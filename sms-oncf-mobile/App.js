@@ -13,6 +13,8 @@ import FolderScreen from './app/screens/FolderScreen';
 import CheckListScreen from './app/screens/CheckListScreen';
 import CollaborateursScreen from './app/screens/CollaborateursScreen';
 import ChangePasswordScreen from './app/screens/ChangePasswordScreen';
+import CompteRenduScreen from './app/screens/CompteRenduScreen';
+
 
 const Stack = createStackNavigator();
 
@@ -32,6 +34,7 @@ export default function App() {
           <Stack.Screen name="CheckList" component={CheckListScreen} />
           <Stack.Screen name="Collaborateurs" component={CollaborateursScreen} />
           <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
+          <Stack.Screen name="CompteRendu" component={CompteRenduScreen} />
 
         </Stack.Navigator>
       </NavigationContainer>

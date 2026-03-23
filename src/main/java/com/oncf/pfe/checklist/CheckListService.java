@@ -15,6 +15,7 @@ public class CheckListService {
 
     private final CheckListRepository checkListRepository;
     private final CheckListItemRepository itemRepository;
+    
 
     @Transactional
     public CheckListResponse createCheckList(CheckListRequest request, User user) {

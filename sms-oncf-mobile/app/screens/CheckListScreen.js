@@ -114,15 +114,52 @@ const ITEMS_COLLABORATEUR = [
     sousSection: 'Documents à usage courant',
     points: [
       'Extrait du carnet de vie du LRS (Pochette canton)',
-      'Schéma du District', 'Fiches d\'AD et appareils de voie',
-      'Carte d\'habilitation', 'Carnets DPG, bulletin I',
-      'Consigne d\'établissement S6A n°2', 'Carnet de dépêches',
+      'Schéma du District',
+      'Fiches d\'AD et appareils de voie',
+      'Carte d\'habilitation',
+      'Carnets DPG, bulletin I',
+      'Consigne d\'établissement S6A n°2',
+      'Carnet de dépêches',
       'Consigne de sécurité des travaux et consignes communes',
     ]
   },
 ];
 
 const ITEMS_CHANTIER = [
+   {
+    section: 'Indicateurs de fiabilité humaine',
+    sousSection: 'Indicateurs d\'alerte professionnels',
+    points: [
+      'Erreurs répétées', 'Démotivation dans le travail',
+      'Distraction et manque de concentration', 'Emotivité dans le travail',
+    ]
+  },
+  {
+    section: 'Indicateurs de fiabilité humaine',
+    sousSection: 'Indicateurs d\'alerte sociologiques',
+    points: [
+      'Maladie grave d\'un proche', 'Maladie grave du collaborateur',
+      'Deuil', 'Séparation ou divorce', 'Mariage', 'Problème matériel', 'Navette',
+    ]
+  },
+  {
+    section: 'Indicateurs de fiabilité humaine',
+    sousSection: 'Indicateurs d\'alerte psychologiques',
+    points: [
+      'Isolement volontaire', 'Recherche inhabituelle de contact',
+      'Incohérence dans le discours', 'Consommation d\'alcool', 'Drogue',
+      'Activité extra-professionnelle incompatible avec le poste',
+    ]
+  },
+  {
+    section: 'Indicateurs de fiabilité humaine',
+    sousSection: 'Indicateurs d\'alerte physiologiques et médicaux',
+    points: [
+      'Fatigabilité inhabituelle', 'Variation de poids récente',
+      'Intempérance', 'Pathologie psychiatrique aiguë, bénigne ou plus grave',
+      'Pathologie neurologique',
+    ]
+  },
   {
     section: 'Collaborateurs sécurité',
     sousSection: 'Rôles',
@@ -236,6 +273,7 @@ export default function CheckListScreen({ navigation }) {
   const [collaborateurs, setCollaborateurs] = useState([]);
   const [collabModalVisible, setCollabModalVisible] = useState(false);
   const [collabSearch, setCollabSearch] = useState('');
+  const [docGlobal, setDocGlobal] = useState({ existence: 'OUI', miseAJour: 'OUI' });
 
   const [infos, setInfos] = useState({
     siteUp: '',
@@ -291,6 +329,7 @@ export default function CheckListScreen({ navigation }) {
       });
     });
     setItemsState(initial);
+    setDocGlobal({ existence: 'OUI', miseAJour: 'OUI' });
   };
 
   const handleSave = async () => {
@@ -316,6 +355,19 @@ export default function CheckListScreen({ navigation }) {
         });
       });
 
+      // Ajouter item global Documentation
+      if (type === 'COLLABORATEUR') {
+        items.push({
+          section: 'Documentation',
+          sousSection: 'Documents à usage courant',
+          pointCle: '__GLOBAL__',
+          cotation: 'S',
+          constatation: `Existence:${docGlobal.existence}|MiseAJour:${docGlobal.miseAJour}`,
+          regularisation: '',
+          ordre: ordre++,
+        });
+      }
+
       await axios.post(CHECKLIST_API, {
         type,
         ...infos,
@@ -326,6 +378,7 @@ export default function CheckListScreen({ navigation }) {
       setStep(0);
       setType(null);
       setItemsState({});
+      setDocGlobal({ existence: 'OUI', miseAJour: 'OUI' });
       setInfos({
         siteUp: '', dateControle: new Date().toISOString().split('T')[0],
         reference: 'DR.PSC.M1C.CISF.024',
@@ -344,18 +397,29 @@ export default function CheckListScreen({ navigation }) {
     setGenerating(true);
     try {
       const token = await getToken();
-    const detail = await axios.get(`${CHECKLIST_API}/${cl.id}`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
+      const detail = await axios.get(`${CHECKLIST_API}/${cl.id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       const data = detail.data;
 
+      // Extraire les données globales documentation
+      const globalItem = (data.items || []).find(i => i.pointCle === '__GLOBAL__');
+      let docExistence = 'OUI', docMiseAJour = 'OUI';
+      if (globalItem?.constatation) {
+        const parts = globalItem.constatation.split('|');
+        docExistence = parts[0]?.replace('Existence:', '') || 'OUI';
+        docMiseAJour = parts[1]?.replace('MiseAJour:', '') || 'OUI';
+      }
+
       const grouped = {};
-      (data.items || []).forEach(item => {
-        if (!grouped[item.section]) grouped[item.section] = {};
-        if (!grouped[item.section][item.sousSection])
-          grouped[item.section][item.sousSection] = [];
-        grouped[item.section][item.sousSection].push(item);
-      });
+      (data.items || [])
+        .filter(i => i.pointCle !== '__GLOBAL__')
+        .forEach(item => {
+          if (!grouped[item.section]) grouped[item.section] = {};
+          if (!grouped[item.section][item.sousSection])
+            grouped[item.section][item.sousSection] = [];
+          grouped[item.section][item.sousSection].push(item);
+        });
 
       const cotColor = (c) => {
         switch(c) {
@@ -390,6 +454,22 @@ export default function CheckListScreen({ navigation }) {
           </tr>
           ${rowsHtml}
         `;
+
+        // Ajouter ligne Existence/MiseAJour pour la section Documentation
+        if (section === 'Documentation') {
+          sectionsHtml += `
+            <tr style="background:#E8F5E9;">
+              <td style="font-weight:bold;font-size:11px;">Existence et Mise à jour</td>
+              <td colspan="2" style="font-size:11px;">Documents à usage courant</td>
+              <td style="text-align:center;font-weight:bold;color:${docExistence === 'OUI' ? '#27AE60' : '#E74C3C'};">
+                Existence: ${docExistence}
+              </td>
+              <td style="text-align:center;font-weight:bold;color:${docMiseAJour === 'OUI' ? '#27AE60' : '#E74C3C'};">
+                Mise à jour: ${docMiseAJour}
+              </td>
+            </tr>
+          `;
+        }
       });
 
       const isCollab = data.type === 'COLLABORATEUR';
@@ -643,7 +723,6 @@ export default function CheckListScreen({ navigation }) {
                 </Text>
                 <Text style={{ color: '#C9A84C' }}>▼</Text>
               </TouchableOpacity>
-
               {infos.collaborateurNom !== '' && (
                 <Text style={{ color: '#C9A84C', fontSize: 11, marginTop: 4 }}>
                   Matricule : {infos.collaborateurMatricule}
@@ -683,7 +762,6 @@ export default function CheckListScreen({ navigation }) {
           <View style={{ height: 40 }} />
         </ScrollView>
 
-        {/* Modal sélection collaborateur */}
         <Modal
           visible={collabModalVisible}
           transparent
@@ -703,7 +781,7 @@ export default function CheckListScreen({ navigation }) {
               <ScrollView style={{ maxHeight: 400 }}>
                 {collaborateurs
                   .filter(c =>
-                    `${c.prenom} ${c.nom} ${c.matricule}`
+                    `${c.fullName} ${c.matricule}`
                       .toLowerCase()
                       .includes(collabSearch.toLowerCase())
                   )
@@ -714,7 +792,7 @@ export default function CheckListScreen({ navigation }) {
                       onPress={() => {
                         setInfos({
                           ...infos,
-                          collaborateurNom: `${c.prenom} ${c.nom}`,
+                          collaborateurNom: c.fullName,
                           collaborateurMatricule: c.matricule,
                         });
                         setCollabModalVisible(false);
@@ -723,11 +801,11 @@ export default function CheckListScreen({ navigation }) {
                     >
                       <View style={styles.collabOptionAvatar}>
                         <Text style={styles.collabOptionAvatarText}>
-                          {c.prenom?.charAt(0)}{c.nom?.charAt(0)}
+                          {c.fullName?.charAt(0)}
                         </Text>
                       </View>
                       <View style={{ flex: 1 }}>
-                        <Text style={styles.collabOptionName}>{c.prenom} {c.nom}</Text>
+                        <Text style={styles.collabOptionName}>{c.fullName}</Text>
                         <Text style={styles.collabOptionMatricule}>{c.matricule}</Text>
                         {c.poste && (
                           <Text style={styles.collabOptionPoste}>{c.poste}</Text>
@@ -830,6 +908,63 @@ export default function CheckListScreen({ navigation }) {
               })}
             </View>
           ))}
+
+          {/* Bloc global Documentation — uniquement pour COLLABORATEUR */}
+          {type === 'COLLABORATEUR' && (
+            <View style={styles.docGlobalBox}>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>Documentation</Text>
+                <Text style={styles.sousSectionTitle}>Existence et Mise à jour — Documents à usage courant *</Text>
+              </View>
+
+              <View style={styles.docRow}>
+                <View style={styles.docField}>
+                  <Text style={styles.docFieldLabel}>Existence *</Text>
+                  <View style={styles.ouiNonRow}>
+                    {['OUI', 'NON'].map(val => (
+                      <TouchableOpacity
+                        key={val}
+                        style={[styles.ouiNonBtn, {
+                          backgroundColor: docGlobal.existence === val
+                            ? (val === 'OUI' ? '#27AE60' : '#E74C3C')
+                            : '#1A2F4A',
+                          borderColor: val === 'OUI' ? '#27AE60' : '#E74C3C',
+                        }]}
+                        onPress={() => setDocGlobal({ ...docGlobal, existence: val })}
+                      >
+                        <Text style={{ color: '#fff', fontSize: 13, fontWeight: 'bold' }}>
+                          {val}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+
+                <View style={styles.docField}>
+                  <Text style={styles.docFieldLabel}>Mise à jour *</Text>
+                  <View style={styles.ouiNonRow}>
+                    {['OUI', 'NON'].map(val => (
+                      <TouchableOpacity
+                        key={val}
+                        style={[styles.ouiNonBtn, {
+                          backgroundColor: docGlobal.miseAJour === val
+                            ? (val === 'OUI' ? '#27AE60' : '#E74C3C')
+                            : '#1A2F4A',
+                          borderColor: val === 'OUI' ? '#27AE60' : '#E74C3C',
+                        }]}
+                        onPress={() => setDocGlobal({ ...docGlobal, miseAJour: val })}
+                      >
+                        <Text style={{ color: '#fff', fontSize: 13, fontWeight: 'bold' }}>
+                          {val}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+              </View>
+            </View>
+          )}
+
           <View style={{ height: 60 }} />
         </ScrollView>
       </SafeAreaView>
@@ -916,6 +1051,22 @@ const styles = StyleSheet.create({
   smallInput: {
     backgroundColor: '#1A2F4A', borderWidth: 1, borderColor: '#2A4060',
     borderRadius: 6, padding: 8, color: '#FFFFFF', fontSize: 12,
+  },
+
+  // Documentation globale
+  docGlobalBox: {
+    backgroundColor: '#0F2137', borderRadius: 12,
+    padding: 16, marginBottom: 16,
+    borderWidth: 2, borderColor: '#27AE60',
+  },
+  docRow: { flexDirection: 'row', gap: 12, marginTop: 8 },
+  docField: { flex: 1 },
+  docFieldLabel: { color: '#B0BEC5', fontSize: 12, marginBottom: 8 },
+  ouiNonRow: { flexDirection: 'row', gap: 8 },
+  ouiNonBtn: {
+    flex: 1, paddingVertical: 12,
+    borderRadius: 8, borderWidth: 1,
+    alignItems: 'center', justifyContent: 'center',
   },
 
   modalOverlay: {

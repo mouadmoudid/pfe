@@ -30,9 +30,9 @@ const FOLDERS = {
     {
       id: 'COMPTE_RENDU_KN1',
       title: 'Compte Rendu de contrôles des procédures KN1',
-      subtitle: 'Comptes rendus KN1',
+      subtitle: 'Comptes rendus KN1 par collaborateur',
       icon: '📝',
-      screen: null,
+      screen: 'CompteRendu',
     },
 
     {
