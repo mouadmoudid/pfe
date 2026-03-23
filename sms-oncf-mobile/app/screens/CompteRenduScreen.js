@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet,
-  ScrollView, ActivityIndicator, Alert, Modal, TextInput
+  ScrollView, ActivityIndicator, Alert, TextInput
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import axios from 'axios';
@@ -17,15 +17,23 @@ export default function CompteRenduScreen({ navigation }) {
   const [generating, setGenerating] = useState(false);
   const [checklists, setChecklists] = useState([]);
   const [selectedCL, setSelectedCL] = useState(null);
-  const [step, setStep] = useState(0); // 0=liste, 1=section2, 2=preview
+  const [step, setStep] = useState(0);
 
-  // Champs section 2 — optionnels
   const [section2, setSection2] = useState({
     lieu: '',
     constatations: '',
     isKm: '',
     actions: '',
   });
+
+  const [section4, setSection4] = useState([
+    { nom: 'GSMR', completude: 'Oui', etat: 'Bon', actions: '' },
+    { nom: 'Clés de berne', completude: 'Oui', etat: 'Bon', actions: '' },
+    { nom: 'Clés de vestibule', completude: 'Oui', etat: 'Bon', actions: '' },
+    { nom: 'Lanternes', completude: 'Oui', etat: 'Bon', actions: '' },
+    { nom: 'SAM', completude: 'Oui', etat: 'Bon', actions: '' },
+    { nom: 'Pétards', completude: 'Oui', etat: 'Bon', actions: '' },
+  ]);
 
   useEffect(() => { loadChecklists(); }, []);
 
@@ -38,7 +46,6 @@ export default function CompteRenduScreen({ navigation }) {
       const res = await axios.get(`${CL_API}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      // Filtrer uniquement les check lists COLLABORATEUR
       setChecklists(res.data.filter(cl => cl.type === 'COLLABORATEUR'));
     } catch {
       Alert.alert('Erreur', 'Impossible de charger les check lists');
@@ -63,18 +70,16 @@ export default function CompteRenduScreen({ navigation }) {
     }
   };
 
-  // Calculer la cotation moyenne d'une sous-section
   const getMoyenneSousSection = (items, sousSection) => {
     const filtered = items.filter(i => i.sousSection === sousSection);
     if (filtered.length === 0) return 'S';
-    const hasA = filtered.some(i => i.cotation === 'A');
     const hasM = filtered.some(i => i.cotation === 'M');
+    const hasA = filtered.some(i => i.cotation === 'A');
     if (hasM) return 'M';
     if (hasA) return 'A';
     return 'S';
   };
 
-  // Vérifier si tous les indicateurs d'une catégorie sont S
   const getIndicateurConstat = (items, sousSection) => {
     const filtered = items.filter(i => i.sousSection === sousSection);
     if (filtered.length === 0) return 'RAS';
@@ -89,6 +94,12 @@ export default function CompteRenduScreen({ navigation }) {
       case 'M': return '#E74C3C';
       default: return '#607D8B';
     }
+  };
+
+  const updateSection4 = (idx, field, value) => {
+    const updated = [...section4];
+    updated[idx] = { ...updated[idx], [field]: value };
+    setSection4(updated);
   };
 
   const generatePDF = async () => {
@@ -107,35 +118,27 @@ export default function CompteRenduScreen({ navigation }) {
         docExistence = parts[0]?.replace('Existence:', '') || 'OUI';
         docMiseAJour = parts[1]?.replace('MiseAJour:', '') || 'OUI';
       }
+
       const date = data.dateControle || new Date().toLocaleDateString('fr-FR');
 
-      // Sous-sections procédures collaborateur
       const sousSections = [
-        'SP320',
-        'Règlement S2B',
+        'SP320', 'Règlement S2B',
         'Règlements S9A et leurs consignes',
         'Règlements S9B et leurs consignes',
         'Consigne générale S2CN°4',
-        'Consignes locales',
-        'Guide pratiques Voie',
-        'Référentiels LGV',
+        'Consignes locales', 'Guide pratiques Voie', 'Référentiels LGV',
       ];
 
-      // Vérifier si au moins une non-conformité
       const hasNonConformite = items
         .filter(i => i.section === 'Procédures collaborateur')
         .some(i => i.cotation === 'A' || i.cotation === 'M');
 
-      // Section 1 — Procédures collaborateur
       const section1Rows = sousSections.map(ss => {
         const moyenne = getMoyenneSousSection(
           items.filter(i => i.section === 'Procédures collaborateur'), ss
         );
         return { sousSection: ss, moyenne };
-      }).filter(row => {
-        // Inclure toutes les sous-sections qui ont des items
-        return items.some(i => i.sousSection === row.sousSection);
-      });
+      }).filter(row => items.some(i => i.sousSection === row.sousSection));
 
       const section1Html = section1Rows.length > 0 ? `
         <tr>
@@ -149,7 +152,7 @@ export default function CompteRenduScreen({ navigation }) {
           ${section1Rows.map((row, idx) => `
             ${idx > 0 ? '</tr><tr>' : ''}
             <td style="font-size:11px;color:#E67E22;">${row.sousSection}</td>
-            <td style="text-align:center;font-weight:bold;color:${cotationColor(row.moyenne)};background:${cotationColor(row.moyenne)}20;padding:4px 8px;border-radius:4px;">
+            <td style="text-align:center;font-weight:bold;color:${cotationColor(row.moyenne)};background:${cotationColor(row.moyenne)}20;padding:4px 8px;">
               ${row.moyenne}
             </td>
             ${idx === 0 ? `
@@ -164,7 +167,6 @@ export default function CompteRenduScreen({ navigation }) {
         </tr>
       ` : `<tr><td colspan="6" style="text-align:center;color:#607D8B;">Aucune donnée</td></tr>`;
 
-      // Section 2 — Installations (optionnel)
       const section2Html = section2.lieu || section2.constatations ? `
         <tr>
           <td style="font-size:11px;">${section2.lieu || ''}</td>
@@ -173,39 +175,24 @@ export default function CompteRenduScreen({ navigation }) {
           <td style="font-size:11px;">${section2.actions || ''}</td>
         </tr>
       ` : `
-        <tr>
-          <td colspan="4" style="text-align:center;color:#607D8B;font-size:11px;">RAS</td>
-        </tr>
+        <tr><td colspan="4" style="text-align:center;color:#607D8B;font-size:11px;">RAS</td></tr>
       `;
-      
 
-      // Section 4 — Agrès depuis la check list
-      const agresItems = items.filter(i =>
-        i.section === 'Procédures collaborateur' && i.sousSection === 'SP320' &&
-        i.pointCle.includes('Agrès')
-      );
-
-      const agresFixe = [
-        { nom: 'GSMR', completude: 'Oui', etat: 'Bon', validite: '', actions: '' },
-        { nom: 'Clés de berne', completude: 'Non', etat: 'Bon', validite: '', actions: 'Nombre insuffisant — Clés disponibles sont mutualisés' },
-        { nom: 'Clés de vestibule', completude: 'Non', etat: 'Bon', validite: '', actions: 'Nombre insuffisant — Clés disponibles sont mutualisés' },
-        { nom: 'Lanternes', completude: 'Oui', etat: 'Bon', validite: '', actions: '' },
-        { nom: 'SAM', completude: 'Oui', etat: 'Bon', validite: '', actions: '' },
-        { nom: 'Pétards', completude: 'Oui', etat: 'Bon', validite: 'Oui', actions: '' },
-      ];
-
-      const agresHtml = agresFixe.map(a => `
+      const agresHtml = section4.map(a => `
         <tr>
           <td style="font-size:11px;font-weight:bold;">${a.nom}</td>
-          <td style="text-align:center;font-size:11px;">${a.completude}</td>
-          <td style="text-align:center;font-size:11px;">${a.etat}</td>
-          <td style="text-align:center;font-size:11px;">${a.validite}</td>
+          <td style="text-align:center;font-size:11px;font-weight:bold;color:${a.completude === 'Oui' ? '#27AE60' : '#E74C3C'};">
+            ${a.completude}
+          </td>
+          <td style="text-align:center;font-size:11px;font-weight:bold;color:${a.etat === 'Bon' ? '#27AE60' : '#E74C3C'};">
+            ${a.etat}
+          </td>
+          <td style="text-align:center;font-size:11px;"></td>
           <td style="text-align:center;font-size:11px;"></td>
           <td style="font-size:10px;color:#E74C3C;">${a.actions}</td>
         </tr>
       `).join('');
 
-      // Section 5 — Indicateurs fiabilité humaine
       const indicateurs = [
         { label: 'Indicateurs d\'alerte professionnels', sousSection: 'Indicateurs d\'alerte professionnels' },
         { label: 'Indicateurs d\'alerte sociologiques', sousSection: 'Indicateurs d\'alerte sociologiques' },
@@ -218,9 +205,7 @@ export default function CompteRenduScreen({ navigation }) {
         return `
           <tr>
             <td style="font-size:11px;">${ind.label}</td>
-            <td style="text-align:center;font-size:11px;color:${constat === 'RAS' ? '#27AE60' : '#E67E22'};">
-              ${constat}
-            </td>
+            <td style="text-align:center;font-size:11px;color:${constat === 'RAS' ? '#27AE60' : '#E67E22'};">${constat}</td>
             <td style="font-size:11px;"></td>
           </tr>
         `;
@@ -240,35 +225,31 @@ export default function CompteRenduScreen({ navigation }) {
           tr:nth-child(even) td { background: #f9f9f9; }
           .info-table td { padding: 5px 8px; border: 1px solid #ccc; }
           .info-label { background: #f0f0f0; font-weight: bold; width: 200px; }
-          .sms-box { border: 1px solid #ccc; padding: 8px 16px; margin-bottom: 10px; display: flex; flex-wrap: wrap; gap: 4px; }
-          .sms-item { font-size: 10px; width: 48%; }
           .section-title { font-weight: bold; text-decoration: underline; font-size: 12px; margin: 12px 0 6px; }
           .footer-sig { display: flex; justify-content: space-between; margin-top: 20px; font-size: 11px; border-top: 1px solid #ccc; padding-top: 10px; }
           .oncf-logo { color: #C9A84C; font-size: 18px; font-weight: bold; letter-spacing: 2px; }
         </style>
         </head><body>
 
-        <!-- En-tête -->
         <div class="header-top">
           <div class="header-cell">
-            <div style="font-size:10px;">Référence : DR.PSC.M1C.CISF.024</div>
-            <div style="font-size:10px;">Version 1 du 20/06/2013</div>
-            <div style="font-size:10px;">Contrôle et inspection sécurité ferroviaire</div>
-            <div style="font-size:10px;">Page 1 sur 1</div>
+            <div>Référence : DR.PSC.M1C.CISF.024</div>
+            <div>Version 1 du 20/06/2013</div>
+            <div>Contrôle et inspection sécurité ferroviaire</div>
+            <div>Page 1 sur 1</div>
           </div>
           <div class="header-cell header-center" style="display:flex;flex-direction:column;justify-content:center;align-items:center;gap:4px;">
             <div class="oncf-logo">ONCF</div>
-            <div style="font-size:11px;">Compte Rendu de contrôles des procédures, documentation,</div>
-            <div style="font-size:11px;">installations matériel et autres équipement</div>
+            <div>Compte Rendu de contrôles des procédures, documentation,</div>
+            <div>installations matériel et autres équipement</div>
           </div>
           <div class="header-cell" style="text-align:right;">
-            <div style="font-size:10px;">Pole Infrastructure & Circulation</div>
-            <div style="font-weight:bold;font-size:11px;">D R I Centre.</div>
+            <div>Pole Infrastructure & Circulation</div>
+            <div style="font-weight:bold;">D R I Centre.</div>
             <div style="font-weight:bold;font-size:14px;">*KN1</div>
           </div>
         </div>
 
-        <!-- Infos générales -->
         <table class="info-table" style="margin-bottom:8px;">
           <tr>
             <td class="info-label">Date du contrôle :</td>
@@ -286,7 +267,6 @@ export default function CompteRenduScreen({ navigation }) {
           </tr>
         </table>
 
-        <!-- Enregistrements SMS -->
         <div style="border:1px solid #ccc;padding:8px;margin-bottom:10px;">
           <div style="font-weight:bold;font-size:11px;margin-bottom:6px;">Enregistrements SMS utilisés :</div>
           <div style="display:flex;flex-wrap:wrap;gap:2px;">
@@ -301,7 +281,6 @@ export default function CompteRenduScreen({ navigation }) {
           </div>
         </div>
 
-        <!-- Section 1 -->
         <div class="section-title">1. COLLABORATEURS/PROCEDURES :</div>
         <table>
           <thead>
@@ -317,7 +296,6 @@ export default function CompteRenduScreen({ navigation }) {
           <tbody>${section1Html}</tbody>
         </table>
 
-        <!-- Section 2 -->
         <div class="section-title">2. INSTALLATIONS ET EQUIPEMENTS :</div>
         <table>
           <thead>
@@ -331,7 +309,6 @@ export default function CompteRenduScreen({ navigation }) {
           <tbody>${section2Html}</tbody>
         </table>
 
-        <!-- Section 3 -->
         <div class="section-title">3. DOCUMENTATION :</div>
         <table>
           <thead>
@@ -345,27 +322,18 @@ export default function CompteRenduScreen({ navigation }) {
           <tbody>
             <tr>
               <td rowspan="2">Documents à usage courant</td>
-              <td style="text-align:center;font-weight:bold;color:${docExistence === 'OUI' ? '#27AE60' : '#E74C3C'};">
-                ${docExistence}
-              </td>
-              <td style="text-align:center;font-weight:bold;color:${docMiseAJour === 'OUI' ? '#27AE60' : '#E74C3C'};">
-                ${docMiseAJour}
-              </td>
+              <td style="text-align:center;font-weight:bold;color:${docExistence === 'OUI' ? '#27AE60' : '#E74C3C'};">${docExistence}</td>
+              <td style="text-align:center;font-weight:bold;color:${docMiseAJour === 'OUI' ? '#27AE60' : '#E74C3C'};">${docMiseAJour}</td>
               <td></td>
             </tr>
             <tr>
-              <td style="text-align:center;font-weight:bold;color:${docExistence === 'OUI' ? '#27AE60' : '#E74C3C'};">
-                ${docExistence}
-              </td>
-              <td style="text-align:center;font-weight:bold;color:${docMiseAJour === 'OUI' ? '#27AE60' : '#E74C3C'};">
-                ${docMiseAJour}
-              </td>
+              <td style="text-align:center;font-weight:bold;color:${docExistence === 'OUI' ? '#27AE60' : '#E74C3C'};">${docExistence}</td>
+              <td style="text-align:center;font-weight:bold;color:${docMiseAJour === 'OUI' ? '#27AE60' : '#E74C3C'};">${docMiseAJour}</td>
               <td></td>
             </tr>
           </tbody>
         </table>
 
-        <!-- Section 4 -->
         <div class="section-title">4. OUTILS ET AGRES DE SECURITE :</div>
         <table>
           <thead>
@@ -381,7 +349,6 @@ export default function CompteRenduScreen({ navigation }) {
           <tbody>${agresHtml}</tbody>
         </table>
 
-        <!-- Section 5 -->
         <div class="section-title">5. INDICATEURS DE FIABILITE HUMAINE :</div>
         <table>
           <thead>
@@ -394,7 +361,6 @@ export default function CompteRenduScreen({ navigation }) {
           <tbody>${indicateursHtml}</tbody>
         </table>
 
-        <!-- Section 7 -->
         <div class="section-title">7. DIVERS (Sécurité prestataires externes et internes) :</div>
         <table>
           <thead>
@@ -406,7 +372,6 @@ export default function CompteRenduScreen({ navigation }) {
           </tbody>
         </table>
 
-        <!-- Signatures -->
         <div class="footer-sig">
           <div>
             <div>Dressé par Mr. ${currentUser.fullName || '___________'}</div>
@@ -478,12 +443,8 @@ export default function CompteRenduScreen({ navigation }) {
                       </View>
                       <View style={{ flex: 1 }}>
                         <Text style={styles.clName}>{cl.collaborateurNom}</Text>
-                        <Text style={styles.clMatricule}>
-                          Matricule : {cl.collaborateurMatricule}
-                        </Text>
-                        <Text style={styles.clDate}>
-                          📅 {cl.dateControle} · {cl.siteUp}
-                        </Text>
+                        <Text style={styles.clMatricule}>Matricule : {cl.collaborateurMatricule}</Text>
+                        <Text style={styles.clDate}>📅 {cl.dateControle} · {cl.siteUp}</Text>
                       </View>
                     </View>
                     <Text style={styles.arrow}>›</Text>
@@ -498,7 +459,7 @@ export default function CompteRenduScreen({ navigation }) {
     );
   }
 
-  // ===== ÉTAPE 1 — Section 2 optionnelle =====
+  // ===== ÉTAPE 1 — Formulaire sections 2 et 4 =====
   if (step === 1) {
     return (
       <SafeAreaView style={styles.safe}>
@@ -506,60 +467,115 @@ export default function CompteRenduScreen({ navigation }) {
           <TouchableOpacity onPress={() => setStep(0)}>
             <Text style={styles.backText}>← Retour</Text>
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Installations & Équipements</Text>
-          <Text style={styles.headerSub}>Section 2 — optionnelle</Text>
+          <Text style={styles.headerTitle}>Compléter le Compte Rendu</Text>
+          <Text style={styles.headerSub}>{selectedCL?.collaborateurNom}</Text>
         </View>
 
         <ScrollView style={styles.formContainer}>
+
+          {/* Check list sélectionnée */}
           <View style={styles.selectedCLBox}>
             <Text style={styles.selectedCLName}>👤 {selectedCL?.collaborateurNom}</Text>
             <Text style={styles.selectedCLDate}>{selectedCL?.dateControle}</Text>
           </View>
 
-          <View style={styles.infoBox}>
-            <Text style={styles.infoText}>
-              Ces champs sont optionnels — laissez vides si pas d'installations à signaler
-            </Text>
+          {/* Section 2 — Optionnelle */}
+          <View style={styles.sectionBox}>
+            <Text style={styles.sectionBoxTitle}>2. Installations & Équipements</Text>
+            <Text style={styles.sectionBoxSub}>Optionnel — laisser vide si RAS</Text>
+
+            <Text style={styles.inputLabel}>Lieu</Text>
+            <TextInput style={styles.input}
+              placeholder="Ex: Chantier redressage des rails..."
+              placeholderTextColor="#607D8B"
+              value={section2.lieu}
+              onChangeText={v => setSection2({ ...section2, lieu: v })} />
+
+            <Text style={styles.inputLabel}>Constatations</Text>
+            <TextInput style={[styles.input, { height: 60, textAlignVertical: 'top' }]}
+              placeholder="Ex: RAS" placeholderTextColor="#607D8B" multiline
+              value={section2.constatations}
+              onChangeText={v => setSection2({ ...section2, constatations: v })} />
+
+            <Text style={styles.inputLabel}>IS/Km</Text>
+            <TextInput style={styles.input}
+              placeholder="Ex: 145.881" placeholderTextColor="#607D8B"
+              value={section2.isKm}
+              onChangeText={v => setSection2({ ...section2, isKm: v })} />
+
+            <Text style={styles.inputLabel}>Actions réalisées ou programmées</Text>
+            <TextInput style={[styles.input, { height: 60, textAlignVertical: 'top' }]}
+              placeholder="Ex: RAS" placeholderTextColor="#607D8B" multiline
+              value={section2.actions}
+              onChangeText={v => setSection2({ ...section2, actions: v })} />
           </View>
 
-          <Text style={styles.inputLabel}>Lieu</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Ex: Chantier redressage des rails..."
-            placeholderTextColor="#607D8B"
-            value={section2.lieu}
-            onChangeText={v => setSection2({ ...section2, lieu: v })}
-          />
+          {/* Section 4 — Obligatoire */}
+          <View style={styles.sectionBox4}>
+            <Text style={styles.sectionBoxTitle}>4. Outils et Agrès de Sécurité *</Text>
+            <Text style={styles.sectionBoxSub}>Obligatoire — remplissez les constatations</Text>
 
-          <Text style={styles.inputLabel}>Constatations</Text>
-          <TextInput
-            style={[styles.input, { height: 70, textAlignVertical: 'top' }]}
-            placeholder="Ex: RAS"
-            placeholderTextColor="#607D8B"
-            multiline
-            value={section2.constatations}
-            onChangeText={v => setSection2({ ...section2, constatations: v })}
-          />
+            {section4.map((agre, idx) => (
+              <View key={idx} style={styles.agreRow}>
+                <Text style={styles.agreNom}>{agre.nom}</Text>
 
-          <Text style={styles.inputLabel}>IS/Km</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Ex: 145.881"
-            placeholderTextColor="#607D8B"
-            value={section2.isKm}
-            onChangeText={v => setSection2({ ...section2, isKm: v })}
-          />
+                <View style={styles.agreFields}>
+                  {/* Complétude */}
+                  <View style={styles.agreField}>
+                    <Text style={styles.agreLabel}>Complétude</Text>
+                    <View style={styles.ouiNonRow}>
+                      {['Oui', 'Non'].map(val => (
+                        <TouchableOpacity
+                          key={val}
+                          style={[styles.ouiNonBtn, {
+                            backgroundColor: agre.completude === val
+                              ? (val === 'Oui' ? '#27AE60' : '#E74C3C')
+                              : '#1A2F4A',
+                            borderColor: val === 'Oui' ? '#27AE60' : '#E74C3C',
+                          }]}
+                          onPress={() => updateSection4(idx, 'completude', val)}
+                        >
+                          <Text style={{ color: '#fff', fontSize: 11, fontWeight: 'bold' }}>{val}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </View>
 
-          <Text style={styles.inputLabel}>Actions réalisées ou programmées</Text>
-          <TextInput
-            style={[styles.input, { height: 70, textAlignVertical: 'top' }]}
-            placeholder="Ex: RAS"
-            placeholderTextColor="#607D8B"
-            multiline
-            value={section2.actions}
-            onChangeText={v => setSection2({ ...section2, actions: v })}
-          />
+                  {/* État */}
+                  <View style={styles.agreField}>
+                    <Text style={styles.agreLabel}>État</Text>
+                    <View style={styles.ouiNonRow}>
+                      {['Bon', 'Mauvais'].map(val => (
+                        <TouchableOpacity
+                          key={val}
+                          style={[styles.ouiNonBtn, {
+                            backgroundColor: agre.etat === val
+                              ? (val === 'Bon' ? '#27AE60' : '#E74C3C')
+                              : '#1A2F4A',
+                            borderColor: val === 'Bon' ? '#27AE60' : '#E74C3C',
+                          }]}
+                          onPress={() => updateSection4(idx, 'etat', val)}
+                        >
+                          <Text style={{ color: '#fff', fontSize: 10, fontWeight: 'bold' }}>{val}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </View>
+                </View>
 
+                {/* Actions */}
+                <TextInput
+                  style={styles.agreActions}
+                  placeholder="Actions si nécessaire..."
+                  placeholderTextColor="#607D8B"
+                  value={agre.actions}
+                  onChangeText={v => updateSection4(idx, 'actions', v)}
+                />
+              </View>
+            ))}
+          </View>
+
+          {/* Bouton générer */}
           <TouchableOpacity
             style={styles.generateBtn}
             onPress={generatePDF}
@@ -631,15 +647,47 @@ const styles = StyleSheet.create({
   selectedCLName: { color: '#FFFFFF', fontSize: 14, fontWeight: 'bold' },
   selectedCLDate: { color: '#C9A84C', fontSize: 12 },
 
-  inputLabel: { color: '#B0BEC5', fontSize: 12, marginBottom: 4, marginTop: 12 },
+  sectionBox: {
+    backgroundColor: '#0F2137', borderRadius: 12,
+    padding: 16, marginBottom: 12,
+    borderWidth: 1, borderColor: '#2A4060',
+  },
+  sectionBox4: {
+    backgroundColor: '#0F2137', borderRadius: 12,
+    padding: 16, marginBottom: 12,
+    borderWidth: 2, borderColor: '#E67E22',
+  },
+  sectionBoxTitle: { color: '#FFFFFF', fontSize: 14, fontWeight: 'bold', marginBottom: 4 },
+  sectionBoxSub: { color: '#607D8B', fontSize: 11, marginBottom: 12 },
+
+  inputLabel: { color: '#B0BEC5', fontSize: 12, marginBottom: 4, marginTop: 10 },
   input: {
     backgroundColor: '#1A2F4A', borderWidth: 1, borderColor: '#2A4060',
     borderRadius: 8, padding: 10, color: '#FFFFFF', fontSize: 13,
   },
 
+  agreRow: {
+    backgroundColor: '#1A2F4A', borderRadius: 8,
+    padding: 12, marginBottom: 8,
+  },
+  agreNom: { color: '#FFFFFF', fontSize: 13, fontWeight: 'bold', marginBottom: 8 },
+  agreFields: { flexDirection: 'row', gap: 12, marginBottom: 8 },
+  agreField: { flex: 1 },
+  agreLabel: { color: '#607D8B', fontSize: 11, marginBottom: 6 },
+  ouiNonRow: { flexDirection: 'row', gap: 6 },
+  ouiNonBtn: {
+    flex: 1, paddingVertical: 8,
+    borderRadius: 6, borderWidth: 1,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  agreActions: {
+    backgroundColor: '#0F2137', borderWidth: 1, borderColor: '#2A4060',
+    borderRadius: 6, padding: 8, color: '#FFFFFF', fontSize: 12,
+  },
+
   generateBtn: {
     backgroundColor: '#C9A84C', borderRadius: 10,
-    padding: 14, alignItems: 'center', marginTop: 24,
+    padding: 14, alignItems: 'center', marginTop: 8,
   },
   generateBtnText: { color: '#0A1628', fontWeight: 'bold', fontSize: 15 },
 });
