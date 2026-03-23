@@ -20,10 +20,7 @@ export default function CompteRenduScreen({ navigation }) {
   const [step, setStep] = useState(0);
 
   const [section2, setSection2] = useState({
-    lieu: '',
-    constatations: '',
-    isKm: '',
-    actions: '',
+    lieu: '', constatations: '', isKm: '', actions: '',
   });
 
   const [section4, setSection4] = useState([
@@ -33,6 +30,11 @@ export default function CompteRenduScreen({ navigation }) {
     { nom: 'Lanternes', completude: 'Oui', etat: 'Bon', actions: '' },
     { nom: 'SAM', completude: 'Oui', etat: 'Bon', actions: '' },
     { nom: 'Pétards', completude: 'Oui', etat: 'Bon', actions: '' },
+  ]);
+
+  const [section7, setSection7] = useState([
+    { rubrique: '', constatations: '', actions: '' },
+    { rubrique: '', constatations: '', actions: '' },
   ]);
 
   useEffect(() => { loadChecklists(); }, []);
@@ -102,6 +104,12 @@ export default function CompteRenduScreen({ navigation }) {
     setSection4(updated);
   };
 
+  const updateSection7 = (idx, field, value) => {
+    const updated = [...section7];
+    updated[idx] = { ...updated[idx], [field]: value };
+    setSection7(updated);
+  };
+
   const generatePDF = async () => {
     setGenerating(true);
     try {
@@ -110,7 +118,6 @@ export default function CompteRenduScreen({ navigation }) {
       const data = selectedCL;
       const items = data.items || [];
 
-      // Extraire Existence et MiseAJour depuis le __GLOBAL__ item
       const globalItem = items.find(i => i.pointCle === '__GLOBAL__');
       let docExistence = 'OUI', docMiseAJour = 'OUI';
       if (globalItem?.constatation) {
@@ -210,6 +217,14 @@ export default function CompteRenduScreen({ navigation }) {
           </tr>
         `;
       }).join('');
+
+      const section7Html = section7.map(row => `
+        <tr>
+          <td style="font-size:11px;">${row.rubrique || ''}</td>
+          <td style="font-size:11px;">${row.constatations || ''}</td>
+          <td style="font-size:11px;">${row.actions || ''}</td>
+        </tr>
+      `).join('');
 
       const html = `
         <!DOCTYPE html><html><head><meta charset="UTF-8">
@@ -366,10 +381,7 @@ export default function CompteRenduScreen({ navigation }) {
           <thead>
             <tr><th>Rubriques</th><th>Constatations</th><th>Actions</th></tr>
           </thead>
-          <tbody>
-            <tr><td style="height:20px;"></td><td></td><td></td></tr>
-            <tr><td style="height:20px;"></td><td></td><td></td></tr>
-          </tbody>
+          <tbody>${section7Html}</tbody>
         </table>
 
         <div class="footer-sig">
@@ -459,7 +471,7 @@ export default function CompteRenduScreen({ navigation }) {
     );
   }
 
-  // ===== ÉTAPE 1 — Formulaire sections 2 et 4 =====
+  // ===== ÉTAPE 1 — Formulaire =====
   if (step === 1) {
     return (
       <SafeAreaView style={styles.safe}>
@@ -473,7 +485,6 @@ export default function CompteRenduScreen({ navigation }) {
 
         <ScrollView style={styles.formContainer}>
 
-          {/* Check list sélectionnée */}
           <View style={styles.selectedCLBox}>
             <Text style={styles.selectedCLName}>👤 {selectedCL?.collaborateurNom}</Text>
             <Text style={styles.selectedCLDate}>{selectedCL?.dateControle}</Text>
@@ -518,9 +529,7 @@ export default function CompteRenduScreen({ navigation }) {
             {section4.map((agre, idx) => (
               <View key={idx} style={styles.agreRow}>
                 <Text style={styles.agreNom}>{agre.nom}</Text>
-
                 <View style={styles.agreFields}>
-                  {/* Complétude */}
                   <View style={styles.agreField}>
                     <Text style={styles.agreLabel}>Complétude</Text>
                     <View style={styles.ouiNonRow}>
@@ -540,8 +549,6 @@ export default function CompteRenduScreen({ navigation }) {
                       ))}
                     </View>
                   </View>
-
-                  {/* État */}
                   <View style={styles.agreField}>
                     <Text style={styles.agreLabel}>État</Text>
                     <View style={styles.ouiNonRow}>
@@ -562,8 +569,6 @@ export default function CompteRenduScreen({ navigation }) {
                     </View>
                   </View>
                 </View>
-
-                {/* Actions */}
                 <TextInput
                   style={styles.agreActions}
                   placeholder="Actions si nécessaire..."
@@ -575,7 +580,33 @@ export default function CompteRenduScreen({ navigation }) {
             ))}
           </View>
 
-          {/* Bouton générer */}
+          {/* Section 7 — Optionnelle */}
+          <View style={styles.sectionBox}>
+            <Text style={styles.sectionBoxTitle}>7. Divers — Sécurité prestataires</Text>
+            <Text style={styles.sectionBoxSub}>Optionnel — laisser vide si RAS</Text>
+
+            {section7.map((row, idx) => (
+              <View key={idx} style={styles.agreRow}>
+                <Text style={styles.agreLabel}>Ligne {idx + 1}</Text>
+                <TextInput style={styles.input}
+                  placeholder="Rubriques..."
+                  placeholderTextColor="#607D8B"
+                  value={row.rubrique}
+                  onChangeText={v => updateSection7(idx, 'rubrique', v)} />
+                <TextInput style={[styles.input, { marginTop: 6 }]}
+                  placeholder="Constatations..."
+                  placeholderTextColor="#607D8B"
+                  value={row.constatations}
+                  onChangeText={v => updateSection7(idx, 'constatations', v)} />
+                <TextInput style={[styles.input, { marginTop: 6 }]}
+                  placeholder="Actions..."
+                  placeholderTextColor="#607D8B"
+                  value={row.actions}
+                  onChangeText={v => updateSection7(idx, 'actions', v)} />
+              </View>
+            ))}
+          </View>
+
           <TouchableOpacity
             style={styles.generateBtn}
             onPress={generatePDF}
