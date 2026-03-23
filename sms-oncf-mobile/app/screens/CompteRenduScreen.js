@@ -98,6 +98,15 @@ export default function CompteRenduScreen({ navigation }) {
       const currentUser = userData ? JSON.parse(userData) : {};
       const data = selectedCL;
       const items = data.items || [];
+
+      // Extraire Existence et MiseAJour depuis le __GLOBAL__ item
+      const globalItem = items.find(i => i.pointCle === '__GLOBAL__');
+      let docExistence = 'OUI', docMiseAJour = 'OUI';
+      if (globalItem?.constatation) {
+        const parts = globalItem.constatation.split('|');
+        docExistence = parts[0]?.replace('Existence:', '') || 'OUI';
+        docMiseAJour = parts[1]?.replace('MiseAJour:', '') || 'OUI';
+      }
       const date = data.dateControle || new Date().toLocaleDateString('fr-FR');
 
       // Sous-sections procédures collaborateur
@@ -168,6 +177,7 @@ export default function CompteRenduScreen({ navigation }) {
           <td colspan="4" style="text-align:center;color:#607D8B;font-size:11px;">RAS</td>
         </tr>
       `;
+      
 
       // Section 4 — Agrès depuis la check list
       const agresItems = items.filter(i =>
@@ -335,13 +345,21 @@ export default function CompteRenduScreen({ navigation }) {
           <tbody>
             <tr>
               <td rowspan="2">Documents à usage courant</td>
-              <td style="text-align:center;">OUI</td>
-              <td style="text-align:center;">OUI</td>
+              <td style="text-align:center;font-weight:bold;color:${docExistence === 'OUI' ? '#27AE60' : '#E74C3C'};">
+                ${docExistence}
+              </td>
+              <td style="text-align:center;font-weight:bold;color:${docMiseAJour === 'OUI' ? '#27AE60' : '#E74C3C'};">
+                ${docMiseAJour}
+              </td>
               <td></td>
             </tr>
             <tr>
-              <td style="text-align:center;">OUI</td>
-              <td style="text-align:center;">OUI</td>
+              <td style="text-align:center;font-weight:bold;color:${docExistence === 'OUI' ? '#27AE60' : '#E74C3C'};">
+                ${docExistence}
+              </td>
+              <td style="text-align:center;font-weight:bold;color:${docMiseAJour === 'OUI' ? '#27AE60' : '#E74C3C'};">
+                ${docMiseAJour}
+              </td>
               <td></td>
             </tr>
           </tbody>
