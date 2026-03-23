@@ -104,9 +104,15 @@ export default function PlanningScreen({ navigation }) {
   });
 
   useEffect(() => {
-    loadData();
-    loadUser();
-  }, [annee]);
+    const initialize = async () => {
+      await loadUser();
+    };
+    initialize();
+  }, []);
+
+  useEffect(() => {
+    if (user) loadData();
+  }, [user, annee]);
 
   const getToken = async () => await AsyncStorage.getItem('token');
 
@@ -120,13 +126,23 @@ export default function PlanningScreen({ navigation }) {
     try {
       const token = await getToken();
       const headers = { Authorization: `Bearer ${token}` };
-      const [planRes, agentRes] = await Promise.all([
-      axios.get(`${PLANNING_API}?annee=${annee}`, { headers }),
-      axios.get(`${API_URL.replace('/auth', '/admin/collaborateurs')}`, { headers }),
-    ]);
+
+      const storageUser = await AsyncStorage.getItem('user');
+      const currentUser = user || (storageUser ? JSON.parse(storageUser) : null);
+
+      let planRes;
+      if (currentUser && (currentUser.role === 'ADMIN' || currentUser.role === 'MANAGER')) {
+        planRes = await axios.get(`${PLANNING_API}?annee=${annee}`, { headers });
+        const agentRes = await axios.get(`${API_URL.replace('/auth', '/admin/collaborateurs')}`, { headers });
+        setAgents(agentRes.data);
+      } else {
+        planRes = await axios.get(`${PLANNING_API}/my`, { headers });
+        setAgents([]); // non autorisé / pas nécessaire pour agent
+      }
+
       setTasks(planRes.data);
-      setAgents(agentRes.data);
-    } catch {
+    } catch (e) {
+      console.error('loadData planning error', e);
       Alert.alert('Erreur', 'Impossible de charger le planning');
     } finally {
       setLoading(false);
