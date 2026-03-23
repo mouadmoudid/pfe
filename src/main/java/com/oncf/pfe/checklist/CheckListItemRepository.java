@@ -5,4 +5,5 @@ import java.util.List;
 
 public interface CheckListItemRepository extends JpaRepository<CheckListItem, Long> {
     List<CheckListItem> findByCheckListId(Long checkListId);
+    void deleteByCheckListId(Long checkListId);
 }

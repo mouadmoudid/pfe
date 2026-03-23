@@ -1,6 +1,7 @@
 package com.oncf.pfe.checklist;
 
 import com.oncf.pfe.checklist.dto.*;
+import com.oncf.pfe.user.Role;
 import com.oncf.pfe.user.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -78,6 +79,21 @@ public class CheckListService {
                 .orElseThrow(() -> new RuntimeException("Check list non trouvée"));
         cl.setStatus(status);
         return toResponse(checkListRepository.save(cl));
+    }
+
+    @Transactional
+    public void deleteCheckList(Long id, User user) {
+        CheckList cl = checkListRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Check list non trouvée"));
+
+        if (cl.getCreatedBy() != null
+                && !cl.getCreatedBy().getId().equals(user.getId())
+                && user.getRole() != Role.ADMIN) {
+            throw new RuntimeException("Vous n'avez pas le droit de supprimer cette check list");
+        }
+
+        itemRepository.deleteByCheckListId(id);
+        checkListRepository.delete(cl);
     }
 
     private CheckListResponse toResponse(CheckList cl) {

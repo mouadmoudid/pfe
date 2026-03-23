@@ -47,4 +47,11 @@ public class CheckListController {
             @RequestParam CheckListStatus status) {
         return ResponseEntity.ok(checkListService.updateStatus(id, status));
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deleteChecklist(@PathVariable Long id, Authentication auth) {
+        User user = (User) auth.getPrincipal();
+        checkListService.deleteCheckList(id, user);
+        return ResponseEntity.ok("Check list supprimée");
+    }
 }

@@ -393,6 +393,33 @@ export default function CheckListScreen({ navigation }) {
     }
   };
 
+  const deleteChecklist = async (cl) => {
+    Alert.alert(
+      'Confirmation',
+      `Supprimer la checklist ${cl.type === 'COLLABORATEUR' ? cl.collaborateurNom : cl.chantierNom} ?`,
+      [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Supprimer',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const token = await getToken();
+              await axios.delete(`${CHECKLIST_API}/${cl.id}`, {
+                headers: { Authorization: `Bearer ${token}` }
+              });
+              Alert.alert('Succès', 'Check list supprimée');
+              loadChecklists();
+            } catch (error) {
+              const msg = error?.response?.data?.message || error?.response?.data || error.message || 'Impossible de supprimer la check list';
+              Alert.alert('Erreur', msg.toString());
+            }
+          }
+        }
+      ]
+    );
+  };
+
   const generatePDF = async (cl) => {
     setGenerating(true);
     try {
@@ -626,6 +653,12 @@ export default function CheckListScreen({ navigation }) {
                           ? <ActivityIndicator color="#0A1628" size="small" />
                           : <Text style={styles.pdfBtnText}>📄 Exporter PDF</Text>
                         }
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.deleteBtn}
+                        onPress={() => deleteChecklist(cl)}
+                      >
+                        <Text style={styles.deleteBtnText}>🗑 Supprimer</Text>
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -1004,9 +1037,11 @@ const styles = StyleSheet.create({
   clDate: { color: '#607D8B', fontSize: 12 },
   clTitle: { color: '#FFFFFF', fontSize: 15, fontWeight: 'bold', marginBottom: 4 },
   clSite: { color: '#607D8B', fontSize: 12, marginBottom: 10 },
-  clActions: { flexDirection: 'row' },
+  clActions: { flexDirection: 'row', gap: 8 },
   pdfBtn: { backgroundColor: '#C9A84C', borderRadius: 8, paddingHorizontal: 14, paddingVertical: 8 },
   pdfBtnText: { color: '#0A1628', fontWeight: 'bold', fontSize: 12 },
+  deleteBtn: { backgroundColor: '#E74C3C', borderRadius: 8, paddingHorizontal: 14, paddingVertical: 8 },
+  deleteBtnText: { color: '#FFFFFF', fontWeight: 'bold', fontSize: 12 },
 
   typeContainer: { padding: 20, gap: 16 },
   typeCard: {
