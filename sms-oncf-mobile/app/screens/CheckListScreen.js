@@ -244,11 +244,12 @@ const ITEMS_CHANTIER = [
     section: 'Agrès',
     sousSection: 'Vérification agrès',
     points: [
-      'Tenue réglementaire et gilet de sécurité', 'GSMR',
-      'Torches à flamme rouge', 'Pétards', 'Lanternes',
+      'GSMR', 'Clés de berne', 'Clés de vestibule', 'Lanternes', 'SAM', 'Pétards',
+      'Tenue réglementaire et gilet de sécurité', 'Torches à flamme rouge',
       'Drapeaux rouge à main et sur jalon et Drapeaux blancs',
-      'Moyens de communication entre acteurs clés',
-      'Trompes à grande puissance', 'Agrès pour engin',
+      'Moyens de communication entre acteurs clés', 'Trompes à grande puissance',
+      'Agrès pour engin', 'Moyens d’intervention rapides en cas de panne d’engins',
+      'Agrès de consolidation', 'Connexion volante de retour de courant'
     ]
   },
   {
