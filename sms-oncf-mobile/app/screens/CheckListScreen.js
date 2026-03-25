@@ -936,6 +936,15 @@ export default function CheckListScreen({ navigation }) {
                         ...prev, [key]: { ...state, constatation: v }
                       }))}
                     />
+                    <TextInput
+                      style={[styles.smallInput, { marginTop: 8 }]}
+                      placeholder="Régularisation..."
+                      placeholderTextColor="#607D8B"
+                      value={state.regularisation}
+                      onChangeText={v => setItemsState(prev => ({
+                        ...prev, [key]: { ...state, regularisation: v }
+                      }))}
+                    />
                   </View>
                 );
               })}
