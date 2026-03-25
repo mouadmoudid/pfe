@@ -18,6 +18,9 @@ const COTATION_COLORS = {
   S: '#27AE60', A: '#E67E22', M: '#E74C3C', I: '#8E44AD', NA: '#607D8B'
 };
 
+// Les 6 agrès avec détails (Complétude/État/Validité + Régularisation)
+const AGRES_DETAIL_NOMS = ['GSMR', 'Clés de berne', 'Clés de vestibule', 'Lanternes', 'SAM', 'Pétards'];
+
 const ITEMS_COLLABORATEUR = [
   {
     section: 'Procédures collaborateur',
@@ -126,7 +129,7 @@ const ITEMS_COLLABORATEUR = [
 ];
 
 const ITEMS_CHANTIER = [
-   {
+  {
     section: 'Indicateurs de fiabilité humaine',
     sousSection: 'Indicateurs d\'alerte professionnels',
     points: [
@@ -244,12 +247,18 @@ const ITEMS_CHANTIER = [
     section: 'Agrès',
     sousSection: 'Vérification agrès',
     points: [
+      // 6 premiers : S/A/M/I + Complétude/État/Validité/Régularisation
       'GSMR', 'Clés de berne', 'Clés de vestibule', 'Lanternes', 'SAM', 'Pétards',
-      'Tenue réglementaire et gilet de sécurité', 'Torches à flamme rouge',
+      // Reste : S/A/M/I uniquement
+      'Tenue réglementaire et gilet de sécurité',
+      'Torches à flamme rouge',
       'Drapeaux rouge à main et sur jalon et Drapeaux blancs',
-      'Moyens de communication entre acteurs clés', 'Trompes à grande puissance',
-      'Agrès pour engin', 'Moyens d’intervention rapides en cas de panne d’engins',
-      'Agrès de consolidation', 'Connexion volante de retour de courant'
+      'Moyens de communication entre acteurs clés',
+      'Trompes à grande puissance',
+      'Agrès pour engin',
+      'Moyens d\'intervention rapides en cas de panne d\'engins',
+      'Agrès de consolidation',
+      'Connexion volante de retour de courant',
     ]
   },
   {
@@ -321,13 +330,28 @@ export default function CheckListScreen({ navigation }) {
     } catch {}
   };
 
+  const isAgresDetail = (sousSection, pointNom) => {
+    return sousSection === 'Vérification agrès' && AGRES_DETAIL_NOMS.includes(pointNom);
+  };
+
   const initItems = (checkType) => {
     const structure = checkType === 'COLLABORATEUR' ? ITEMS_COLLABORATEUR : ITEMS_CHANTIER;
     const initial = {};
     structure.forEach((section, si) => {
       section.points.forEach((point, pi) => {
         const key = `${si}_${pi}`;
-        initial[key] = { cotation: 'S', constatation: '', regularisation: '' };
+        if (isAgresDetail(section.sousSection, point)) {
+          initial[key] = {
+            cotation: 'S',
+            completude: 'Oui',
+            etat: 'Bon',
+            validite: '',
+            constatation: '',
+            regularisation: '',
+          };
+        } else {
+          initial[key] = { cotation: 'S', constatation: '', regularisation: '' };
+        }
       });
     });
     setItemsState(initial);
@@ -345,19 +369,23 @@ export default function CheckListScreen({ navigation }) {
         section.points.forEach((point, pi) => {
           const key = `${si}_${pi}`;
           const state = itemsState[key] || {};
+          const hasDetail = isAgresDetail(section.sousSection, point);
+
           items.push({
             section: section.section,
             sousSection: section.sousSection,
             pointCle: point,
             cotation: state.cotation || 'S',
-            constatation: state.constatation || '',
+            constatation: hasDetail
+              ? `Completude:${state.completude || 'Oui'}|Etat:${state.etat || 'Bon'}|Validite:${state.validite || ''}|Note:${state.constatation || ''}`
+              : state.constatation || '',
             regularisation: state.regularisation || '',
             ordre: ordre++,
           });
         });
       });
 
-      // Ajouter item global Documentation
+      // Ajouter item global Documentation pour COLLABORATEUR
       if (type === 'COLLABORATEUR') {
         items.push({
           section: 'Documentation',
@@ -413,7 +441,7 @@ export default function CheckListScreen({ navigation }) {
               Alert.alert('Succès', 'Check list supprimée');
               loadChecklists();
             } catch (error) {
-              const msg = error?.response?.data?.message || error?.response?.data || error.message || 'Impossible de supprimer la check list';
+              const msg = error?.response?.data?.message || error?.response?.data || error.message || 'Impossible de supprimer';
               Alert.alert('Erreur', msg.toString());
             }
           }
@@ -431,7 +459,6 @@ export default function CheckListScreen({ navigation }) {
       });
       const data = detail.data;
 
-      // Extraire les données globales documentation
       const globalItem = (data.items || []).find(i => i.pointCle === '__GLOBAL__');
       let docExistence = 'OUI', docMiseAJour = 'OUI';
       if (globalItem?.constatation) {
@@ -460,20 +487,49 @@ export default function CheckListScreen({ navigation }) {
         }
       };
 
+      const parseAgresDetail = (constatation) => {
+        if (!constatation || !constatation.includes('Completude:')) return null;
+        const parts = constatation.split('|');
+        return {
+          completude: parts[0]?.replace('Completude:', '') || 'Oui',
+          etat: parts[1]?.replace('Etat:', '') || 'Bon',
+          validite: parts[2]?.replace('Validite:', '') || '',
+          note: parts[3]?.replace('Note:', '') || '',
+        };
+      };
+
       let sectionsHtml = '';
       Object.entries(grouped).forEach(([section, sousSections]) => {
         let rowsHtml = '';
         Object.entries(sousSections).forEach(([sousSec, items]) => {
           items.forEach((item, idx) => {
-            rowsHtml += `
-              <tr>
-                ${idx === 0 ? `<td rowspan="${items.length}" style="vertical-align:middle;font-weight:bold;font-size:11px;background:#f8f9fa;">${sousSec}</td>` : ''}
-                <td style="font-size:11px;">${item.pointCle}</td>
-                <td style="text-align:center;font-weight:bold;color:${cotColor(item.cotation)}">${item.cotation || ''}</td>
-                <td style="text-align:center;font-size:11px;">${item.constatation || ''}</td>
-                <td style="text-align:center;font-size:11px;">${item.regularisation || ''}</td>
-              </tr>
-            `;
+            const agresData = parseAgresDetail(item.constatation);
+            if (agresData) {
+              // Ligne avec détails agrès
+              rowsHtml += `
+                <tr>
+                  ${idx === 0 ? `<td rowspan="${items.length}" style="vertical-align:middle;font-weight:bold;font-size:11px;background:#f8f9fa;">${sousSec}</td>` : ''}
+                  <td style="font-size:11px;">${item.pointCle}</td>
+                  <td style="text-align:center;font-weight:bold;color:${cotColor(item.cotation)}">${item.cotation || ''}</td>
+                  <td style="font-size:10px;">
+                    <span style="color:${agresData.completude === 'Oui' ? '#27AE60' : '#E74C3C'}">C: ${agresData.completude}</span> |
+                    <span style="color:${agresData.etat === 'Bon' ? '#27AE60' : '#E74C3C'}">E: ${agresData.etat}</span>
+                    ${agresData.validite ? `| V: ${agresData.validite}` : ''}
+                  </td>
+                  <td style="font-size:10px;">${item.regularisation || ''}</td>
+                </tr>
+              `;
+            } else {
+              rowsHtml += `
+                <tr>
+                  ${idx === 0 ? `<td rowspan="${items.length}" style="vertical-align:middle;font-weight:bold;font-size:11px;background:#f8f9fa;">${sousSec}</td>` : ''}
+                  <td style="font-size:11px;">${item.pointCle}</td>
+                  <td style="text-align:center;font-weight:bold;color:${cotColor(item.cotation)}">${item.cotation || ''}</td>
+                  <td style="text-align:center;font-size:11px;">${item.constatation || ''}</td>
+                  <td style="text-align:center;font-size:11px;">${item.regularisation || ''}</td>
+                </tr>
+              `;
+            }
           });
         });
 
@@ -484,7 +540,6 @@ export default function CheckListScreen({ navigation }) {
           ${rowsHtml}
         `;
 
-        // Ajouter ligne Existence/MiseAJour pour la section Documentation
         if (section === 'Documentation') {
           sectionsHtml += `
             <tr style="background:#E8F5E9;">
@@ -555,8 +610,8 @@ export default function CheckListScreen({ navigation }) {
             <div class="info-value">${data.chantierNom || '-'}</div>
           </div>
           <div class="info-box">
-            <div class="info-label">Type chantier</div>
-            <div class="info-value">${data.chantierType || '-'}</div>
+            <div class="info-label">IS/Km</div>
+            <div class="info-value">${data.isKm || '-'}</div>
           </div>
           `}
           <div class="info-box">
@@ -570,8 +625,8 @@ export default function CheckListScreen({ navigation }) {
               <th style="width:150px">Objet du contrôle</th>
               <th>(Thèmes) Points clés</th>
               <th style="width:50px">Cotation</th>
-              <th style="width:120px">Constatation</th>
-              <th style="width:120px">Régularisation</th>
+              <th style="width:150px">Constatation / Détail</th>
+              <th style="width:120px">Régularisation / Actions</th>
             </tr>
           </thead>
           <tbody>${sectionsHtml}</tbody>
@@ -908,10 +963,17 @@ export default function CheckListScreen({ navigation }) {
 
               {section.points.map((point, pi) => {
                 const key = `${si}_${pi}`;
-                const state = itemsState[key] || { cotation: 'S', constatation: '', regularisation: '' };
+                const hasDetail = isAgresDetail(section.sousSection, point);
+                const state = itemsState[key] || {
+                  cotation: 'S', constatation: '', regularisation: '',
+                  completude: 'Oui', etat: 'Bon', validite: '',
+                };
+
                 return (
                   <View key={pi} style={styles.itemRow}>
                     <Text style={styles.pointText}>{point}</Text>
+
+                    {/* Cotation S/A/M/I — pour tous */}
                     <View style={styles.cotationRow}>
                       {COTATIONS.map(cot => (
                         <TouchableOpacity
@@ -923,8 +985,7 @@ export default function CheckListScreen({ navigation }) {
                             borderColor: COTATION_COLORS[cot],
                           }]}
                           onPress={() => setItemsState(prev => ({
-                            ...prev,
-                            [key]: { ...state, cotation: cot }
+                            ...prev, [key]: { ...state, cotation: cot }
                           }))}
                         >
                           <Text style={[styles.cotBtnText, {
@@ -933,20 +994,84 @@ export default function CheckListScreen({ navigation }) {
                         </TouchableOpacity>
                       ))}
                     </View>
+
+                    {/* Complétude/État/Validité — uniquement pour les 6 premiers agrès */}
+                    {hasDetail && (
+                      <>
+                        <View style={styles.agreFields}>
+                          <View style={styles.agreField}>
+                            <Text style={styles.agreLabel}>Complétude</Text>
+                            <View style={styles.ouiNonRow}>
+                              {['Oui', 'Non'].map(val => (
+                                <TouchableOpacity
+                                  key={val}
+                                  style={[styles.ouiNonBtn, {
+                                    backgroundColor: state.completude === val
+                                      ? (val === 'Oui' ? '#27AE60' : '#E74C3C')
+                                      : '#1A2F4A',
+                                    borderColor: val === 'Oui' ? '#27AE60' : '#E74C3C',
+                                  }]}
+                                  onPress={() => setItemsState(prev => ({
+                                    ...prev, [key]: { ...state, completude: val }
+                                  }))}
+                                >
+                                  <Text style={{ color: '#fff', fontSize: 11, fontWeight: 'bold' }}>{val}</Text>
+                                </TouchableOpacity>
+                              ))}
+                            </View>
+                          </View>
+                          <View style={styles.agreField}>
+                            <Text style={styles.agreLabel}>État</Text>
+                            <View style={styles.ouiNonRow}>
+                              {['Bon', 'Mauvais'].map(val => (
+                                <TouchableOpacity
+                                  key={val}
+                                  style={[styles.ouiNonBtn, {
+                                    backgroundColor: state.etat === val
+                                      ? (val === 'Bon' ? '#27AE60' : '#E74C3C')
+                                      : '#1A2F4A',
+                                    borderColor: val === 'Bon' ? '#27AE60' : '#E74C3C',
+                                  }]}
+                                  onPress={() => setItemsState(prev => ({
+                                    ...prev, [key]: { ...state, etat: val }
+                                  }))}
+                                >
+                                  <Text style={{ color: '#fff', fontSize: 10, fontWeight: 'bold' }}>{val}</Text>
+                                </TouchableOpacity>
+                              ))}
+                            </View>
+                          </View>
+                        </View>
+                        <Text style={styles.agreLabel}>Validité</Text>
+                        <TextInput
+                          style={styles.smallInput}
+                          placeholder="Ex: Oui / Non / Date..."
+                          placeholderTextColor="#607D8B"
+                          value={state.validite || ''}
+                          onChangeText={v => setItemsState(prev => ({
+                            ...prev, [key]: { ...state, validite: v }
+                          }))}
+                        />
+                      </>
+                    )}
+
+                    {/* Constatation — pour tous */}
                     <TextInput
-                      style={styles.smallInput}
+                      style={[styles.smallInput, { marginTop: 8 }]}
                       placeholder="Constatation..."
                       placeholderTextColor="#607D8B"
-                      value={state.constatation}
+                      value={state.constatation || ''}
                       onChangeText={v => setItemsState(prev => ({
                         ...prev, [key]: { ...state, constatation: v }
                       }))}
                     />
+
+                    {/* Régularisation — pour tous */}
                     <TextInput
-                      style={[styles.smallInput, { marginTop: 8 }]}
-                      placeholder="Régularisation..."
+                      style={[styles.smallInput, { marginTop: 6 }]}
+                      placeholder="Régularisation / Actions..."
                       placeholderTextColor="#607D8B"
-                      value={state.regularisation}
+                      value={state.regularisation || ''}
                       onChangeText={v => setItemsState(prev => ({
                         ...prev, [key]: { ...state, regularisation: v }
                       }))}
@@ -980,9 +1105,7 @@ export default function CheckListScreen({ navigation }) {
                         }]}
                         onPress={() => setDocGlobal({ ...docGlobal, existence: val })}
                       >
-                        <Text style={{ color: '#fff', fontSize: 13, fontWeight: 'bold' }}>
-                          {val}
-                        </Text>
+                        <Text style={{ color: '#fff', fontSize: 13, fontWeight: 'bold' }}>{val}</Text>
                       </TouchableOpacity>
                     ))}
                   </View>
@@ -1002,9 +1125,7 @@ export default function CheckListScreen({ navigation }) {
                         }]}
                         onPress={() => setDocGlobal({ ...docGlobal, miseAJour: val })}
                       >
-                        <Text style={{ color: '#fff', fontSize: 13, fontWeight: 'bold' }}>
-                          {val}
-                        </Text>
+                        <Text style={{ color: '#fff', fontSize: 13, fontWeight: 'bold' }}>{val}</Text>
                       </TouchableOpacity>
                     ))}
                   </View>
@@ -1103,6 +1224,17 @@ const styles = StyleSheet.create({
     borderRadius: 6, padding: 8, color: '#FFFFFF', fontSize: 12,
   },
 
+  // Agrès détails
+  agreFields: { flexDirection: 'row', gap: 12, marginBottom: 8, marginTop: 4 },
+  agreField: { flex: 1 },
+  agreLabel: { color: '#607D8B', fontSize: 11, marginBottom: 6, marginTop: 4 },
+  ouiNonRow: { flexDirection: 'row', gap: 6 },
+  ouiNonBtn: {
+    flex: 1, paddingVertical: 8,
+    borderRadius: 6, borderWidth: 1,
+    alignItems: 'center', justifyContent: 'center',
+  },
+
   // Documentation globale
   docGlobalBox: {
     backgroundColor: '#0F2137', borderRadius: 12,
@@ -1112,12 +1244,6 @@ const styles = StyleSheet.create({
   docRow: { flexDirection: 'row', gap: 12, marginTop: 8 },
   docField: { flex: 1 },
   docFieldLabel: { color: '#B0BEC5', fontSize: 12, marginBottom: 8 },
-  ouiNonRow: { flexDirection: 'row', gap: 8 },
-  ouiNonBtn: {
-    flex: 1, paddingVertical: 12,
-    borderRadius: 8, borderWidth: 1,
-    alignItems: 'center', justifyContent: 'center',
-  },
 
   modalOverlay: {
     flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end',

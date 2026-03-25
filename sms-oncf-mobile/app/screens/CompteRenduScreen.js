@@ -48,7 +48,7 @@ export default function CompteRenduScreen({ navigation }) {
       const res = await axios.get(`${CL_API}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setChecklists(res.data.filter(cl => cl.type === 'COLLABORATEUR'));
+      setChecklists(res.data.filter(cl => cl.type === 'COLLABORATEUR' || cl.type === 'CHANTIER'));
     } catch {
       Alert.alert('Erreur', 'Impossible de charger les check lists');
     } finally {
@@ -117,6 +117,7 @@ export default function CompteRenduScreen({ navigation }) {
       const currentUser = userData ? JSON.parse(userData) : {};
       const data = selectedCL;
       const items = data.items || [];
+      const isChantier = data.type === 'CHANTIER';
 
       const globalItem = items.find(i => i.pointCle === '__GLOBAL__');
       let docExistence = 'OUI', docMiseAJour = 'OUI';
@@ -128,230 +129,420 @@ export default function CompteRenduScreen({ navigation }) {
 
       const date = data.dateControle || new Date().toLocaleDateString('fr-FR');
 
-      const sousSections = [
-        'SP320', 'Règlement S2B',
-        'Règlements S9A et leurs consignes',
-        'Règlements S9B et leurs consignes',
-        'Consigne générale S2CN°4',
-        'Consignes locales', 'Guide pratiques Voie', 'Référentiels LGV',
-      ];
+      let html = '';
 
-      const hasNonConformite = items
-        .filter(i => i.section === 'Procédures collaborateur')
-        .some(i => i.cotation === 'A' || i.cotation === 'M');
+      if (isChantier) {
+        // Generate CHANTIER report
+        const chantierSections = [
+          { section: 'Collaborateurs sécurité', sousSection: 'Rôles' },
+          { section: 'Avant départ au chantier', sousSection: 'Préparation' },
+          { section: 'Au Chantier', sousSection: 'Mise en place' },
+          { section: 'Au Chantier', sousSection: 'Circulation' },
+          { section: 'À la Fin des Travaux', sousSection: 'Clôture' },
+          { section: 'Consignes', sousSection: 'Vérification' },
+          { section: 'Documents', sousSection: 'Vérification documents' },
+          { section: 'Agrès', sousSection: 'Vérification agrès' },
+          { section: 'Environnement', sousSection: 'État des lieux' },
+        ];
 
-      const section1Rows = sousSections.map(ss => {
-        const moyenne = getMoyenneSousSection(
-          items.filter(i => i.section === 'Procédures collaborateur'), ss
-        );
-        return { sousSection: ss, moyenne };
-      }).filter(row => items.some(i => i.sousSection === row.sousSection));
+        const indicateurs = [
+          { label: 'Indicateurs d\'alerte professionnels', sousSection: 'Indicateurs d\'alerte professionnels' },
+          { label: 'Indicateurs d\'alerte sociologiques', sousSection: 'Indicateurs d\'alerte sociologiques' },
+          { label: 'Indicateurs d\'alerte psychologiques', sousSection: 'Indicateurs d\'alerte psychologiques' },
+          { label: 'Indicateurs d\'alerte physiologiques et médicaux', sousSection: 'Indicateurs d\'alerte physiologiques et médicaux' },
+        ];
 
-      const section1Html = section1Rows.length > 0 ? `
-        <tr>
-          <td rowspan="${section1Rows.length}" style="vertical-align:middle;font-weight:bold;font-size:11px;text-align:center;">
-            ${data.collaborateurNom || '-'}<br/>
-            <small style="color:#607D8B;">${data.collaborateurMatricule || ''}</small>
-          </td>
-          <td rowspan="${section1Rows.length}" style="vertical-align:middle;font-size:11px;text-align:center;">
-            Technicien Maintenance Voie LGV
-          </td>
-          ${section1Rows.map((row, idx) => `
-            ${idx > 0 ? '</tr><tr>' : ''}
-            <td style="font-size:11px;color:#E67E22;">${row.sousSection}</td>
-            <td style="text-align:center;font-weight:bold;color:${cotationColor(row.moyenne)};background:${cotationColor(row.moyenne)}20;padding:4px 8px;">
-              ${row.moyenne}
-            </td>
-            ${idx === 0 ? `
-            <td rowspan="${section1Rows.length}" style="vertical-align:middle;font-size:10px;color:#607D8B;">
-              Sur les Connaissances / Vif
-            </td>
-            <td rowspan="${section1Rows.length}" style="vertical-align:middle;font-size:10px;">
-              ${hasNonConformite ? 'Sensibiliser le collaborateur sur les écarts relevés.' : 'RAS'}
-            </td>
-            ` : ''}
-          `).join('')}
-        </tr>
-      ` : `<tr><td colspan="6" style="text-align:center;color:#607D8B;">Aucune donnée</td></tr>`;
+        const chantierRows = chantierSections.map(sec => {
+          const moyenne = getMoyenneSousSection(items.filter(i => i.section === sec.section), sec.sousSection);
+          return { section: sec.section, sousSection: sec.sousSection, moyenne };
+        }).filter(row => items.some(i => i.section === row.section && i.sousSection === row.sousSection));
 
-      const section2Html = section2.lieu || section2.constatations ? `
-        <tr>
-          <td style="font-size:11px;">${section2.lieu || ''}</td>
-          <td style="font-size:11px;">${section2.constatations || 'RAS'}</td>
-          <td style="font-size:11px;">${section2.isKm || ''}</td>
-          <td style="font-size:11px;">${section2.actions || ''}</td>
-        </tr>
-      ` : `
-        <tr><td colspan="4" style="text-align:center;color:#607D8B;font-size:11px;">RAS</td></tr>
-      `;
+        const indicateursHtml = indicateurs.map(ind => {
+          const constat = getIndicateurConstat(items, ind.sousSection);
+          return `
+            <tr>
+              <td style="font-size:11px;">${ind.label}</td>
+              <td style="text-align:center;font-size:11px;color:${constat === 'RAS' ? '#27AE60' : '#E67E22'};">${constat}</td>
+              <td style="font-size:11px;"></td>
+            </tr>
+          `;
+        }).join('');
 
-      const agresHtml = section4.map(a => `
-        <tr>
-          <td style="font-size:11px;font-weight:bold;">${a.nom}</td>
-          <td style="text-align:center;font-size:11px;font-weight:bold;color:${a.completude === 'Oui' ? '#27AE60' : '#E74C3C'};">
-            ${a.completude}
-          </td>
-          <td style="text-align:center;font-size:11px;font-weight:bold;color:${a.etat === 'Bon' ? '#27AE60' : '#E74C3C'};">
-            ${a.etat}
-          </td>
-          <td style="text-align:center;font-size:11px;"></td>
-          <td style="text-align:center;font-size:11px;"></td>
-          <td style="font-size:10px;color:#E74C3C;">${a.actions}</td>
-        </tr>
-      `).join('');
-
-      const indicateurs = [
-        { label: 'Indicateurs d\'alerte professionnels', sousSection: 'Indicateurs d\'alerte professionnels' },
-        { label: 'Indicateurs d\'alerte sociologiques', sousSection: 'Indicateurs d\'alerte sociologiques' },
-        { label: 'Indicateurs d\'alerte psychologiques', sousSection: 'Indicateurs d\'alerte psychologiques' },
-        { label: 'Indicateurs d\'alerte physiologiques et médicaux', sousSection: 'Indicateurs d\'alerte physiologiques et médicaux' },
-      ];
-
-      const indicateursHtml = indicateurs.map(ind => {
-        const constat = getIndicateurConstat(items, ind.sousSection);
-        return `
+        const section2Html = section2.lieu || section2.constatations ? `
           <tr>
-            <td style="font-size:11px;">${ind.label}</td>
-            <td style="text-align:center;font-size:11px;color:${constat === 'RAS' ? '#27AE60' : '#E67E22'};">${constat}</td>
-            <td style="font-size:11px;"></td>
+            <td style="font-size:11px;">${section2.lieu || ''}</td>
+            <td style="font-size:11px;">${section2.constatations || 'RAS'}</td>
+            <td style="font-size:11px;">${section2.isKm || ''}</td>
+            <td style="font-size:11px;">${section2.actions || ''}</td>
           </tr>
+        ` : `
+          <tr><td colspan="4" style="text-align:center;color:#607D8B;font-size:11px;">RAS</td></tr>
         `;
-      }).join('');
 
-      const section7Html = section7.map(row => `
-        <tr>
-          <td style="font-size:11px;">${row.rubrique || ''}</td>
-          <td style="font-size:11px;">${row.constatations || ''}</td>
-          <td style="font-size:11px;">${row.actions || ''}</td>
-        </tr>
-      `).join('');
-
-      const html = `
-        <!DOCTYPE html><html><head><meta charset="UTF-8">
-        <style>
-          * { margin: 0; padding: 0; box-sizing: border-box; }
-          body { font-family: Arial, sans-serif; font-size: 11px; color: #1a1a2e; padding: 16px; }
-          .header-top { display: grid; grid-template-columns: 1fr 2fr 1fr; border: 1px solid #ccc; margin-bottom: 8px; }
-          .header-cell { padding: 6px 10px; border-right: 1px solid #ccc; font-size: 10px; }
-          .header-center { text-align: center; font-weight: bold; }
-          table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
-          th { background: #1E3A5F; color: white; padding: 6px 8px; font-size: 10px; text-align: left; }
-          td { padding: 5px 8px; border: 1px solid #ddd; vertical-align: middle; }
-          tr:nth-child(even) td { background: #f9f9f9; }
-          .info-table td { padding: 5px 8px; border: 1px solid #ccc; }
-          .info-label { background: #f0f0f0; font-weight: bold; width: 200px; }
-          .section-title { font-weight: bold; text-decoration: underline; font-size: 12px; margin: 12px 0 6px; }
-          .footer-sig { display: flex; justify-content: space-between; margin-top: 20px; font-size: 11px; border-top: 1px solid #ccc; padding-top: 10px; }
-          .oncf-logo { color: #C9A84C; font-size: 18px; font-weight: bold; letter-spacing: 2px; }
-        </style>
-        </head><body>
-
-        <div class="header-top">
-          <div class="header-cell">
-            <div>Référence : DR.PSC.M1C.CISF.024</div>
-            <div>Version 1 du 20/06/2013</div>
-            <div>Contrôle et inspection sécurité ferroviaire</div>
-            <div>Page 1 sur 1</div>
-          </div>
-          <div class="header-cell header-center" style="display:flex;flex-direction:column;justify-content:center;align-items:center;gap:4px;">
-            <div class="oncf-logo">ONCF</div>
-            <div>Compte Rendu de contrôles des procédures, documentation,</div>
-            <div>installations matériel et autres équipement</div>
-          </div>
-          <div class="header-cell" style="text-align:right;">
-            <div>Pole Infrastructure & Circulation</div>
-            <div style="font-weight:bold;">D R I Centre.</div>
-            <div style="font-weight:bold;font-size:14px;">*KN1</div>
-          </div>
-        </div>
-
-        <table class="info-table" style="margin-bottom:8px;">
+        const agresHtml = section4.map(a => `
           <tr>
-            <td class="info-label">Date du contrôle :</td>
-            <td colspan="3">${date}</td>
-          </tr>
-          <tr>
-            <td class="info-label">Contrôle réalisé par :</td>
-            <td>Mr. ${currentUser.fullName || '___________'}</td>
-            <td class="info-label">Fonction : CDT Adjoint KN1</td>
-            <td></td>
-          </tr>
-          <tr>
-            <td class="info-label">Entité ou site contrôlé :</td>
-            <td colspan="3">Collaborateur — ${data.siteUp || ''}</td>
-          </tr>
-        </table>
+            <td style="font-size:11px;font-weight:bold;">${a.nom}</td>
+            <td style="text-align:center;font-size:11px;font-weight:bold;color:${a.completude === 'Oui' ? '#27AE60' : '#E74C3C'};">
+              ${a.completude}
+            </td>
+            <td style="text-align:center;font-size:11px;font-weight:bold;color:${a.etat === 'Bon' ? '#27AE60' : '#E74C3C'};">
+              ${a.etat}
+            </td>
+            <td style="text-align:center;font-size:11px;"></td>
+            <td style="text-align:center;font-size:11px;"></td>
+            <td style="font-size:10px;color:#E74C3C;">${a.actions}</td>
+          </tr>`).join('');
 
-        <div style="border:1px solid #ccc;padding:8px;margin-bottom:10px;">
-          <div style="font-weight:bold;font-size:11px;margin-bottom:6px;">Enregistrements SMS utilisés :</div>
-          <div style="display:flex;flex-wrap:wrap;gap:2px;">
-            <div style="width:48%;font-size:10px;">✓ Check-list du contrôle de sécurité</div>
-            <div style="width:48%;font-size:10px;">_ Fiches de suivi individuel</div>
-            <div style="width:48%;font-size:10px;">_ Fiches de suivi des Sites</div>
-            <div style="width:48%;font-size:10px;">_ Fiche de classification des collaborateurs de sécurité</div>
-            <div style="width:48%;font-size:10px;">✓ Fiche d'indicateurs d'alerte relatifs à la fiabilité humaine</div>
-            <div style="width:48%;font-size:10px;">_ Cartographie des risques</div>
-            <div style="width:48%;font-size:10px;">_ Plan de veille collaborateurs/procédures</div>
-            <div style="width:48%;font-size:10px;">_ Compte-rendu du dernier contrôle de sécurité</div>
+        const section7Html = section7.map(row => `
+          <tr>
+            <td style="font-size:11px;">${row.rubrique || ''}</td>
+            <td style="font-size:11px;">${row.constatations || ''}</td>
+            <td style="font-size:11px;">${row.actions || ''}</td>
+          </tr>
+        `).join('');
+
+        html = `
+          <!DOCTYPE html><html><head><meta charset="UTF-8">
+          <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { font-family: Arial, sans-serif; font-size: 11px; color: #1a1a2e; padding: 16px; }
+            .header-top { display: grid; grid-template-columns: 1fr 2fr 1fr; border: 1px solid #ccc; margin-bottom: 8px; }
+            .header-cell { padding: 6px 10px; border-right: 1px solid #ccc; font-size: 10px; }
+            .header-center { text-align: center; font-weight: bold; }
+            table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+            th { background: #1E3A5F; color: white; padding: 6px 8px; font-size: 10px; text-align: left; }
+            td { padding: 5px 8px; border: 1px solid #ddd; vertical-align: middle; }
+            tr:nth-child(even) td { background: #f9f9f9; }
+            .info-table td { padding: 5px 8px; border: 1px solid #ccc; }
+            .info-label { background: #f0f0f0; font-weight: bold; width: 200px; }
+            .section-title { font-weight: bold; text-decoration: underline; font-size: 12px; margin: 12px 0 6px; }
+            .footer-sig { display: flex; justify-content: space-between; margin-top: 20px; font-size: 11px; border-top: 1px solid #ccc; padding-top: 10px; }
+            .oncf-logo { color: #C9A84C; font-size: 18px; font-weight: bold; letter-spacing: 2px; }
+          </style>
+          </head><body>
+
+          <div class="header-top">
+            <div class="header-cell">
+              <div>Référence : DR.PSC.M1C.CISF.024</div>
+              <div>Version 1 du 20/06/2013</div>
+              <div>Contrôle et inspection sécurité ferroviaire</div>
+              <div>Page 1 sur 1</div>
+            </div>
+            <div class="header-cell header-center" style="display:flex;flex-direction:column;justify-content:center;align-items:center;gap:4px;">
+              <div class="oncf-logo">ONCF</div>
+              <div>Compte Rendu de contrôles des procédures, documentation,</div>
+              <div>installations matériel et autres équipement</div>
+            </div>
+            <div class="header-cell" style="text-align:right;">
+              <div>Pole Infrastructure & Circulation</div>
+              <div style="font-weight:bold;">D R I Centre.</div>
+              <div style="font-weight:bold;font-size:14px;">*KN1</div>
+            </div>
           </div>
-        </div>
 
-        <div class="section-title">1. COLLABORATEURS/PROCEDURES :</div>
-        <table>
-          <thead>
+          <table class="info-table" style="margin-bottom:8px;">
             <tr>
-              <th style="width:130px;">Collaborateurs contrôlés</th>
-              <th style="width:120px;">Fonction occupée</th>
-              <th>Non-conformités relevées</th>
-              <th style="width:70px;">Nature de contrôle</th>
-              <th style="width:70px;">Cotation</th>
-              <th style="width:150px;">Actions réalisées ou programmées</th>
+              <td class="info-label">Date du contrôle :</td>
+              <td colspan="3">${date}</td>
             </tr>
-          </thead>
-          <tbody>${section1Html}</tbody>
-        </table>
-
-        <div class="section-title">2. INSTALLATIONS ET EQUIPEMENTS :</div>
-        <table>
-          <thead>
             <tr>
-              <th>Lieu</th>
-              <th>Constatations</th>
-              <th style="width:80px;">IS/Km</th>
-              <th>Actions réalisées ou programmées</th>
-            </tr>
-          </thead>
-          <tbody>${section2Html}</tbody>
-        </table>
-
-        <div class="section-title">3. DOCUMENTATION :</div>
-        <table>
-          <thead>
-            <tr>
-              <th>Désignation</th>
-              <th style="width:80px;">Existence</th>
-              <th style="width:80px;">Mise à jour</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td rowspan="2">Documents à usage courant</td>
-              <td style="text-align:center;font-weight:bold;color:${docExistence === 'OUI' ? '#27AE60' : '#E74C3C'};">${docExistence}</td>
-              <td style="text-align:center;font-weight:bold;color:${docMiseAJour === 'OUI' ? '#27AE60' : '#E74C3C'};">${docMiseAJour}</td>
+              <td class="info-label">Contrôle réalisé par :</td>
+              <td>Mr. ${currentUser.fullName || '___________'}</td>
+              <td class="info-label">Fonction : CDT Adjoint KN1</td>
               <td></td>
             </tr>
             <tr>
-              <td style="text-align:center;font-weight:bold;color:${docExistence === 'OUI' ? '#27AE60' : '#E74C3C'};">${docExistence}</td>
-              <td style="text-align:center;font-weight:bold;color:${docMiseAJour === 'OUI' ? '#27AE60' : '#E74C3C'};">${docMiseAJour}</td>
+              <td class="info-label">Entité ou site contrôlé :</td>
+              <td colspan="3">Chantier — ${data.chantierNom || ''} (${data.chantierType || ''})</td>
+            </tr>
+          </table>
+
+          <div style="border:1px solid #ccc;padding:8px;margin-bottom:10px;">
+            <div style="font-weight:bold;font-size:11px;margin-bottom:6px;">Enregistrements SMS utilisés :</div>
+            <div style="display:flex;flex-wrap:wrap;gap:2px;">
+              <div style="width:48%;font-size:10px;">✓ Check-list du contrôle de sécurité chantier</div>
+              <div style="width:48%;font-size:10px;">_ Fiches de suivi individuel</div>
+              <div style="width:48%;font-size:10px;">_ Fiches de suivi des Sites</div>
+              <div style="width:48%;font-size:10px;">_ Fiche de classification des collaborateurs de sécurité</div>
+              <div style="width:48%;font-size:10px;">✓ Fiche d'indicateurs d'alerte relatifs à la fiabilité humaine</div>
+              <div style="width:48%;font-size:10px;">_ Cartographie des risques</div>
+              <div style="width:48%;font-size:10px;">_ Plan de veille collaborateurs/procédures</div>
+              <div style="width:48%;font-size:10px;">_ Compte-rendu du dernier contrôle de sécurité</div>
+            </div>
+          </div>
+
+          <div class="section-title">1. CONTRÔLE CHANTIER :</div>
+          <table>
+            <tr>
+              <th style="width:25%;">Section</th>
+              <th style="width:25%;">Sous-section</th>
+              <th style="width:15%;">Évaluation</th>
+              <th style="width:35%;">Actions correctives</th>
+            </tr>
+            ${chantierRows.map((row, idx) => `
+              <tr>
+                <td style="font-size:11px;font-weight:bold;">${row.section}</td>
+                <td style="font-size:11px;">${row.sousSection}</td>
+                <td style="text-align:center;font-weight:bold;color:${cotationColor(row.moyenne)};background:${cotationColor(row.moyenne)}20;padding:4px 8px;">
+                  ${row.moyenne}
+                </td>
+                <td style="font-size:10px;"></td>
+              </tr>
+            `).join('')}
+          </table>
+
+          <div class="section-title">2. INDICATEURS D'ALERTE FIABILITÉ HUMAINE :</div>
+          <table>
+            <tr>
+              <th style="width:50%;">Indicateur</th>
+              <th style="width:20%;">Constat</th>
+              <th style="width:30%;">Actions</th>
+            </tr>
+            ${indicateursHtml}
+          </table>
+
+          <div class="section-title">3. AGRÈS DE SÉCURITÉ :</div>
+          <table>
+            <tr>
+              <th style="width:25%;">Désignation</th>
+              <th style="width:15%;">Complétude</th>
+              <th style="width:15%;">État</th>
+              <th style="width:15%;">Validité</th>
+              <th style="width:15%;">Régularisation</th>
+              <th style="width:15%;">Actions</th>
+            </tr>
+            ${agresHtml}
+          </table>
+
+          <div class="section-title">4. AUTRES CONSTATIONS :</div>
+          <table>
+            <tr>
+              <th style="width:25%;">Lieu</th>
+              <th style="width:35%;">Constatations</th>
+              <th style="width:15%;">KM</th>
+              <th style="width:25%;">Actions</th>
+            </tr>
+            ${section2Html}
+          </table>
+
+          <div class="section-title">5. OBSERVATIONS GÉNÉRALES :</div>
+          <table>
+            <tr>
+              <th style="width:25%;">Rubrique</th>
+              <th style="width:35%;">Constatations</th>
+              <th style="width:40%;">Actions</th>
+            </tr>
+            ${section7Html}
+          </table>
+
+          <div class="footer-sig">
+            <div>
+              <div>Contrôleur : ___________________________</div>
+              <div style="margin-top:8px;">Date : ____/____/________</div>
+            </div>
+            <div>
+              <div>Visa hiérarchique : ___________________________</div>
+              <div style="margin-top:8px;">Date : ____/____/________</div>
+            </div>
+          </div>
+
+          </body></html>
+        `;
+      } else {
+        // Generate COLLABORATEUR report (existing code)
+        const sousSections = [
+          'SP320', 'Règlement S2B',
+          'Règlements S9A et leurs consignes',
+          'Règlements S9B et leurs consignes',
+          'Consigne générale S2CN°4',
+          'Consignes locales', 'Guide pratiques Voie', 'Référentiels LGV',
+        ];
+
+        const hasNonConformite = items
+          .filter(i => i.section === 'Procédures collaborateur')
+          .some(i => i.cotation === 'A' || i.cotation === 'M');
+
+        const section1Rows = sousSections.map(ss => {
+          const moyenne = getMoyenneSousSection(
+            items.filter(i => i.section === 'Procédures collaborateur'), ss
+          );
+          return { sousSection: ss, moyenne };
+        }).filter(row => items.some(i => i.sousSection === row.sousSection));
+
+        const indicateurs = [
+          { label: 'Indicateurs d\'alerte professionnels', sousSection: 'Indicateurs d\'alerte professionnels' },
+          { label: 'Indicateurs d\'alerte sociologiques', sousSection: 'Indicateurs d\'alerte sociologiques' },
+          { label: 'Indicateurs d\'alerte psychologiques', sousSection: 'Indicateurs d\'alerte psychologiques' },
+          { label: 'Indicateurs d\'alerte physiologiques et médicaux', sousSection: 'Indicateurs d\'alerte physiologiques et médicaux' },
+        ];
+
+        const indicateursHtml = indicateurs.map(ind => {
+          const constat = getIndicateurConstat(items, ind.sousSection);
+          return `
+            <tr>
+              <td style="font-size:11px;">${ind.label}</td>
+              <td style="text-align:center;font-size:11px;color:${constat === 'RAS' ? '#27AE60' : '#E67E22'};">${constat}</td>
+              <td style="font-size:11px;"></td>
+            </tr>
+          `;
+        }).join('');
+
+        const section7Html = section7.map(row => `
+          <tr>
+            <td style="font-size:11px;">${row.rubrique || ''}</td>
+            <td style="font-size:11px;">${row.constatations || ''}</td>
+            <td style="font-size:11px;">${row.actions || ''}</td>
+          </tr>
+        `).join('');
+
+        const section2Html = section2.lieu || section2.constatations ? `
+          <tr>
+            <td style="font-size:11px;">${section2.lieu || ''}</td>
+            <td style="font-size:11px;">${section2.constatations || 'RAS'}</td>
+            <td style="font-size:11px;">${section2.isKm || ''}</td>
+            <td style="font-size:11px;">${section2.actions || ''}</td>
+          </tr>
+        ` : `
+          <tr><td colspan="4" style="text-align:center;color:#607D8B;font-size:11px;">RAS</td></tr>
+        `;
+
+        const agresHtml = section4.map(a => `
+          <tr>
+            <td style="font-size:11px;font-weight:bold;">${a.nom}</td>
+            <td style="text-align:center;font-size:11px;font-weight:bold;color:${a.completude === 'Oui' ? '#27AE60' : '#E74C3C'};">
+              ${a.completude}
+            </td>
+            <td style="text-align:center;font-size:11px;font-weight:bold;color:${a.etat === 'Bon' ? '#27AE60' : '#E74C3C'};">
+              ${a.etat}
+            </td>
+            <td style="text-align:center;font-size:11px;"></td>
+            <td style="text-align:center;font-size:11px;"></td>
+            <td style="font-size:10px;color:#E74C3C;">${a.actions}</td>
+          </tr>`).join('');
+
+        const section1Html = section1Rows.length > 0 ? `
+            <tr>
+              <td rowspan="${section1Rows.length}" style="vertical-align:middle;font-weight:bold;font-size:11px;text-align:center;">
+                ${data.collaborateurNom || '-'}<br/>
+                <small style="color:#607D8B;">${data.collaborateurMatricule || ''}</small>
+              </td>
+              <td rowspan="${section1Rows.length}" style="vertical-align:middle;font-size:11px;text-align:center;">
+                Technicien Maintenance Voie LGV
+              </td>
+              ${section1Rows.map((row, idx) => `
+                ${idx > 0 ? '</tr><tr>' : ''}
+                <td style="font-size:11px;color:#E67E22;">${row.sousSection}</td>
+                <td style="text-align:center;font-weight:bold;color:${cotationColor(row.moyenne)};background:${cotationColor(row.moyenne)}20;padding:4px 8px;">
+                  ${row.moyenne}
+                </td>
+                ${idx === 0 ? `
+                <td rowspan="${section1Rows.length}" style="vertical-align:middle;font-size:10px;color:#607D8B;">
+                  Sur les Connaissances / Vif
+                </td>
+                <td rowspan="${section1Rows.length}" style="vertical-align:middle;font-size:10px;">
+                  ${hasNonConformite ? 'Sensibiliser le collaborateur sur les écarts relevés.' : 'RAS'}
+                </td>
+                ` : ''}
+              `).join('')}
+            </tr>
+            ` : `<tr><td colspan="6" style="text-align:center;color:#607D8B;">Aucune donnée</td></tr>`;
+
+        html = `
+          <!DOCTYPE html><html><head><meta charset="UTF-8">
+          <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { font-family: Arial, sans-serif; font-size: 11px; color: #1a1a2e; padding: 16px; }
+            .header-top { display: grid; grid-template-columns: 1fr 2fr 1fr; border: 1px solid #ccc; margin-bottom: 8px; }
+            .header-cell { padding: 6px 10px; border-right: 1px solid #ccc; font-size: 10px; }
+            .header-center { text-align: center; font-weight: bold; }
+            table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+            th { background: #1E3A5F; color: white; padding: 6px 8px; font-size: 10px; text-align: left; }
+            td { padding: 5px 8px; border: 1px solid #ddd; vertical-align: middle; }
+            tr:nth-child(even) td { background: #f9f9f9; }
+            .info-table td { padding: 5px 8px; border: 1px solid #ccc; }
+            .info-label { background: #f0f0f0; font-weight: bold; width: 200px; }
+            .section-title { font-weight: bold; text-decoration: underline; font-size: 12px; margin: 12px 0 6px; }
+            .footer-sig { display: flex; justify-content: space-between; margin-top: 20px; font-size: 11px; border-top: 1px solid #ccc; padding-top: 10px; }
+            .oncf-logo { color: #C9A84C; font-size: 18px; font-weight: bold; letter-spacing: 2px; }
+          </style>
+          </head><body>
+
+          <div class="header-top">
+            <div class="header-cell">
+              <div>Référence : DR.PSC.M1C.CISF.024</div>
+              <div>Version 1 du 20/06/2013</div>
+              <div>Contrôle et inspection sécurité ferroviaire</div>
+              <div>Page 1 sur 1</div>
+            </div>
+            <div class="header-cell header-center" style="display:flex;flex-direction:column;justify-content:center;align-items:center;gap:4px;">
+              <div class="oncf-logo">ONCF</div>
+              <div>Compte Rendu de contrôles des procédures, documentation,</div>
+              <div>installations matériel et autres équipement</div>
+            </div>
+            <div class="header-cell" style="text-align:right;">
+              <div>Pole Infrastructure & Circulation</div>
+              <div style="font-weight:bold;">D R I Centre.</div>
+              <div style="font-weight:bold;font-size:14px;">*KN1</div>
+            </div>
+          </div>
+
+          <table class="info-table" style="margin-bottom:8px;">
+            <tr>
+              <td class="info-label">Date du contrôle :</td>
+              <td colspan="3">${date}</td>
+            </tr>
+            <tr>
+              <td class="info-label">Contrôle réalisé par :</td>
+              <td>Mr. ${currentUser.fullName || '___________'}</td>
+              <td class="info-label">Fonction : CDT Adjoint KN1</td>
               <td></td>
             </tr>
-          </tbody>
-        </table>
+            <tr>
+              <td class="info-label">Entité ou site contrôlé :</td>
+              <td colspan="3">Collaborateur — ${data.siteUp || ''}</td>
+            </tr>
+          </table>
 
-        <div class="section-title">4. OUTILS ET AGRES DE SECURITE :</div>
-        <table>
-          <thead>
+          <div style="border:1px solid #ccc;padding:8px;margin-bottom:10px;">
+            <div style="font-weight:bold;font-size:11px;margin-bottom:6px;">Enregistrements SMS utilisés :</div>
+            <div style="display:flex;flex-wrap:wrap;gap:2px;">
+              <div style="width:48%;font-size:10px;">✓ Check-list du contrôle de sécurité</div>
+              <div style="width:48%;font-size:10px;">_ Fiches de suivi individuel</div>
+              <div style="width:48%;font-size:10px;">_ Fiches de suivi des Sites</div>
+              <div style="width:48%;font-size:10px;">_ Fiche de classification des collaborateurs de sécurité</div>
+              <div style="width:48%;font-size:10px;">✓ Fiche d'indicateurs d'alerte relatifs à la fiabilité humaine</div>
+              <div style="width:48%;font-size:10px;">_ Cartographie des risques</div>
+              <div style="width:48%;font-size:10px;">_ Plan de veille collaborateurs/procédures</div>
+              <div style="width:48%;font-size:10px;">_ Compte-rendu du dernier contrôle de sécurité</div>
+            </div>
+          </div>
+
+          <div class="section-title">1. COLLABORATEURS/PROCEDURES :</div>
+          <table>
+            <tr>
+              <th style="width:20%;">Collaborateur</th>
+              <th style="width:15%;">Fonction</th>
+              <th style="width:20%;">Sous-section</th>
+              <th style="width:10%;">Évaluation</th>
+              <th style="width:20%;">Objectif</th>
+              <th style="width:15%;">Actions</th>
+            </tr>
+            ${section1Html}
+          </table>
+
+          <div class="section-title">2. INSTALLATIONS & EQUIPEMENTS :</div>
+          <table>
+            <tr>
+              <th style="width:25%;">Lieu</th>
+              <th style="width:35%;">Constatations</th>
+              <th style="width:15%;">IS/Km</th>
+              <th style="width:25%;">Actions</th>
+            </tr>
+            ${section2Html}
+          </table>
+
+          <div class="section-title">3. OUTILS ET AGRES DE SECURITE :</div>
+          <table>
             <tr>
               <th>Désignation</th>
               <th style="width:70px;">Complétude</th>
@@ -360,52 +551,54 @@ export default function CompteRenduScreen({ navigation }) {
               <th style="width:50px;">Autre</th>
               <th>Actions</th>
             </tr>
-          </thead>
-          <tbody>${agresHtml}</tbody>
-        </table>
+            ${agresHtml}
+          </table>
 
-        <div class="section-title">5. INDICATEURS DE FIABILITE HUMAINE :</div>
-        <table>
-          <thead>
+          <div class="section-title">4. INDICATEURS DE FIABILITE HUMAINE :</div>
+          <table>
             <tr>
               <th>Rubriques</th>
               <th style="width:120px;">Constatations</th>
               <th>Actions</th>
             </tr>
-          </thead>
-          <tbody>${indicateursHtml}</tbody>
-        </table>
+            ${indicateursHtml}
+          </table>
 
-        <div class="section-title">7. DIVERS (Sécurité prestataires externes et internes) :</div>
-        <table>
-          <thead>
-            <tr><th>Rubriques</th><th>Constatations</th><th>Actions</th></tr>
-          </thead>
-          <tbody>${section7Html}</tbody>
-        </table>
+          <div class="section-title">5. DIVERS (Sécurité prestataires externes et internes) :</div>
+          <table>
+            <tr>
+              <th>Rubriques</th>
+              <th>Constatations</th>
+              <th>Actions</th>
+            </tr>
+            ${section7Html}
+          </table>
 
-        <div class="footer-sig">
-          <div>
-            <div>Dressé par Mr. ${currentUser.fullName || '___________'}</div>
-            <div>À KENITRA, LE ${date}</div>
-            <div style="margin-top:30px;">Signature : _______________</div>
+          <div class="footer-sig">
+            <div>
+              <div>Dressé par Mr. ${currentUser.fullName || '___________'}</div>
+              <div>À KENITRA, LE ${date}</div>
+              <div style="margin-top:30px;">Signature : _______________</div>
+            </div>
+            <div style="text-align:right;">
+              <div><u>Vérifié et signé par le Chargé technique et sécurité voie</u></div>
+              <div style="margin-top:30px;">Signature : _______________</div>
+            </div>
           </div>
-          <div style="text-align:right;">
-            <div><u>Vérifié et signé par le Chargé technique et sécurité voie</u></div>
-            <div style="margin-top:30px;">Signature : _______________</div>
-          </div>
-        </div>
 
-        </body></html>
-      `;
+          </body></html>
+        `;
+      } // End of else block for COLLABORATEUR
 
       const { uri } = await Print.printToFileAsync({ html, base64: false });
+      const dialogTitle = isChantier
+        ? `Compte Rendu Chantier — ${data.chantierNom || 'Chantier'}`
+        : `Compte Rendu KN1 — ${data.collaborateurNom}`;
       await Sharing.shareAsync(uri, {
         mimeType: 'application/pdf',
-        dialogTitle: `Compte Rendu KN1 — ${data.collaborateurNom}`,
+        dialogTitle,
         UTI: 'com.adobe.pdf',
       });
-
     } catch (err) {
       Alert.alert('Erreur', 'Impossible de générer le PDF');
     } finally {
@@ -422,7 +615,7 @@ export default function CompteRenduScreen({ navigation }) {
             <Text style={styles.backText}>← Retour</Text>
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Compte Rendu KN1</Text>
-          <Text style={styles.headerSub}>Sélectionnez une check list collaborateur</Text>
+          <Text style={styles.headerSub}>Sélectionnez une check list</Text>
         </View>
 
         {loading
@@ -431,15 +624,15 @@ export default function CompteRenduScreen({ navigation }) {
             <ScrollView style={styles.list}>
               <View style={styles.infoBox}>
                 <Text style={styles.infoText}>
-                  Sélectionnez une check list pour générer le compte rendu KN1
+                  Sélectionnez une check list pour générer le compte rendu
                 </Text>
               </View>
 
               {checklists.length === 0 ? (
                 <View style={styles.emptyBox}>
                   <Text style={styles.emptyIcon}>📋</Text>
-                  <Text style={styles.emptyText}>Aucune check list collaborateur</Text>
-                  <Text style={styles.emptySubText}>Créez d'abord une check list collaborateur</Text>
+                  <Text style={styles.emptyText}>Aucune check list disponible</Text>
+                  <Text style={styles.emptySubText}>Créez d'abord une check list</Text>
                 </View>
               ) : (
                 checklists.map(cl => (
@@ -454,8 +647,12 @@ export default function CompteRenduScreen({ navigation }) {
                         <Text style={styles.clAvatarText}>👤</Text>
                       </View>
                       <View style={{ flex: 1 }}>
-                        <Text style={styles.clName}>{cl.collaborateurNom}</Text>
-                        <Text style={styles.clMatricule}>Matricule : {cl.collaborateurMatricule}</Text>
+                        <Text style={styles.clName}>
+                          {cl.type === 'CHANTIER' ? cl.chantierNom : cl.collaborateurNom}
+                        </Text>
+                        <Text style={styles.clMatricule}>
+                          {cl.type === 'CHANTIER' ? `Type: ${cl.chantierType}` : `Matricule: ${cl.collaborateurMatricule}`}
+                        </Text>
                         <Text style={styles.clDate}>📅 {cl.dateControle} · {cl.siteUp}</Text>
                       </View>
                     </View>
@@ -480,13 +677,17 @@ export default function CompteRenduScreen({ navigation }) {
             <Text style={styles.backText}>← Retour</Text>
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Compléter le Compte Rendu</Text>
-          <Text style={styles.headerSub}>{selectedCL?.collaborateurNom}</Text>
+          <Text style={styles.headerSub}>
+            {selectedCL?.type === 'CHANTIER' ? selectedCL?.chantierNom : selectedCL?.collaborateurNom}
+          </Text>
         </View>
 
         <ScrollView style={styles.formContainer}>
 
           <View style={styles.selectedCLBox}>
-            <Text style={styles.selectedCLName}>👤 {selectedCL?.collaborateurNom}</Text>
+            <Text style={styles.selectedCLName}>
+              {selectedCL?.type === 'CHANTIER' ? '🏗️' : '👤'} {selectedCL?.type === 'CHANTIER' ? selectedCL?.chantierNom : selectedCL?.collaborateurNom}
+            </Text>
             <Text style={styles.selectedCLDate}>{selectedCL?.dateControle}</Text>
           </View>
 
