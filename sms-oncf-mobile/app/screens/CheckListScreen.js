@@ -281,7 +281,6 @@ export default function CheckListScreen({ navigation }) {
   const [type, setType] = useState(null);
   const [generating, setGenerating] = useState(false);
   const [collaborateurs, setCollaborateurs] = useState([]);
-  const [collabModalVisible, setCollabModalVisible] = useState(false);
   const [collabSearch, setCollabSearch] = useState('');
   const [docGlobal, setDocGlobal] = useState({ existence: 'OUI', miseAJour: 'OUI' });
 
@@ -330,8 +329,9 @@ export default function CheckListScreen({ navigation }) {
     } catch {}
   };
 
-  const isAgresDetail = (sousSection, pointNom) => {
-    return sousSection === 'Vérification agrès' && AGRES_DETAIL_NOMS.includes(pointNom);
+  const isAgresDetail = (sousSection, pointNom, checkType) => {
+    // Pour les checklists collaborateur et chantier, les agrès ont les champs détaillés
+    return (checkType === 'COLLABORATEUR' || checkType === 'CHANTIER') && sousSection === 'Vérification agrès' && AGRES_DETAIL_NOMS.includes(pointNom);
   };
 
   const initItems = (checkType) => {
@@ -340,7 +340,7 @@ export default function CheckListScreen({ navigation }) {
     structure.forEach((section, si) => {
       section.points.forEach((point, pi) => {
         const key = `${si}_${pi}`;
-        if (isAgresDetail(section.sousSection, point)) {
+        if (isAgresDetail(section.sousSection, point, checkType)) {
           initial[key] = {
             cotation: 'S',
             completude: 'Oui',
@@ -369,7 +369,7 @@ export default function CheckListScreen({ navigation }) {
         section.points.forEach((point, pi) => {
           const key = `${si}_${pi}`;
           const state = itemsState[key] || {};
-          const hasDetail = isAgresDetail(section.sousSection, point);
+          const hasDetail = isAgresDetail(section.sousSection, point, type);
 
           items.push({
             section: section.section,
@@ -504,7 +504,8 @@ export default function CheckListScreen({ navigation }) {
         Object.entries(sousSections).forEach(([sousSec, items]) => {
           items.forEach((item, idx) => {
             const agresData = parseAgresDetail(item.constatation);
-            if (agresData) {
+            const isChantier = data.type === 'CHANTIER';
+            if (agresData && !isChantier) {
               // Ligne avec détails agrès
               rowsHtml += `
                 <tr>
@@ -520,12 +521,17 @@ export default function CheckListScreen({ navigation }) {
                 </tr>
               `;
             } else {
+              // Pour les checklists chantier avec agrès, extraire seulement la note
+              let displayConstatation = item.constatation || '';
+              if (isChantier && agresData) {
+                displayConstatation = agresData.note || '';
+              }
               rowsHtml += `
                 <tr>
                   ${idx === 0 ? `<td rowspan="${items.length}" style="vertical-align:middle;font-weight:bold;font-size:11px;background:#f8f9fa;">${sousSec}</td>` : ''}
                   <td style="font-size:11px;">${item.pointCle}</td>
                   <td style="text-align:center;font-weight:bold;color:${cotColor(item.cotation)}">${item.cotation || ''}</td>
-                  <td style="text-align:center;font-size:11px;">${item.constatation || ''}</td>
+                  <td style="text-align:center;font-size:11px;">${displayConstatation}</td>
                   <td style="text-align:center;font-size:11px;">${item.regularisation || ''}</td>
                 </tr>
               `;
@@ -729,7 +735,7 @@ export default function CheckListScreen({ navigation }) {
     );
   }
 
-  // ===== CHOIX TYPE =====
+  // ===== CHOIX COLLABORATEUR =====
   if (step === 1) {
     return (
       <SafeAreaView style={styles.safe}>
@@ -737,23 +743,98 @@ export default function CheckListScreen({ navigation }) {
           <TouchableOpacity onPress={() => setStep(0)}>
             <Text style={styles.backText}>← Annuler</Text>
           </TouchableOpacity>
+          <Text style={styles.headerTitle}>Sélection du collaborateur</Text>
+        </View>
+
+        <Modal
+          visible={true}
+          transparent
+          animationType="slide"
+          onRequestClose={() => setStep(0)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalBox}>
+              <Text style={styles.modalTitle}>Choisir un collaborateur</Text>
+              <TextInput
+                style={[styles.input, { marginBottom: 12 }]}
+                placeholder="Rechercher par nom ou matricule..."
+                placeholderTextColor="#607D8B"
+                value={collabSearch}
+                onChangeText={setCollabSearch}
+              />
+              <ScrollView style={{ maxHeight: 400 }}>
+                {collaborateurs
+                  .filter(c =>
+                    `${c.fullName} ${c.matricule}`
+                      .toLowerCase()
+                      .includes(collabSearch.toLowerCase())
+                  )
+                  .map(c => (
+                    <TouchableOpacity
+                      key={c.id}
+                      style={styles.collabOption}
+                      onPress={() => {
+                        setInfos({
+                          ...infos,
+                          collaborateurNom: c.fullName,
+                          collaborateurMatricule: c.matricule,
+                        });
+                        setCollabSearch('');
+                        setStep(2); // Aller à l'étape de choix du type
+                      }}
+                    >
+                      <View style={styles.collabOptionAvatar}>
+                        <Text style={styles.collabOptionAvatarText}>
+                          {c.fullName?.charAt(0)}
+                        </Text>
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.collabOptionName}>{c.fullName}</Text>
+                        <Text style={styles.collabOptionMatricule}>{c.matricule}</Text>
+                      </View>
+                    </TouchableOpacity>
+                  ))
+                }
+              </ScrollView>
+              <TouchableOpacity
+                style={[styles.nextBtn, { marginTop: 16 }]}
+                onPress={() => setStep(0)}
+              >
+                <Text style={styles.nextBtnText}>Annuler</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+      </SafeAreaView>
+    );
+  }
+
+  // ===== CHOIX TYPE =====
+  if (step === 2) {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => setStep(1)}>
+            <Text style={styles.backText}>← Retour</Text>
+          </TouchableOpacity>
           <Text style={styles.headerTitle}>Type de Check List</Text>
+          <Text style={styles.headerSub}>Collaborateur: {infos.collaborateurNom}</Text>
         </View>
         <View style={styles.typeContainer}>
           <TouchableOpacity
             style={styles.typeCard}
-            onPress={() => { setType('COLLABORATEUR'); initItems('COLLABORATEUR'); setStep(2); }}
+            onPress={() => { setType('COLLABORATEUR'); initItems('COLLABORATEUR'); setStep(3); }}
           >
             <Text style={styles.typeCardIcon}>👤</Text>
             <Text style={styles.typeCardTitle}>Check List Collaborateur</Text>
             <Text style={styles.typeCardDesc}>
-              Contrôle individuel d'un collaborateur — procédures, fiabilité humaine, documentation
+              Contrôle individuel du collaborateur — procédures, fiabilité humaine, documentation
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={[styles.typeCard, { borderColor: '#27AE60' }]}
-            onPress={() => { setType('CHANTIER'); initItems('CHANTIER'); setStep(2); }}
+            onPress={() => { setType('CHANTIER'); initItems('CHANTIER'); setStep(3); }}
           >
             <Text style={styles.typeCardIcon}>🏗</Text>
             <Text style={styles.typeCardTitle}>Check List Chantier</Text>
@@ -767,12 +848,12 @@ export default function CheckListScreen({ navigation }) {
   }
 
   // ===== SAISIE INFOS =====
-  if (step === 2) {
+  if (step === 3) {
     const isCollab = type === 'COLLABORATEUR';
     return (
       <SafeAreaView style={styles.safe}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => setStep(1)}>
+          <TouchableOpacity onPress={() => setStep(2)}>
             <Text style={styles.backText}>← Retour</Text>
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Informations générales</Text>
@@ -796,28 +877,29 @@ export default function CheckListScreen({ navigation }) {
 
           {isCollab ? (
             <>
-              <Text style={styles.inputLabel}>Collaborateur *</Text>
-              <TouchableOpacity
-                style={[styles.input, {
-                  flexDirection: 'row',
-                  justifyContent: 'space-between',
-                  alignItems: 'center'
-                }]}
-                onPress={() => setCollabModalVisible(true)}
-              >
+              <Text style={styles.inputLabel}>Collaborateur sélectionné</Text>
+              <View style={[styles.input, {
+                backgroundColor: '#2A2A2A',
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+              }]}>
                 <Text style={{
-                  color: infos.collaborateurNom ? '#FFFFFF' : '#607D8B',
+                  color: '#FFFFFF',
                   fontSize: 13
                 }}>
-                  {infos.collaborateurNom || 'Sélectionner un collaborateur...'}
+                  {infos.collaborateurNom}
                 </Text>
-                <Text style={{ color: '#C9A84C' }}>▼</Text>
-              </TouchableOpacity>
-              {infos.collaborateurNom !== '' && (
-                <Text style={{ color: '#C9A84C', fontSize: 11, marginTop: 4 }}>
-                  Matricule : {infos.collaborateurMatricule}
-                </Text>
-              )}
+                <TouchableOpacity
+                  onPress={() => setStep(1)}
+                  style={{ padding: 4 }}
+                >
+                  <Text style={{ color: '#C9A84C', fontSize: 12 }}>Changer</Text>
+                </TouchableOpacity>
+              </View>
+              <Text style={{ color: '#C9A84C', fontSize: 11, marginTop: 4 }}>
+                Matricule : {infos.collaborateurMatricule}
+              </Text>
             </>
           ) : (
             <>
@@ -848,94 +930,24 @@ export default function CheckListScreen({ navigation }) {
                 Alert.alert('Erreur', 'Veuillez sélectionner un collaborateur');
                 return;
               }
-              setStep(3);
+              setStep(4);
             }}
           >
             <Text style={styles.nextBtnText}>Continuer → Remplir les items</Text>
           </TouchableOpacity>
           <View style={{ height: 40 }} />
         </ScrollView>
-
-        <Modal
-          visible={collabModalVisible}
-          transparent
-          animationType="slide"
-          onRequestClose={() => setCollabModalVisible(false)}
-        >
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalBox}>
-              <Text style={styles.modalTitle}>Choisir un collaborateur</Text>
-              <TextInput
-                style={[styles.input, { marginBottom: 12 }]}
-                placeholder="Rechercher par nom ou matricule..."
-                placeholderTextColor="#607D8B"
-                value={collabSearch}
-                onChangeText={setCollabSearch}
-              />
-              <ScrollView style={{ maxHeight: 400 }}>
-                {collaborateurs
-                  .filter(c =>
-                    `${c.fullName} ${c.matricule}`
-                      .toLowerCase()
-                      .includes(collabSearch.toLowerCase())
-                  )
-                  .map(c => (
-                    <TouchableOpacity
-                      key={c.id}
-                      style={styles.collabOption}
-                      onPress={() => {
-                        setInfos({
-                          ...infos,
-                          collaborateurNom: c.fullName,
-                          collaborateurMatricule: c.matricule,
-                        });
-                        setCollabModalVisible(false);
-                        setCollabSearch('');
-                      }}
-                    >
-                      <View style={styles.collabOptionAvatar}>
-                        <Text style={styles.collabOptionAvatarText}>
-                          {c.fullName?.charAt(0)}
-                        </Text>
-                      </View>
-                      <View style={{ flex: 1 }}>
-                        <Text style={styles.collabOptionName}>{c.fullName}</Text>
-                        <Text style={styles.collabOptionMatricule}>{c.matricule}</Text>
-                        {c.poste && (
-                          <Text style={styles.collabOptionPoste}>{c.poste}</Text>
-                        )}
-                      </View>
-                    </TouchableOpacity>
-                  ))
-                }
-                {collaborateurs.length === 0 && (
-                  <View style={{ alignItems: 'center', padding: 30 }}>
-                    <Text style={{ color: '#607D8B' }}>
-                      Aucun collaborateur — ajoutez-en depuis l'interface Admin
-                    </Text>
-                  </View>
-                )}
-              </ScrollView>
-              <TouchableOpacity
-                style={styles.cancelBtn}
-                onPress={() => { setCollabModalVisible(false); setCollabSearch(''); }}
-              >
-                <Text style={styles.cancelBtnText}>Fermer</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </Modal>
       </SafeAreaView>
     );
   }
 
   // ===== SAISIE ITEMS =====
-  if (step === 3) {
+  if (step === 4) {
     const structure = type === 'COLLABORATEUR' ? ITEMS_COLLABORATEUR : ITEMS_CHANTIER;
     return (
       <SafeAreaView style={styles.safe}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => setStep(2)}>
+          <TouchableOpacity onPress={() => setStep(3)}>
             <Text style={styles.backText}>← Retour</Text>
           </TouchableOpacity>
           <View style={styles.headerRow}>
@@ -963,7 +975,7 @@ export default function CheckListScreen({ navigation }) {
 
               {section.points.map((point, pi) => {
                 const key = `${si}_${pi}`;
-                const hasDetail = isAgresDetail(section.sousSection, point);
+                const hasDetail = isAgresDetail(section.sousSection, point, type);
                 const state = itemsState[key] || {
                   cotation: 'S', constatation: '', regularisation: '',
                   completude: 'Oui', etat: 'Bon', validite: '',

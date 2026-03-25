@@ -64,6 +64,29 @@ export default function CompteRenduScreen({ navigation }) {
         headers: { Authorization: `Bearer ${token}` }
       });
       setSelectedCL(res.data);
+
+      // Extraire les données des agrès pour section4
+      const items = res.data.items || [];
+      const agresItems = items.filter(item =>
+        item.sousSection === 'Vérification agrès' &&
+        ['GSMR', 'Clés de berne', 'Clés de vestibule', 'Lanternes', 'SAM', 'Pétards'].includes(item.pointCle)
+      );
+
+      const updatedSection4 = section4.map(agre => {
+        const item = agresItems.find(i => i.pointCle === agre.nom);
+        if (item && item.constatation && item.constatation.includes('Completude:')) {
+          const parts = item.constatation.split('|');
+          return {
+            ...agre,
+            completude: parts[0]?.replace('Completude:', '') || 'Oui',
+            etat: parts[1]?.replace('Etat:', '') || 'Bon',
+            actions: item.regularisation || '',
+          };
+        }
+        return agre;
+      });
+      setSection4(updatedSection4);
+
       setStep(1);
     } catch {
       Alert.alert('Erreur', 'Impossible de charger la check list');
