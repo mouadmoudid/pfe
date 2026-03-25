@@ -34,6 +34,7 @@ public class CheckList {
     // Champs Check List Chantier
     private String chantierNom;
     private String chantierType;
+    private String isKm;
 
     @Column(columnDefinition = "TEXT")
     private String observations;

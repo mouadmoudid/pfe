@@ -283,6 +283,7 @@ export default function CheckListScreen({ navigation }) {
     collaborateurMatricule: '',
     chantierNom: '',
     chantierType: '',
+    isKm: '',
   });
 
   const [itemsState, setItemsState] = useState({});
@@ -383,7 +384,7 @@ export default function CheckListScreen({ navigation }) {
         siteUp: '', dateControle: new Date().toISOString().split('T')[0],
         reference: 'DR.PSC.M1C.CISF.024',
         collaborateurNom: '', collaborateurMatricule: '',
-        chantierNom: '', chantierType: '',
+        chantierNom: '', chantierType: '', isKm: '',
       });
       loadChecklists();
     } catch {
@@ -768,6 +769,10 @@ export default function CheckListScreen({ navigation }) {
               <TextInput style={styles.input} placeholder="Ex: Chantier BDML"
                 placeholderTextColor="#607D8B" value={infos.chantierNom}
                 onChangeText={v => setInfos({ ...infos, chantierNom: v })} />
+              <Text style={styles.inputLabel}>IS/Km</Text>
+              <TextInput style={styles.input} placeholder="Ex: KM 123+400"
+                placeholderTextColor="#607D8B" value={infos.isKm}
+                onChangeText={v => setInfos({ ...infos, isKm: v })} />
               <Text style={styles.inputLabel}>Type de chantier</Text>
               <TextInput style={styles.input}
                 placeholder="Ex: Meulage / Ballast / Redressage"

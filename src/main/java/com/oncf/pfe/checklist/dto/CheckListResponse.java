@@ -20,6 +20,7 @@ public class CheckListResponse {
     private String collaborateurMatricule;
     private String chantierNom;
     private String chantierType;
+    private String isKm;
     private String observations;
     private CheckListStatus status;
     private String createdByName;

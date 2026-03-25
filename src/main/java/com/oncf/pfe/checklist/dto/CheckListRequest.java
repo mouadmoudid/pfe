@@ -15,6 +15,7 @@ public class CheckListRequest {
     private String collaborateurMatricule;
     private String chantierNom;
     private String chantierType;
+    private String isKm;
     private String observations;
     private List<CheckListItemDto> items;
 }

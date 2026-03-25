@@ -29,6 +29,7 @@ public class CheckListService {
                 .collaborateurMatricule(request.getCollaborateurMatricule())
                 .chantierNom(request.getChantierNom())
                 .chantierType(request.getChantierType())
+                .isKm(request.getIsKm())
                 .observations(request.getObservations())
                 .createdBy(user)
                 .build();
@@ -118,6 +119,7 @@ public class CheckListService {
                 .type(cl.getType())
                 .siteUp(cl.getSiteUp())
                 .dateControle(cl.getDateControle())
+                .isKm(cl.getIsKm())
                 .reference(cl.getReference())
                 .collaborateurNom(cl.getCollaborateurNom())
                 .collaborateurMatricule(cl.getCollaborateurMatricule())
