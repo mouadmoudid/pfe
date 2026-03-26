@@ -16,6 +16,7 @@ export default function CompteRenduScreen({ navigation }) {
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [checklists, setChecklists] = useState([]);
+  const [filteredCollab, setFilteredCollab] = useState(null);
   const [selectedCL, setSelectedCL] = useState(null);
   const [step, setStep] = useState(0);
 
@@ -86,6 +87,32 @@ export default function CompteRenduScreen({ navigation }) {
         return agre;
       });
       setSection4(updatedSection4);
+
+      // Remplir la section "Autre constations" pour les checklists chantier
+      if (res.data.type === 'CHANTIER') {
+        // Exclure les items de type agrès (Completude/Etat/Validité) des constatations
+        const constatations = items
+          .filter(item => 
+            item.constatation && item.constatation.trim() !== '' &&
+            !/Completude\s*:/i.test(item.constatation) &&
+            !/Etat\s*:/i.test(item.constatation) &&
+            !/Validit\s*e\s*:/i.test(item.constatation)
+          )
+          .map(item => item.constatation)
+          .join('\n');
+
+        const actions = items
+          .filter(item => item.regularisation && item.regularisation.trim() !== '')
+          .map(item => item.regularisation)
+          .join('\n');
+
+        setSection2({
+          lieu: res.data.chantierNom || '',
+          constatations: constatations || '',
+          isKm: res.data.isKm || '',
+          actions: actions || '',
+        });
+      }
 
       setStep(1);
     } catch {
@@ -638,16 +665,27 @@ export default function CompteRenduScreen({ navigation }) {
             <Text style={styles.backText}>← Retour</Text>
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Compte Rendu KN1</Text>
-          <Text style={styles.headerSub}>Sélectionnez une check list</Text>
+          <Text style={styles.headerSub}>
+            {filteredCollab ? `Filtre : ${filteredCollab}` : 'Sélectionnez un collaborateur'}
+          </Text>
         </View>
 
         {loading
           ? <ActivityIndicator color="#C9A84C" style={{ marginTop: 40 }} />
           : (
             <ScrollView style={styles.list}>
+              {filteredCollab ? (
+                <TouchableOpacity 
+                  style={styles.filterBackBtn} 
+                  onPress={() => setFilteredCollab(null)}
+                >
+                  <Text style={styles.filterBackText}>← Retour à la liste des collaborateurs</Text>
+                </TouchableOpacity>
+              ) : null}
+
               <View style={styles.infoBox}>
                 <Text style={styles.infoText}>
-                  Sélectionnez une check list pour générer le compte rendu
+                  {filteredCollab ? 'Sélectionnez une check list' : 'Sélectionnez un collaborateur pour voir ses rapports'}
                 </Text>
               </View>
 
@@ -657,8 +695,10 @@ export default function CompteRenduScreen({ navigation }) {
                   <Text style={styles.emptyText}>Aucune check list disponible</Text>
                   <Text style={styles.emptySubText}>Créez d'abord une check list</Text>
                 </View>
-              ) : (
-                checklists.map(cl => (
+              ) : filteredCollab ? (
+                checklists
+                  .filter(cl => cl.collaborateurNom === filteredCollab)
+                  .map(cl => (
                   <TouchableOpacity
                     key={cl.id}
                     style={styles.clCard}
@@ -682,6 +722,28 @@ export default function CompteRenduScreen({ navigation }) {
                     <Text style={styles.arrow}>›</Text>
                   </TouchableOpacity>
                 ))
+              ) : (
+                [...new Set(checklists.map(cl => cl.collaborateurNom))].filter(Boolean).sort().map(collab => {
+                  const count = checklists.filter(cl => cl.collaborateurNom === collab).length;
+                  return (
+                    <TouchableOpacity 
+                      key={collab} 
+                      style={styles.collabFilterCard}
+                      onPress={() => setFilteredCollab(collab)}
+                    >
+                      <View style={styles.collabFilterLeft}>
+                        <View style={styles.collabFilterAvatar}>
+                          <Text style={styles.collabFilterAvatarText}>{collab.charAt(0)}</Text>
+                        </View>
+                        <View>
+                          <Text style={styles.collabFilterName}>{collab}</Text>
+                          <Text style={styles.collabFilterCount}>{count} rapport{count > 1 ? 's' : ''}</Text>
+                        </View>
+                      </View>
+                      <Text style={styles.arrowIcon}>›</Text>
+                    </TouchableOpacity>
+                  );
+                })
               )}
               <View style={{ height: 40 }} />
             </ScrollView>
@@ -945,4 +1007,37 @@ const styles = StyleSheet.create({
     padding: 14, alignItems: 'center', marginTop: 8,
   },
   generateBtnText: { color: '#0A1628', fontWeight: 'bold', fontSize: 15 },
+
+  filterBackBtn: {
+    marginBottom: 12, paddingVertical: 8,
+  },
+  filterBackText: {
+    color: '#C9A84C', fontSize: 13, fontWeight: 'bold',
+  },
+  collabFilterCard: {
+    backgroundColor: '#0F2137', borderRadius: 12,
+    padding: 16, marginBottom: 10,
+    flexDirection: 'row', alignItems: 'center',
+    justifyContent: 'space-between',
+    borderLeftWidth: 4, borderLeftColor: '#C9A84C',
+  },
+  collabFilterLeft: { flexDirection: 'row', alignItems: 'center' },
+  collabFilterAvatar: {
+    width: 40, height: 40, borderRadius: 20,
+    backgroundColor: '#1E3A5F', alignItems: 'center',
+    justifyContent: 'center', marginRight: 12,
+    borderWidth: 1, borderColor: '#4A90D9',
+  },
+  collabFilterAvatarText: {
+    color: '#4A90D9', fontWeight: 'bold', fontSize: 16,
+  },
+  collabFilterName: {
+    color: '#FFFFFF', fontSize: 15, fontWeight: 'bold',
+  },
+  collabFilterCount: {
+    color: '#607D8B', fontSize: 12, marginTop: 2,
+  },
+  arrowIcon: {
+    color: '#C9A84C', fontSize: 24, fontWeight: 'bold',
+  },
 });

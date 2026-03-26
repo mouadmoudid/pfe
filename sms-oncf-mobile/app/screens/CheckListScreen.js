@@ -275,6 +275,7 @@ const ITEMS_CHANTIER = [
 
 export default function CheckListScreen({ navigation }) {
   const [checklists, setChecklists] = useState([]);
+  const [filteredCollab, setFilteredCollab] = useState(null);
   const [loading, setLoading] = useState(false);
   const [creating, setCreating] = useState(false);
   const [step, setStep] = useState(0);
@@ -669,7 +670,9 @@ export default function CheckListScreen({ navigation }) {
           <View style={styles.headerRow}>
             <View>
               <Text style={styles.headerTitle}>K Check List</Text>
-              <Text style={styles.headerSub}>Contrôle & Inspection — DRIC</Text>
+              <Text style={styles.headerSub}>
+                {filteredCollab ? `Filtre : ${filteredCollab}` : 'Contrôle & Inspection — DRIC'}
+              </Text>
             </View>
             <TouchableOpacity style={styles.addBtn} onPress={() => setStep(1)}>
               <Text style={styles.addBtnText}>+ Nouvelle</Text>
@@ -681,14 +684,25 @@ export default function CheckListScreen({ navigation }) {
           ? <ActivityIndicator color="#C9A84C" style={{ marginTop: 40 }} />
           : (
             <ScrollView style={styles.list}>
+              {filteredCollab ? (
+                <TouchableOpacity 
+                  style={styles.filterBackBtn} 
+                  onPress={() => setFilteredCollab(null)}
+                >
+                  <Text style={styles.filterBackText}>← Retour à la liste des collaborateurs</Text>
+                </TouchableOpacity>
+              ) : null}
+
               {checklists.length === 0 ? (
                 <View style={styles.emptyBox}>
                   <Text style={styles.emptyIcon}>📋</Text>
                   <Text style={styles.emptyText}>Aucune check list</Text>
                   <Text style={styles.emptySubText}>Appuyez sur "+ Nouvelle" pour commencer</Text>
                 </View>
-              ) : (
-                checklists.map(cl => (
+              ) : filteredCollab ? (
+                checklists
+                  .filter(cl => cl.collaborateurNom === filteredCollab)
+                  .map(cl => (
                   <View key={cl.id} style={styles.clCard}>
                     <View style={styles.clTop}>
                       <View style={[styles.typeBadge, {
@@ -726,6 +740,28 @@ export default function CheckListScreen({ navigation }) {
                     </View>
                   </View>
                 ))
+              ) : (
+                [...new Set(checklists.map(cl => cl.collaborateurNom))].filter(Boolean).sort().map(collab => {
+                  const count = checklists.filter(cl => cl.collaborateurNom === collab).length;
+                  return (
+                    <TouchableOpacity 
+                      key={collab} 
+                      style={styles.collabFilterCard}
+                      onPress={() => setFilteredCollab(collab)}
+                    >
+                      <View style={styles.collabFilterLeft}>
+                        <View style={styles.collabFilterAvatar}>
+                          <Text style={styles.collabFilterAvatarText}>{collab.charAt(0)}</Text>
+                        </View>
+                        <View>
+                          <Text style={styles.collabFilterName}>{collab}</Text>
+                          <Text style={styles.collabFilterCount}>{count} check list{count > 1 ? 's' : ''}</Text>
+                        </View>
+                      </View>
+                      <Text style={styles.arrowIcon}>›</Text>
+                    </TouchableOpacity>
+                  );
+                })
               )}
               <View style={{ height: 40 }} />
             </ScrollView>
@@ -1288,4 +1324,37 @@ const styles = StyleSheet.create({
     padding: 12, alignItems: 'center', marginTop: 8,
   },
   cancelBtnText: { color: '#607D8B', fontSize: 14 },
+
+  filterBackBtn: {
+    marginBottom: 12, paddingVertical: 8,
+  },
+  filterBackText: {
+    color: '#C9A84C', fontSize: 13, fontWeight: 'bold',
+  },
+  collabFilterCard: {
+    backgroundColor: '#0F2137', borderRadius: 12,
+    padding: 16, marginBottom: 10,
+    flexDirection: 'row', alignItems: 'center',
+    justifyContent: 'space-between',
+    borderLeftWidth: 4, borderLeftColor: '#C9A84C',
+  },
+  collabFilterLeft: { flexDirection: 'row', alignItems: 'center' },
+  collabFilterAvatar: {
+    width: 40, height: 40, borderRadius: 20,
+    backgroundColor: '#1E3A5F', alignItems: 'center',
+    justifyContent: 'center', marginRight: 12,
+    borderWidth: 1, borderColor: '#4A90D9',
+  },
+  collabFilterAvatarText: {
+    color: '#4A90D9', fontWeight: 'bold', fontSize: 16,
+  },
+  collabFilterName: {
+    color: '#FFFFFF', fontSize: 15, fontWeight: 'bold',
+  },
+  collabFilterCount: {
+    color: '#607D8B', fontSize: 12, marginTop: 2,
+  },
+  arrowIcon: {
+    color: '#C9A84C', fontSize: 24, fontWeight: 'bold',
+  },
 });
