@@ -14,6 +14,7 @@ import CheckListScreen from './app/screens/CheckListScreen';
 import CollaborateursScreen from './app/screens/CollaborateursScreen';
 import ChangePasswordScreen from './app/screens/ChangePasswordScreen';
 import CompteRenduScreen from './app/screens/CompteRenduScreen';
+import RapportPeriodiqueScreen from './app/screens/RapportPeriodiqueScreen';
 
 
 const Stack = createStackNavigator();
@@ -35,6 +36,7 @@ export default function App() {
           <Stack.Screen name="Collaborateurs" component={CollaborateursScreen} />
           <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
           <Stack.Screen name="CompteRendu" component={CompteRenduScreen} />
+          <Stack.Screen name="RapportPeriodique" component={RapportPeriodiqueScreen} />
 
         </Stack.Navigator>
       </NavigationContainer>

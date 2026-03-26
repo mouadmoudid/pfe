@@ -59,4 +59,11 @@ public class PlanningController {
         planningService.deleteTask(id);
         return ResponseEntity.ok("Tâche supprimée");
     }
+
+    @GetMapping("/rapport")
+    public ResponseEntity<?> getRapportData(
+            @RequestParam int annee,
+            @RequestParam int mois) {
+        return ResponseEntity.ok(planningService.getRapportData(annee, mois));
+    }
 }

@@ -7,7 +7,10 @@ import com.oncf.pfe.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
+
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -100,5 +103,77 @@ public class PlanningService {
                 .createdByName(task.getCreatedBy() != null ? task.getCreatedBy().getFullName() : null)
                 .createdAt(task.getCreatedAt())
                 .build();
+    }
+    public Map<String, Object> getRapportData(int annee, int mois) {
+        List<PlanningTask> tasks = planningTaskRepository.findByAnnee(annee);
+
+        // Calculer les semaines du mois
+        int[] semainesMois = getSemainsDuMois(annee, mois);
+        int semaineDebut = semainesMois[0];
+        int semaineFin = semainesMois[1];
+
+        // Collaborateurs — CONTROLE_COLLABORATEURS
+        List<PlanningTask> collabTasks = tasks.stream()
+            .filter(t -> t.getCategory() != null &&
+                t.getCategory().name().equals("CONTROLE_COLLABORATEURS"))
+            .toList();
+
+        // Chantier — CHANTIER_TRAVAUX_VOIE
+        List<PlanningTask> chantierTasks = tasks.stream()
+            .filter(t -> t.getCategory() != null &&
+                t.getCategory().name().equals("CHANTIER_TRAVAUX_VOIE"))
+            .toList();
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("collaborateurs", buildStats(collabTasks, semaineDebut, semaineFin));
+        result.put("chantier", buildStats(chantierTasks, semaineDebut, semaineFin));
+        return result;
+    }
+
+    private Map<String, Object> buildStats(List<PlanningTask> tasks, int semaineDebut, int semaineFin) {
+        int annuelPrevu = tasks.size();
+
+        int moisPrevu = (int) tasks.stream()
+            .filter(t -> t.getSemaine() != null &&
+                t.getSemaine() >= semaineDebut &&
+                t.getSemaine() <= semaineFin)
+            .count();
+
+        int cumulPrevu = (int) tasks.stream()
+            .filter(t -> t.getSemaine() != null &&
+                t.getSemaine() <= semaineFin)
+            .count();
+
+        int moisRealise = (int) tasks.stream()
+            .filter(t -> t.getSemaine() != null &&
+                t.getSemaine() >= semaineDebut &&
+                t.getSemaine() <= semaineFin &&
+                "REALISE".equals(t.getStatus() != null ? t.getStatus().name() : ""))
+            .count();
+
+        int cumulRealise = (int) tasks.stream()
+            .filter(t -> "REALISE".equals(t.getStatus() != null ? t.getStatus().name() : ""))
+            .count();
+
+        double avancement = annuelPrevu > 0
+            ? Math.round((cumulRealise * 100.0 / annuelPrevu) * 10.0) / 10.0
+            : 0;
+
+        Map<String, Object> stats = new HashMap<>();
+        stats.put("annuelPrevu", annuelPrevu);
+        stats.put("moisPrevu", moisPrevu);
+        stats.put("cumulPrevu", cumulPrevu);
+        stats.put("moisRealise", moisRealise);
+        stats.put("cumulRealise", cumulRealise);
+        stats.put("avancement", avancement);
+        return stats;
+    }
+
+    private int[] getSemainsDuMois(int annee, int mois) {
+        java.time.LocalDate debut = java.time.LocalDate.of(annee, mois, 1);
+        java.time.LocalDate fin = debut.withDayOfMonth(debut.lengthOfMonth());
+        int s1 = debut.get(java.time.temporal.WeekFields.ISO.weekOfYear());
+        int s2 = fin.get(java.time.temporal.WeekFields.ISO.weekOfYear());
+        return new int[]{s1, s2};
     }
 }

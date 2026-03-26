@@ -21,7 +21,7 @@ const FOLDERS = {
 
     {
     id: 'K_CHECK_LIST',
-    title: 'K Check List 2025',
+    title: 'K Check List',
     subtitle: 'Check lists collaborateur et chantier',
     icon: '✅',
     screen: 'CheckList',
@@ -36,12 +36,12 @@ const FOLDERS = {
     },
 
     {
-        id: 'RAPPORT_PERIODIQUE',
-        title: 'Rapport périodique de synthèse global',
-        subtitle: 'Rapports globaux de synthèse',
-        icon: '📊',
-        screen: null,
-      },
+      id: 'RAPPORT_PERIODIQUE',
+      title: 'Rapport périodique de synthèse global',
+      subtitle: 'Bilan mensuel des contrôles',
+      icon: '📊',
+      screen: 'RapportPeriodique',
+    },
 
       {
         id: 'RACI',
