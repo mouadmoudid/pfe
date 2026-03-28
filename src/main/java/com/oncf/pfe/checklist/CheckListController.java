@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
 import java.util.List;
 
 @RestController
@@ -53,5 +54,36 @@ public class CheckListController {
         User user = (User) auth.getPrincipal();
         checkListService.deleteCheckList(id, user);
         return ResponseEntity.ok("Check list supprimée");
+    }
+
+    @GetMapping("/raci")
+    public ResponseEntity<List<CheckListResponse>> getRaciData(
+            @RequestParam int annee,
+            @RequestParam int mois) {
+        
+        List<CheckListResponse> all = checkListService.getAllCheckLists();
+        
+        return ResponseEntity.ok(
+            all.stream()
+                .filter(cl -> {
+                    if (cl.getDateControle() == null) return false;
+                    return cl.getDateControle().getYear() == annee &&
+                        cl.getDateControle().getMonthValue() == mois;
+                })
+                .toList()
+        );
+    }
+
+    @GetMapping("/{id}/collaborateur-info")
+    public ResponseEntity<Map<String, String>> getCollaborateurInfo(@PathVariable Long id) {
+        CheckListResponse cl = checkListService.getById(id);
+        Map<String, String> info = new java.util.HashMap<>();
+        info.put("nom", cl.getCollaborateurNom() != null ? cl.getCollaborateurNom() : cl.getChantierNom());
+        info.put("matricule", cl.getCollaborateurMatricule() != null ? cl.getCollaborateurMatricule() : "");
+        info.put("siteUp", cl.getSiteUp() != null ? cl.getSiteUp() : "");
+        info.put("dateControle", cl.getDateControle() != null ? cl.getDateControle().toString() : "");
+        info.put("type", cl.getType() != null ? cl.getType().toString() : "");
+        info.put("createdBy", cl.getCreatedByName() != null ? cl.getCreatedByName() : "");
+        return ResponseEntity.ok(info);
     }
 }

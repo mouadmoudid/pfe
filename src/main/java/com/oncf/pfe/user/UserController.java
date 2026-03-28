@@ -75,4 +75,22 @@ public class UserController {
                 .toList()
         );
     }
+
+    @GetMapping("/by-matricule/{matricule}")
+    public ResponseEntity<?> getByMatricule(@PathVariable String matricule) {
+        return userRepository.findAll().stream()
+            .filter(u -> matricule.equals(u.getMatricule()))
+            .findFirst()
+            .map(u -> {
+                java.util.Map<String, String> info = new java.util.HashMap<>();
+                info.put("fullName", u.getFullName() != null ? u.getFullName() : "");
+                info.put("matricule", u.getMatricule() != null ? u.getMatricule() : "");
+                info.put("poste", u.getPoste() != null ? u.getPoste() : "");
+                info.put("siteUp", u.getSiteUp() != null ? u.getSiteUp() : "");
+                info.put("telephone", u.getTelephone() != null ? u.getTelephone() : "");
+                info.put("email", u.getEmail() != null ? u.getEmail() : "");
+                return ResponseEntity.ok(info);
+            })
+            .orElse(ResponseEntity.notFound().build());
+    }
 }

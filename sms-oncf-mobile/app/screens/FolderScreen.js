@@ -44,12 +44,12 @@ const FOLDERS = {
     },
 
       {
-        id: 'RACI',
-        title: 'RACI',
-        subtitle: 'Registre des actions de contrôle et inspection',
-        icon: '📋',
-        screen: null,
-      },
+      id: 'RACI',
+      title: 'RACI',
+      subtitle: 'Registre des actions de contrôle et inspection',
+      icon: '📋',
+      screen: 'RACI',
+    },
     ]
   },
   'VEILLE': {

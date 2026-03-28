@@ -1,0 +1,289 @@
+# SMS ONCF — Prompt de Continuité pour Nouveau Chat
+
+## Contexte du Projet
+Application mobile **SMS ONCF** (Système de Management de la Sécurité) pour ONCF DRIC (Direction Régionale Infrastructure Centre), développée en React Native Expo + Spring Boot 4.
+
+---
+
+## Stack Technique
+
+### Back-end
+- **Spring Boot** 4.0.3
+- **Spring Security** 7.0.3 avec JWT (jjwt 0.12.3)
+- **JPA/Hibernate** 7.2.4
+- **PostgreSQL** 16 (Docker)
+- **Lombok**
+- Chemin : `C:\Users\HP\Downloads\pfe\pfe`
+- Package : `com.oncf.pfe`
+- Lancement : `./mvnw spring-boot:run`
+
+### Front-end
+- **React Native** 0.83.2 + **Expo SDK 55**
+- **Axios**, **AsyncStorage**, **expo-print**, **expo-sharing**
+- Chemin : `C:\Users\HP\Downloads\pfe\pfe\sms-oncf-mobile`
+- Lancement : `npx expo start`
+
+### Infrastructure Docker
+- PostgreSQL port 5432, DB: `sms_oncf`, user: `sms_user`, password: `sms_password_2024`
+- pgAdmin port 5050, email: `admin@oncf.ma`, password: `admin2024`
+- Dossier docker : `C:\Users\HP\Downloads\pfe\pfe\docker`
+- Commande : `docker-compose up -d`
+
+---
+
+## Architecture Back-end
+
+### Packages
+```
+com.oncf.pfe/
+├── auth/           → AuthController, AuthService, dto/(LoginRequest, LoginResponse, RegisterRequest, ChangePasswordRequest)
+├── checklist/      → CheckList, CheckListItem, CheckListType, CheckListStatus, CotationValue
+│                     CheckListRepository, CheckListItemRepository, CheckListService, CheckListController
+│                     dto/(CheckListRequest, CheckListResponse, CheckListItemDto)
+├── config/         → SecurityConfig, CorsConfig
+├── planning/       → PlanningTask, PlanningCategory, PlanningStatus
+│                     PlanningTaskRepository, PlanningService, PlanningController, dto/
+├── security/       → JwtService, JwtAuthFilter, UserDetailsServiceImpl
+└── user/           → User, Role, UserRepository, UserController
+```
+
+### Entités DB (tables PostgreSQL)
+**users** : id, full_name, email, password, role (ADMIN/MANAGER/AGENT/INSPECTEUR), enabled, matricule, poste, site_up, telephone, first_login, is_collaborateur
+**planning_tasks** : id, title, parent_title, category (CONTROLE_COLLABORATEURS/CHANTIER_TRAVAUX_VOIE/EXAMENS/FORMATION_SENSIBILISATION), status (PLANIFIE/EN_COURS/REALISE/REPORTE/ANNULE), matricule, duree, date_prevue, date_realisation, pourcentage_acheve, cotation, details, semaine, annee, assigned_to_id, created_by_id, created_at
+**checklists** : id, type (COLLABORATEUR/CHANTIER), site_up, date_controle, reference, collaborateur_nom, collaborateur_matricule, chantier_nom, chantier_type, is_km, observations, status (BROUILLON/SOUMIS/VALIDE), created_by_id, created_at
+**checklist_items** : id, checklist_id, section, sous_section, point_cle, cotation, moyenne, constatation, regularisation, ordre
+
+### Endpoints API
+```
+POST   /api/auth/register              → Créer compte
+POST   /api/auth/login                 → Connexion → JWT
+POST   /api/auth/change-password       → Changer mot de passe (première connexion)
+
+GET    /api/admin/users                → Liste tous les utilisateurs (ADMIN)
+GET    /api/admin/agents               → Liste agents
+GET    /api/admin/collaborateurs       → Liste agents marqués collaborateurs
+POST   /api/admin/collaborateurs       → Créer agent (via register)
+PATCH  /api/admin/users/{id}/toggle    → Activer/désactiver compte
+PATCH  /api/admin/users/{id}/role      → Changer rôle
+PATCH  /api/admin/users/{id}/collaborateur → Toggle statut collaborateur
+DELETE /api/admin/users/{id}           → Supprimer
+
+GET    /api/planning?annee=            → Planning annuel
+POST   /api/planning                   → Créer tâche planning
+PATCH  /api/planning/{id}              → Mettre à jour tâche
+DELETE /api/planning/{id}              → Supprimer tâche
+GET    /api/planning/my                → Tâches de l'agent connecté
+GET    /api/planning/rapport?annee=&mois= → Données rapport périodique
+
+GET    /api/checklists                 → Toutes les checklists
+GET    /api/checklists/my              → Checklists de l'utilisateur connecté
+POST   /api/checklists                 → Créer checklist
+GET    /api/checklists/{id}            → Détail checklist
+DELETE /api/checklists/{id}            → Supprimer checklist
+PATCH  /api/checklists/{id}/status     → Changer statut
+```
+
+### Sécurité JWT
+- `JwtService.generateToken()` : stocke le rôle avec `.name()` → `"ADMIN"`, `"AGENT"`, etc.
+- `JwtAuthFilter` : extrait le rôle et crée `SimpleGrantedAuthority("ROLE_" + role)`
+- `SecurityConfig` : `/api/admin/**` requiert `hasRole("ADMIN")`, reste `authenticated()`
+- **IMPORTANT** : Les méthodes DELETE sont bloquées par Spring Security sur `/api/checklists/**`. Solution de contournement : utiliser POST avec `/api/checklists/supprimer/{id}` ou similaire.
+
+### Comptes existants
+- Admin : `admin@oncf.ma` / `admin1234` (rôle ADMIN)
+- Agents créés par l'admin avec mot de passe = matricule, `first_login = true`
+
+---
+
+## Architecture Front-end
+
+### Navigation (App.js)
+```
+Stack.Navigator (headerShown: false)
+├── Login
+├── Register
+├── ChangePassword      → Écran changement mot de passe (première connexion)
+├── Dashboard
+├── Manager
+├── Agent
+├── Admin
+├── Planning
+├── Folder              → Sous-dossiers SMS
+├── CheckList           → K Check List
+├── Collaborateurs      → Gestion collaborateurs (Admin)
+├── CompteRendu         → Compte Rendu KN1
+└── RapportPeriodique   → Rapport périodique mensuel
+```
+
+### Structure des fichiers
+```
+sms-oncf-mobile/
+├── App.js
+└── app/
+    ├── context/AuthContext.js        → login/logout avec firstLogin
+    ├── services/authService.js       → API_URL avec Platform.OS
+    └── screens/
+        ├── LoginScreen.js
+        ├── RegisterScreen.js
+        ├── ChangePasswordScreen.js
+        ├── DashboardScreen.js        → 6 dossiers SMS
+        ├── ManagerScreen.js
+        ├── AgentScreen.js
+        ├── AdminScreen.js            → Gestion utilisateurs + bouton collaborateurs
+        ├── PlanningScreen.js         → Gantt S01-S53 + vue liste
+        ├── FolderScreen.js           → Sous-dossiers de chaque dossier SMS
+        ├── CheckListScreen.js        → Formulaire check list + export PDF
+        ├── CollaborateursScreen.js   → Toggle collaborateur sur agents existants
+        ├── CompteRenduScreen.js      → Compte Rendu KN1 depuis checklist
+        └── RapportPeriodiqueScreen.js → Rapport mensuel depuis planning
+```
+
+### authService.js — URL importante
+```javascript
+import { Platform } from 'react-native';
+export const API_URL = Platform.OS === 'web'
+  ? 'http://localhost:8080/api/auth'
+  : 'http://VOTRE_IP_WIFI:8080/api/auth';
+// Remplacer VOTRE_IP_WIFI par l'IP trouvée via ipconfig (Adresse IPv4 Wi-Fi)
+```
+
+### Design System
+```
+Background principal : #0A1628
+Cards/surfaces : #0F2137
+Accent ONCF : #C9A84C (doré)
+Inputs : #1A2F4A
+Bleu : #4A90D9
+Vert : #27AE60
+Orange : #E67E22
+Rouge : #E74C3C
+Violet : #8E44AD
+Texte secondaire : #607D8B
+```
+
+---
+
+## Structure de Navigation — DashboardScreen
+
+Le Dashboard affiche **6 dossiers SMS** :
+```javascript
+const DOSSIERS = [
+  { id: 'CONTROLE_INSPECTION', title: '1 - Contrôle et Inspection', icon: '🔍', color: '#4A90D9' },
+  { id: 'VEILLE', title: '2 - Veille', icon: '👁', color: '#8E44AD' },
+  { id: 'GESTION_RISQUES', title: '3 - Gestion des Risques', icon: '⚠️', color: '#E74C3C' },
+  { id: 'REX', title: '4 - REX', icon: '🔄', color: '#E67E22' },
+  { id: 'CULTURE_POSITIF', title: '7 - Culture Positif', icon: '🌟', color: '#27AE60' },
+  { id: 'REFERENCIELS', title: '8 - Référenciels', icon: '📚', color: '#C9A84C' },
+];
+```
+
+### FolderScreen — Sous-dossiers CONTROLE_INSPECTION
+```javascript
+subFolders: [
+  { id: 'RACI', title: 'RACI', subtitle: 'Registre des actions de contrôle et inspection', icon: '📋', screen: null },
+  { id: 'RAPPORT_PERIODIQUE', title: 'Rapport périodique de synthèse global 2025', subtitle: 'Bilan mensuel des contrôles', icon: '📊', screen: 'RapportPeriodique' },
+  { id: 'COMPTE_RENDU_KN1', title: 'Compte Rendu de contrôles des procédures KN1', subtitle: 'Comptes rendus KN1 par collaborateur', icon: '📝', screen: 'CompteRendu' },
+  { id: 'K_CHECK_LIST', title: 'K Check List 2025', subtitle: 'Check lists collaborateur et chantier', icon: '✅', screen: 'CheckList' },
+  { id: 'PLANNING_ANNUEL', title: 'Planning Annuel', subtitle: 'Diagramme de Gantt S01-S53', icon: '📅', screen: 'Planning' },
+]
+```
+
+---
+
+## Logique Métier Importante
+
+### Check List Collaborateur
+- Sections : Procédures collaborateur (SP320, S2B, S9A, S9B, S2CN°4, Consignes locales, Référentiels LGV), Indicateurs de fiabilité humaine (4 catégories), Documentation
+- Section Documentation : cotation S/A/M/I par item + champ global `Existence/MiseAJour` (OUI/NON) sauvegardé avec `pointCle='__GLOBAL__'` et `constatation='Existence:OUI|MiseAJour:OUI'`
+
+### Check List Chantier
+- Sections : Indicateurs fiabilité humaine, Collaborateurs sécurité, Avant départ, Au Chantier, Fin Travaux, Consignes, Documents, Agrès, Environnement
+- Section Agrès — 6 premiers items (GSMR, Clés de berne, Clés de vestibule, Lanternes, SAM, Pétards) : cotation S/A/M/I **+** Complétude/État/Validité, sauvegardés dans `constatation` au format `Completude:Oui|Etat:Bon|Validite:...|Note:...`, Régularisation = Actions dans le Compte Rendu
+
+### Flux Première Connexion Agent
+1. Admin crée l'agent → mot de passe = matricule, `first_login = true`
+2. Agent se connecte → `firstLogin: true` dans la réponse JWT
+3. `LoginScreen` redirige vers `ChangePassword`
+4. Agent change son mot de passe → `first_login = false`
+5. Redirection vers Dashboard
+
+### Collaborateurs
+- Un collaborateur est un `User` avec `role = AGENT` et `is_collaborateur = true`
+- L'admin toggle le statut depuis `CollaborateursScreen`
+- Seuls les agents marqués `is_collaborateur = true` apparaissent dans les listes de sélection (Planning, Check List)
+
+### Rapport Périodique
+- Données automatiques depuis `planning_tasks`
+- `CONTROLE_COLLABORATEURS` → ligne Collaborateurs
+- `CHANTIER_TRAVAUX_VOIE` → ligne Chantier
+- Endpoint : `GET /api/planning/rapport?annee=&mois=`
+- Calculs : annuelPrevu (total tâches année), moisPrevu (tâches semaine du mois), cumulPrevu (tâches semaines ≤ fin du mois), moisRealise (REALISE dans le mois), cumulRealise (REALISE depuis début année), avancement = cumulRealise/annuelPrevu*100
+
+---
+
+## Ce qui est Développé ✅
+
+1. **Authentification** : Login, Register, JWT, Première connexion, Change password
+2. **Dashboard** : 6 dossiers SMS avec navigation
+3. **Planning Annuel** : Gantt S01-S53, création/modification tâches, filtres catégories, vue liste
+4. **K Check List** : Formulaire complet Collaborateur + Chantier, export PDF
+5. **Collaborateurs** : Toggle statut depuis admin, liste agents
+6. **Admin** : Gestion utilisateurs, rôles, activation
+7. **Compte Rendu KN1** : Génération depuis checklist collaborateur, sections 1-7, export PDF
+8. **Rapport Périodique** : Bilan mensuel automatique depuis planning, export PDF
+
+---
+
+## Ce qui Reste à Développer ❌
+
+### Dans CONTROLE ET INSPECTION :
+- **RACI** (Registre des actions de contrôle et inspection) → à définir avec l'utilisateur
+
+
+### Autres dossiers (tous avec `screen: null` actuellement) :
+- **2-VEILLE** → contenu à définir
+- **3-GESTION DES RISQUES** → contenu à définir
+- **4-REX** → contenu à définir
+- **7-Culture Positif** → contenu à définir
+- **8-REFERENCIELS** → contenu à définir
+
+### Fonctionnalités manquantes :
+- **Espace Agent** → à nettoyer/compléter
+- **Rapports & Statistiques** → à développer
+
+---
+
+## Problèmes Connus et Solutions
+
+| Problème | Solution |
+|---------|---------|
+| Token JWT expiré | Se reconnecter, expiration dans `application.properties` |
+| Docker arrêté | `docker-compose up -d` dans `/docker/` |
+| IP WiFi changée | Mettre à jour `authService.js` avec nouvelle IP (`ipconfig`) |
+| `first_login` colonne manquante | `ALTER TABLE users ADD COLUMN IF NOT EXISTS first_login BOOLEAN DEFAULT false` |
+| `is_collaborateur` colonne manquante | `ALTER TABLE users ADD COLUMN IF NOT EXISTS is_collaborateur BOOLEAN DEFAULT false` |
+| CORS bloqué | CorsConfig.java avec `addAllowedOriginPattern("*")` et méthodes GET/POST/PUT/PATCH/DELETE/OPTIONS |
+
+---
+
+## Instructions pour Continuer
+
+1. **Toujours demander le fichier actuel** avant de modifier (l'utilisateur peut avoir fait des changements)
+2. **Fournir les fichiers complets** à remplacer plutôt que des extraits partiels
+3. **Tester avec PowerShell** les endpoints backend avant de passer au front
+4. **Respecter le design system** (couleurs, styles) définis ci-dessus
+5. **Spring Security** : attention aux méthodes HTTP — DELETE et certains sous-paths peuvent être bloqués
+6. **Import React** : toujours inclure `import React, { useState, useEffect } from 'react';`
+7. **SafeAreaView** : toujours importer depuis `react-native-safe-area-context`
+8. **Les filtres/chips** : utiliser `View` avec `flexDirection: 'row'` et `flex: 1`, jamais `ScrollView` horizontal pour éviter les problèmes de hauteur
+
+---
+
+## Fichiers de Référence Importants
+
+- `SecurityConfig.java` → configuration Spring Security
+- `JwtService.java` → génération/validation JWT
+- `JwtAuthFilter.java` → extraction rôle depuis token
+- `authService.js` → URL API mobile
+- `AuthContext.js` → contexte auth React Native
+- `App.js` → navigation React Native
