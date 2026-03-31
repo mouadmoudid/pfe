@@ -56,7 +56,32 @@ const FOLDERS = {
     title: '2 - Veille',
     color: '#8E44AD',
     icon: '👁',
-    subFolders: []
+    subFolders: [
+      {
+        id: 'PLANNING_K_COLLABORATEUR',
+        title: 'Planning K Collaborateur',
+        subtitle: 'Planning annuel des contrôles collaborateurs',
+        icon: '📅',
+        screen: 'Planning',
+        params: { readOnly: true },
+      },
+      {
+        id: 'FICHE_SUIVI',
+        title: 'Fiche de Suivi Individuel',
+        subtitle: 'Suivi examens et formations par collaborateur',
+        icon: '📑',
+        screen: 'FicheSuivi',
+        params: {},
+      },
+      {
+        id: 'TABLEAU_INDICATEURS',
+        title: 'Tableau des indicateurs d\'alerte',
+        subtitle: 'Surveillance permanente — Fiabilité humaine',
+        icon: '📊',
+        screen: 'TableauIndicateurs',
+        params: {},
+      },
+    ]
   },
   'GESTION_RISQUES': {
     title: '3 - Gestion des Risques',
@@ -113,7 +138,7 @@ export default function FolderScreen({ route, navigation }) {
               style={[styles.subFolder, { borderLeftColor: folder.color }]}
               onPress={() => {
                 if (sub.screen) {
-                  navigation.navigate(sub.screen);
+                  navigation.navigate(sub.screen, sub.params || {});
                 }
               }}
               activeOpacity={sub.screen ? 0.7 : 1}

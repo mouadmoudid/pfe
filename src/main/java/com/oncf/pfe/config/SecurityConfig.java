@@ -38,6 +38,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/checklists/**").authenticated()
                 .requestMatchers("/api/tasks/**").authenticated()
                 .requestMatchers("/api/collaborateurs/**").authenticated()
+                .requestMatchers("/api/fiche-suivi/**").authenticated()
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session
