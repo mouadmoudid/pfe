@@ -40,6 +40,12 @@ public class User implements UserDetails {
     private boolean enabled = true;
 
     private String matricule;
+    private String prenom;
+    private String dateNaissance;
+    private String entite;
+    private String residence;
+    private String fonctionAssuree;
+    private String dateFonction;
     private String poste;
     private String siteUp;
     private String telephone;

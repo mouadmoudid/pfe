@@ -85,6 +85,12 @@ public class UserController {
                 java.util.Map<String, String> info = new java.util.HashMap<>();
                 info.put("fullName", u.getFullName() != null ? u.getFullName() : "");
                 info.put("matricule", u.getMatricule() != null ? u.getMatricule() : "");
+                info.put("prenom", u.getPrenom() != null ? u.getPrenom() : "");
+                info.put("dateNaissance", u.getDateNaissance() != null ? u.getDateNaissance() : "");
+                info.put("entite", u.getEntite() != null ? u.getEntite() : "");
+                info.put("residence", u.getResidence() != null ? u.getResidence() : "");
+                info.put("fonctionAssuree", u.getFonctionAssuree() != null ? u.getFonctionAssuree() : "");
+                info.put("dateFonction", u.getDateFonction() != null ? u.getDateFonction() : "");
                 info.put("poste", u.getPoste() != null ? u.getPoste() : "");
                 info.put("siteUp", u.getSiteUp() != null ? u.getSiteUp() : "");
                 info.put("telephone", u.getTelephone() != null ? u.getTelephone() : "");

@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
   StyleSheet, ActivityIndicator, ScrollView,
-  StatusBar, SafeAreaView
+  StatusBar
 } from 'react-native';
-import { SafeAreaView as SafeAreaViewContext } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import axios from 'axios';
 import { API_URL } from '../services/authService';
 
@@ -15,12 +15,28 @@ const ROLES = [
 ];
 
 export default function RegisterScreen({ navigation }) {
-  const [fullName, setFullName] = useState('');
+  // Champs identité
+  const [nom, setNom] = useState('');
+  const [prenom, setPrenom] = useState('');
+  const [dateNaissance, setDateNaissance] = useState('');
   const [email, setEmail] = useState('');
+  const [matricule, setMatricule] = useState('');
+
+  // Champs poste
+  const [poste, setPoste] = useState('');
+  const [fonctionAssuree, setFonctionAssuree] = useState('');
+  const [dateFonction, setDateFonction] = useState('');
+  const [entite, setEntite] = useState('');
+  const [siteUp, setSiteUp] = useState('');
+  const [residence, setResidence] = useState('');
+  const [telephone, setTelephone] = useState('');
+
+  // Sécurité
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [selectedRole, setSelectedRole] = useState('AGENT');
   const [showPassword, setShowPassword] = useState(false);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
@@ -28,8 +44,8 @@ export default function RegisterScreen({ navigation }) {
   const handleRegister = async () => {
     setError(null);
 
-    if (!fullName || !email || !password || !confirmPassword) {
-      setError('Veuillez remplir tous les champs');
+    if (!nom || !prenom || !email || !password || !confirmPassword) {
+      setError('Veuillez remplir tous les champs obligatoires (*)');
       return;
     }
     if (password !== confirmPassword) {
@@ -44,7 +60,20 @@ export default function RegisterScreen({ navigation }) {
     setLoading(true);
     try {
       await axios.post(`${API_URL}/register`, {
-        fullName, email, password, role: selectedRole
+        fullName: `${nom} ${prenom}`,
+        prenom,
+        email,
+        password,
+        role: selectedRole,
+        matricule,
+        poste,
+        fonctionAssuree,
+        dateFonction,
+        entite,
+        siteUp,
+        residence,
+        telephone,
+        dateNaissance,
       });
       setSuccess(true);
       setTimeout(() => navigation.replace('Login'), 2000);
@@ -66,16 +95,13 @@ export default function RegisterScreen({ navigation }) {
   }
 
   return (
-    <SafeAreaViewContext style={styles.safe}>
+    <SafeAreaView style={styles.safe}>
       <StatusBar barStyle="light-content" backgroundColor="#0A1628" />
-      <ScrollView style={styles.container}   showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
 
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.backBtn}
-            onPress={() => navigation.goBack()}
-          >
+          <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
             <Text style={styles.backText}>← Retour</Text>
           </TouchableOpacity>
           <Text style={styles.logoText}>🚂</Text>
@@ -83,7 +109,6 @@ export default function RegisterScreen({ navigation }) {
           <Text style={styles.subtitle}>SMS ONCF · DRIC</Text>
         </View>
 
-        {/* Formulaire */}
         <View style={styles.form}>
 
           {error && (
@@ -92,80 +117,139 @@ export default function RegisterScreen({ navigation }) {
             </View>
           )}
 
-          {/* Nom complet */}
-          <Text style={styles.label}>Nom complet</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Prénom NOM"
-            placeholderTextColor="#8896A5"
-            value={fullName}
-            onChangeText={setFullName}
-          />
+          {/* ===== IDENTITÉ ===== */}
+          <View style={styles.sectionBox}>
+            <Text style={styles.sectionTitle}>👤 Identité</Text>
 
-          {/* Email */}
-          <Text style={styles.label}>Email professionnel</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="prenom.nom@oncf.ma"
-            placeholderTextColor="#8896A5"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
+            <View style={styles.row}>
+              <View style={{ flex: 1, marginRight: 8 }}>
+                <Text style={styles.label}>Nom *</Text>
+                <TextInput style={styles.input}
+                  placeholder="NOM" placeholderTextColor="#607D8B"
+                  value={nom} onChangeText={setNom}
+                  autoCapitalize="characters"
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.label}>Prénom *</Text>
+                <TextInput style={styles.input}
+                  placeholder="Prénom" placeholderTextColor="#607D8B"
+                  value={prenom} onChangeText={setPrenom}
+                />
+              </View>
+            </View>
 
-          {/* Mot de passe */}
-          <Text style={styles.label}>Mot de passe</Text>
-          <View style={styles.passwordContainer}>
-            <TextInput
-              style={styles.passwordInput}
-              placeholder="Min. 6 caractères"
-              placeholderTextColor="#8896A5"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry={!showPassword}
+            <Text style={styles.label}>Date de naissance</Text>
+            <TextInput style={styles.input}
+              placeholder="JJ/MM/AAAA" placeholderTextColor="#607D8B"
+              value={dateNaissance} onChangeText={setDateNaissance}
             />
-            <TouchableOpacity
-              onPress={() => setShowPassword(!showPassword)}
-              style={styles.eyeButton}
-            >
-              <Text>{showPassword ? '🙈' : '👁'}</Text>
-            </TouchableOpacity>
+
+            <Text style={styles.label}>Matricule</Text>
+            <TextInput style={styles.input}
+              placeholder="Ex: 43370N" placeholderTextColor="#607D8B"
+              value={matricule} onChangeText={setMatricule}
+              autoCapitalize="characters"
+            />
+
+            <Text style={styles.label}>Email professionnel *</Text>
+            <TextInput style={styles.input}
+              placeholder="prenom.nom@oncf.ma" placeholderTextColor="#607D8B"
+              value={email} onChangeText={setEmail}
+              keyboardType="email-address" autoCapitalize="none"
+            />
+
+            <Text style={styles.label}>Téléphone</Text>
+            <TextInput style={styles.input}
+              placeholder="Ex: 06XXXXXXXX" placeholderTextColor="#607D8B"
+              value={telephone} onChangeText={setTelephone}
+              keyboardType="phone-pad"
+            />
+
+            <Text style={styles.label}>Résidence</Text>
+            <TextInput style={styles.input}
+              placeholder="Ex: KENITRA" placeholderTextColor="#607D8B"
+              value={residence} onChangeText={setResidence}
+            />
           </View>
 
-          {/* Confirmer mot de passe */}
-          <Text style={styles.label}>Confirmer le mot de passe</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Répétez le mot de passe"
-            placeholderTextColor="#8896A5"
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-            secureTextEntry={!showPassword}
-          />
+          {/* ===== POSTE ===== */}
+          <View style={styles.sectionBox}>
+            <Text style={styles.sectionTitle}>🏢 Poste & Fonction</Text>
 
-          {/* Rôle */}
-          <Text style={styles.label}>Votre rôle</Text>
-          <View style={styles.rolesContainer}>
-            {ROLES.map((role) => (
-              <TouchableOpacity
-                key={role.value}
-                style={[
-                  styles.roleCard,
-                  selectedRole === role.value && styles.roleCardSelected
-                ]}
-                onPress={() => setSelectedRole(role.value)}
-              >
-                <Text style={styles.roleIcon}>{role.icon}</Text>
-                <Text style={[
-                  styles.roleLabel,
-                  selectedRole === role.value && styles.roleLabelSelected
-                ]}>
-                  {role.label}
-                </Text>
-                <Text style={styles.roleDesc}>{role.desc}</Text>
+            <Text style={styles.label}>Poste occupé</Text>
+            <TextInput style={styles.input}
+              placeholder="Ex: Technicien Voie LGV" placeholderTextColor="#607D8B"
+              value={poste} onChangeText={setPoste}
+            />
+
+            <Text style={styles.label}>Fonction assurée</Text>
+            <TextInput style={styles.input}
+              placeholder="Ex: CDT Adjoint, Tech, STGM..." placeholderTextColor="#607D8B"
+              value={fonctionAssuree} onChangeText={setFonctionAssuree}
+            />
+
+            <Text style={styles.label}>Date de prise de fonction</Text>
+            <TextInput style={styles.input}
+              placeholder="JJ/MM/AAAA" placeholderTextColor="#607D8B"
+              value={dateFonction} onChangeText={setDateFonction}
+            />
+
+            <Text style={styles.label}>Entité</Text>
+            <TextInput style={styles.input}
+              placeholder="Ex: DT 102V / UP 1021V" placeholderTextColor="#607D8B"
+              value={entite} onChangeText={setEntite}
+            />
+
+            <Text style={styles.label}>Site / UP</Text>
+            <TextInput style={styles.input}
+              placeholder="Ex: UP 1021V LGV" placeholderTextColor="#607D8B"
+              value={siteUp} onChangeText={setSiteUp}
+            />
+          </View>
+
+          {/* ===== RÔLE ===== */}
+          <View style={styles.sectionBox}>
+            <Text style={styles.sectionTitle}>🔑 Rôle</Text>
+            <View style={styles.rolesContainer}>
+              {ROLES.map((role) => (
+                <TouchableOpacity
+                  key={role.value}
+                  style={[styles.roleCard, selectedRole === role.value && styles.roleCardSelected]}
+                  onPress={() => setSelectedRole(role.value)}
+                >
+                  <Text style={styles.roleIcon}>{role.icon}</Text>
+                  <Text style={[styles.roleLabel, selectedRole === role.value && styles.roleLabelSelected]}>
+                    {role.label}
+                  </Text>
+                  <Text style={styles.roleDesc}>{role.desc}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          {/* ===== SÉCURITÉ ===== */}
+          <View style={styles.sectionBox}>
+            <Text style={styles.sectionTitle}>🔒 Sécurité</Text>
+
+            <Text style={styles.label}>Mot de passe *</Text>
+            <View style={styles.passwordContainer}>
+              <TextInput style={styles.passwordInput}
+                placeholder="Min. 6 caractères" placeholderTextColor="#607D8B"
+                value={password} onChangeText={setPassword}
+                secureTextEntry={!showPassword}
+              />
+              <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeButton}>
+                <Text>{showPassword ? '🙈' : '👁'}</Text>
               </TouchableOpacity>
-            ))}
+            </View>
+
+            <Text style={styles.label}>Confirmer le mot de passe *</Text>
+            <TextInput style={styles.input}
+              placeholder="Répétez le mot de passe" placeholderTextColor="#607D8B"
+              value={confirmPassword} onChangeText={setConfirmPassword}
+              secureTextEntry={!showPassword}
+            />
           </View>
 
           {/* Bouton */}
@@ -174,26 +258,22 @@ export default function RegisterScreen({ navigation }) {
             onPress={handleRegister}
             disabled={loading}
           >
-            {loading ? (
-              <ActivityIndicator color="#0A1628" />
-            ) : (
-              <Text style={styles.buttonText}>Créer mon compte</Text>
-            )}
+            {loading
+              ? <ActivityIndicator color="#0A1628" />
+              : <Text style={styles.buttonText}>Créer le compte</Text>
+            }
           </TouchableOpacity>
 
-          {/* Lien login */}
-          <TouchableOpacity
-            style={styles.loginLink}
-            onPress={() => navigation.replace('Login')}
-          >
+          <TouchableOpacity style={styles.loginLink} onPress={() => navigation.replace('Login')}>
             <Text style={styles.loginLinkText}>
               Déjà un compte ? <Text style={styles.loginLinkBold}>Se connecter</Text>
             </Text>
           </TouchableOpacity>
 
+          <View style={{ height: 40 }} />
         </View>
       </ScrollView>
-    </SafeAreaViewContext>
+    </SafeAreaView>
   );
 }
 
@@ -210,12 +290,9 @@ const styles = StyleSheet.create({
   successText: { color: '#607D8B', marginTop: 8 },
 
   header: {
-    alignItems: 'center',
-    paddingTop: 20,
-    paddingBottom: 24,
+    alignItems: 'center', paddingTop: 20, paddingBottom: 24,
     backgroundColor: '#0F2137',
-    borderBottomLeftRadius: 28,
-    borderBottomRightRadius: 28,
+    borderBottomLeftRadius: 28, borderBottomRightRadius: 28,
     marginBottom: 24,
   },
   backBtn: { alignSelf: 'flex-start', paddingLeft: 20, marginBottom: 16 },
@@ -224,64 +301,56 @@ const styles = StyleSheet.create({
   title: { color: '#FFFFFF', fontSize: 22, fontWeight: 'bold' },
   subtitle: { color: '#607D8B', fontSize: 12, marginTop: 4 },
 
-  form: { paddingHorizontal: 24, paddingBottom: 40 },
+  form: { paddingHorizontal: 16, paddingBottom: 40 },
 
   errorBox: {
-    backgroundColor: '#2D1515',
-    borderLeftWidth: 3,
-    borderLeftColor: '#E53935',
-    padding: 12, borderRadius: 8, marginBottom: 16,
+    backgroundColor: '#2D1515', borderLeftWidth: 3,
+    borderLeftColor: '#E53935', padding: 12,
+    borderRadius: 8, marginBottom: 16,
   },
   errorText: { color: '#EF9A9A', fontSize: 13 },
 
-  label: { color: '#B0BEC5', fontSize: 13, marginBottom: 6, marginTop: 14 },
-
-  input: {
-    backgroundColor: '#1A2F4A',
+  sectionBox: {
+    backgroundColor: '#0F2137', borderRadius: 12,
+    padding: 16, marginBottom: 12,
     borderWidth: 1, borderColor: '#2A4060',
-    borderRadius: 10, padding: 14,
-    color: '#FFFFFF', fontSize: 15,
+  },
+  sectionTitle: { color: '#C9A84C', fontSize: 14, fontWeight: 'bold', marginBottom: 8 },
+
+  row: { flexDirection: 'row' },
+
+  label: { color: '#B0BEC5', fontSize: 12, marginBottom: 4, marginTop: 10 },
+  input: {
+    backgroundColor: '#1A2F4A', borderWidth: 1, borderColor: '#2A4060',
+    borderRadius: 8, padding: 12, color: '#FFFFFF', fontSize: 14,
   },
 
   passwordContainer: {
-    flexDirection: 'row',
-    backgroundColor: '#1A2F4A',
+    flexDirection: 'row', backgroundColor: '#1A2F4A',
     borderWidth: 1, borderColor: '#2A4060',
-    borderRadius: 10, alignItems: 'center',
+    borderRadius: 8, alignItems: 'center',
   },
-  passwordInput: {
-    flex: 1, padding: 14,
-    color: '#FFFFFF', fontSize: 15,
-  },
-  eyeButton: { padding: 14 },
+  passwordInput: { flex: 1, padding: 12, color: '#FFFFFF', fontSize: 14 },
+  eyeButton: { padding: 12 },
 
-  rolesContainer: {
-    flexDirection: 'row', gap: 8, marginTop: 4,
-  },
+  rolesContainer: { flexDirection: 'row', gap: 8, marginTop: 4 },
   roleCard: {
     flex: 1, backgroundColor: '#1A2F4A',
     borderWidth: 1, borderColor: '#2A4060',
     borderRadius: 10, padding: 12, alignItems: 'center',
   },
-  roleCardSelected: {
-    borderColor: '#C9A84C',
-    backgroundColor: '#1E3A2F',
-  },
+  roleCardSelected: { borderColor: '#C9A84C', backgroundColor: '#1E3A2F' },
   roleIcon: { fontSize: 22, marginBottom: 4 },
   roleLabel: { color: '#B0BEC5', fontSize: 12, fontWeight: 'bold' },
   roleLabelSelected: { color: '#C9A84C' },
   roleDesc: { color: '#607D8B', fontSize: 10, marginTop: 2, textAlign: 'center' },
 
   button: {
-    backgroundColor: '#C9A84C',
-    borderRadius: 10, padding: 16,
-    alignItems: 'center', marginTop: 28,
+    backgroundColor: '#C9A84C', borderRadius: 10,
+    padding: 16, alignItems: 'center', marginTop: 16,
   },
   buttonDisabled: { opacity: 0.6 },
-  buttonText: {
-    color: '#0A1628', fontSize: 16,
-    fontWeight: 'bold', letterSpacing: 1,
-  },
+  buttonText: { color: '#0A1628', fontSize: 16, fontWeight: 'bold', letterSpacing: 1 },
 
   loginLink: { alignItems: 'center', marginTop: 20 },
   loginLinkText: { color: '#607D8B', fontSize: 14 },

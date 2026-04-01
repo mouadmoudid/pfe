@@ -81,6 +81,14 @@ const FOLDERS = {
         screen: 'TableauIndicateurs',
         params: {},
       },
+      {
+        id: 'LISTE_COLLABORATEURS',
+        title: 'Liste des Collaborateurs de Sécurité',
+        subtitle: 'Tous les collaborateurs avec leurs informations',
+        icon: '👥',
+        screen: 'ListeCollaborateurs',
+        params: {},
+      },
     ]
   },
   'GESTION_RISQUES': {
