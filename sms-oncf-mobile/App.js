@@ -9,6 +9,7 @@ import ManagerScreen from './app/screens/ManagerScreen';
 import AgentScreen from './app/screens/AgentScreen';
 import AdminScreen from './app/screens/AdminScreen';
 import PlanningScreen from './app/screens/PlanningScreen';
+import PlanningKScreen from './app/screens/PlanningKScreen';
 import FolderScreen from './app/screens/FolderScreen';
 import CheckListScreen from './app/screens/CheckListScreen';
 import CollaborateursScreen from './app/screens/CollaborateursScreen';
@@ -35,6 +36,7 @@ export default function App() {
           <Stack.Screen name="Agent" component={AgentScreen} />
           <Stack.Screen name="Admin" component={AdminScreen} />
           <Stack.Screen name="Planning" component={PlanningScreen} />
+          <Stack.Screen name="PlanningK" component={PlanningKScreen} />
           <Stack.Screen name="Folder" component={FolderScreen} />
           <Stack.Screen name="CheckList" component={CheckListScreen} />
           <Stack.Screen name="Collaborateurs" component={CollaborateursScreen} />

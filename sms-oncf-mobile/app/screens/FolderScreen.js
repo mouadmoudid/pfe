@@ -62,7 +62,7 @@ const FOLDERS = {
         title: 'Planning K Collaborateur',
         subtitle: 'Planning annuel des contrôles collaborateurs',
         icon: '📅',
-        screen: 'Planning',
+        screen: 'PlanningK',
         params: { readOnly: true },
       },
       {
