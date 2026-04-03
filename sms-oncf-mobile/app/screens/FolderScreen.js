@@ -101,7 +101,24 @@ const FOLDERS = {
     title: '4 - REX',
     color: '#E67E22',
     icon: '🔄',
-    subFolders: []
+    subFolders: [
+      {
+        id: 'REX_REGALEUSE',
+        title: 'REX — Retour d\'Expérience',
+        subtitle: 'Retour d\'expérience incidents',
+        icon: '📋',
+        screen: 'Rex',
+        params: {},
+      },
+      {
+        id: 'RACE',
+        title: 'RACE — Rapport d\'Analyse',
+        subtitle: 'Rapport d\'Analyse Complémentaire d\'Événement',
+        icon: '📊',
+        screen: 'Race',
+        params: {},
+      },
+    ]
   },
   'CULTURE_POSITIF': {
     title: '5 - Culture Positif',

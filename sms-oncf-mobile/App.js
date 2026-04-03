@@ -21,7 +21,8 @@ import RACIScreen from './app/screens/RACIScreen';
 import FicheSuiviScreen from './app/screens/FicheSuiviScreen';
 import TableauIndicateursScreen from './app/screens/TableauIndicateursScreen';
 import ListeCollaborateursScreen from './app/screens/ListeCollaborateursScreen';
-
+import RexScreen from './app/screens/RexScreen';
+import RaceScreen from './app/screens/RaceScreen';
 
 const Stack = createStackNavigator();
 
@@ -48,6 +49,8 @@ export default function App() {
           <Stack.Screen name="FicheSuivi" component={FicheSuiviScreen} />
           <Stack.Screen name="TableauIndicateurs" component={TableauIndicateursScreen} />
           <Stack.Screen name="ListeCollaborateurs" component={ListeCollaborateursScreen} />
+          <Stack.Screen name="Rex" component={RexScreen} />
+          <Stack.Screen name="Race" component={RaceScreen} />
 
 
         </Stack.Navigator>

@@ -39,6 +39,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/tasks/**").authenticated()
                 .requestMatchers("/api/collaborateurs/**").authenticated()
                 .requestMatchers("/api/fiche-suivi/**").authenticated()
+                .requestMatchers("/api/rex/**").authenticated()
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session
