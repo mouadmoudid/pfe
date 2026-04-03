@@ -104,13 +104,13 @@ const FOLDERS = {
     subFolders: []
   },
   'CULTURE_POSITIF': {
-    title: '7 - Culture Positif',
+    title: '5 - Culture Positif',
     color: '#27AE60',
     icon: '🌟',
     subFolders: []
   },
   'REFERENCIELS': {
-    title: '8 - Référenciels',
+    title: '6 - Référenciels',
     color: '#C9A84C',
     icon: '📚',
     subFolders: []

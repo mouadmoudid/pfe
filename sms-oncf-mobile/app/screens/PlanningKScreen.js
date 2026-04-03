@@ -28,13 +28,6 @@ const CATEGORY_COLORS = {
   FORMATION_SENSIBILISATION: '#8E44AD',
 };
 
-const STATUS_COLORS = {
-  PLANIFIE: '#607D8B',
-  EN_COURS: '#E67E22',
-  REALISE: '#27AE60',
-  REPORTE: '#E74C3C',
-  ANNULE: '#424242',
-};
 
 const SOUS_TACHES = {
   CONTROLE_COLLABORATEURS: [
@@ -173,20 +166,6 @@ export default function PlanningScreen({ navigation }) {
       Alert.alert('Succès', 'Tâche planning créée !');
     } catch {
       Alert.alert('Erreur', 'Impossible de créer la tâche');
-    }
-  };
-
-  const updateStatus = async (taskId, status) => {
-    try {
-      const token = await getToken();
-      await axios.patch(`${PLANNING_API}/${taskId}`,
-        { status },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      loadData();
-      setDetailModal(false);
-    } catch {
-      Alert.alert('Erreur', 'Impossible de mettre à jour');
     }
   };
 
@@ -374,11 +353,6 @@ export default function PlanningScreen({ navigation }) {
                       <Text style={[styles.taskCategory, { color: CATEGORY_COLORS[task.category] }]}>
                         {CATEGORIES.find(c => c.key === task.category)?.label}
                       </Text>
-                      <View style={[styles.statusBadge, { backgroundColor: STATUS_COLORS[task.status] + '30' }]}>
-                        <Text style={[styles.statusText, { color: STATUS_COLORS[task.status] }]}>
-                          {task.status}
-                        </Text>
-                      </View>
                     </View>
                     <Text style={styles.taskTitle}>{task.title}</Text>
                     <View style={styles.taskMeta}>
@@ -727,8 +701,6 @@ const styles = StyleSheet.create({
   },
   taskTop: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
   taskCategory: { fontSize: 11, fontWeight: 'bold' },
-  statusBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
-  statusText: { fontSize: 10, fontWeight: 'bold' },
   taskTitle: { color: '#FFFFFF', fontSize: 14, fontWeight: 'bold', marginBottom: 6 },
   taskMeta: { flexDirection: 'row', gap: 12, marginBottom: 8 },
   taskMetaText: { color: '#607D8B', fontSize: 11 },
@@ -755,9 +727,6 @@ const styles = StyleSheet.create({
   },
   detailLabel: { color: '#607D8B', fontSize: 13, marginBottom: 8, marginTop: 12 },
   detailValue: { color: '#FFFFFF', fontSize: 13, fontWeight: 'bold' },
-  statusActions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 },
-  statusBtn: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8 },
-  statusBtnText: { fontSize: 11, fontWeight: 'bold' },
 
   inputLabel: { color: '#B0BEC5', fontSize: 12, marginBottom: 4, marginTop: 10 },
   input: {
