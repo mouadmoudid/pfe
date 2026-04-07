@@ -11,17 +11,16 @@ const DOSSIERS = [
   { id: 'VEILLE', title: '2 - Veille', icon: '👁', color: '#8E44AD' },
   { id: 'GESTION_RISQUES', title: '3 - Gestion des Risques', icon: '⚠️', color: '#E74C3C' },
   { id: 'REX', title: '4 - REX', icon: '🔄', color: '#E67E22' },
-  { id: 'CULTURE_POSITIF', title: '7 - Culture Positif', icon: '🌟', color: '#27AE60' },
-  { id: 'REFERENCIELS', title: '8 - Référenciels', icon: '📚', color: '#C9A84C' },
+  { id: 'CULTURE_POSITIF', title: '5 - Culture Positif', icon: '🌟', color: '#27AE60' },
+  { id: 'REFERENCIELS', title: '6 - Référenciels', icon: '📚', color: '#C9A84C' },
 ];
 
+const isChef = (role) => role === 'CHEF_KN1' || role === 'CHEF_KN2' || role === 'CHEF_KN3';
+
 const getRoleColor = (role) => {
-  switch (role) {
-    case 'ADMIN': return '#E74C3C';
-    case 'MANAGER': return '#E67E22';
-    case 'INSPECTEUR': return '#8E44AD';
-    default: return '#27AE60';
-  }
+  if (role === 'ADMIN') return '#E74C3C';
+  if (isChef(role)) return '#8E44AD';
+  return '#27AE60';
 };
 
 export default function DashboardScreen({ navigation }) {
@@ -66,21 +65,21 @@ export default function DashboardScreen({ navigation }) {
           </View>
         </View>
 
-        {(user?.role === 'MANAGER' || user?.role === 'AGENT') && (
+        {(user?.role === 'ADMIN' || isChef(user?.role)) && (
+          <TouchableOpacity
+            style={styles.adminBtn}
+            onPress={() => navigation.navigate('Admin')}
+          >
+            <Text style={styles.adminBtnText}>👥 Gérer les utilisateurs</Text>
+          </TouchableOpacity>
+        )}
+
+        {(user?.role === 'ADMIN' || isChef(user?.role)) && (
           <TouchableOpacity
             style={styles.planningBtn}
             onPress={() => navigation.navigate('Planning')}
           >
             <Text style={styles.planningBtnText}>📅 Planning Annuel — Gantt S01-S53</Text>
-          </TouchableOpacity>
-        )}
-
-        {user?.role === 'ADMIN' && (
-          <TouchableOpacity
-            style={styles.adminBtn}
-            onPress={() => navigation.navigate('Admin')}
-          >
-            <Text style={styles.adminBtnText}>👥 Interface Admin — Gérer les utilisateurs</Text>
           </TouchableOpacity>
         )}
 

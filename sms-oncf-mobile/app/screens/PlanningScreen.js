@@ -11,6 +11,8 @@ import { API_URL } from '../services/authService';
 
 const PLANNING_API = API_URL.replace('/auth', '/planning');
 const TASK_API = API_URL.replace('/auth', '/tasks');
+
+const isChef = (role) => role === 'CHEF_KN1' || role === 'CHEF_KN2' || role === 'CHEF_KN3';
 const screenWidth = Dimensions.get('window').width;
 
 const CATEGORIES = [
@@ -131,7 +133,7 @@ export default function PlanningScreen({ navigation }) {
       const currentUser = user || (storageUser ? JSON.parse(storageUser) : null);
 
       let planRes;
-      if (currentUser && (currentUser.role === 'ADMIN' || currentUser.role === 'MANAGER')) {
+      if (currentUser && (currentUser.role === 'ADMIN' || currentUser.role === 'MANAGER' || isChef(currentUser.role))) {
         planRes = await axios.get(`${PLANNING_API}?annee=${annee}`, { headers });
         const agentRes = await axios.get(`${API_URL.replace('/auth', '/admin/collaborateurs')}`, { headers });
         setAgents(agentRes.data);
@@ -202,7 +204,7 @@ export default function PlanningScreen({ navigation }) {
     return { start, duration };
   };
 
-  const isCanCreate = user?.role === 'ADMIN' || user?.role === 'MANAGER';
+  const isCanCreate = user?.role === 'ADMIN' || user?.role === 'MANAGER' || isChef(user?.role);
 
   return (
     <SafeAreaView style={styles.safe}>

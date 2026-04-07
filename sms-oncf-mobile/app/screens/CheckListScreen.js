@@ -273,10 +273,13 @@ const ITEMS_CHANTIER = [
   },
 ];
 
+const isChef = (role) => role === 'CHEF_KN1' || role === 'CHEF_KN2' || role === 'CHEF_KN3';
+
 export default function CheckListScreen({ navigation }) {
   const [checklists, setChecklists] = useState([]);
   const [filteredCollab, setFilteredCollab] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
   const [creating, setCreating] = useState(false);
   const [step, setStep] = useState(0);
   const [type, setType] = useState(null);
@@ -299,17 +302,25 @@ export default function CheckListScreen({ navigation }) {
   const [itemsState, setItemsState] = useState({});
 
   useEffect(() => {
-    loadChecklists();
-    loadCollaborateurs();
+    const init = async () => {
+      const userData = await AsyncStorage.getItem('user');
+      const user = userData ? JSON.parse(userData) : null;
+      setCurrentUser(user);
+      await loadChecklists(user);
+      await loadCollaborateurs();
+    };
+    init();
   }, []);
 
   const getToken = async () => await AsyncStorage.getItem('token');
 
-  const loadChecklists = async () => {
+  const loadChecklists = async (user) => {
     setLoading(true);
     try {
       const token = await getToken();
-      const res = await axios.get(`${CHECKLIST_API}/my`, {
+      const canSeeAll = user?.role === 'ADMIN' || isChef(user?.role);
+      const url = canSeeAll ? CHECKLIST_API : `${CHECKLIST_API}/my`;
+      const res = await axios.get(url, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setChecklists(res.data);
@@ -416,7 +427,7 @@ export default function CheckListScreen({ navigation }) {
         collaborateurNom: '', collaborateurMatricule: '',
         chantierNom: '', chantierType: '', isKm: '',
       });
-      loadChecklists();
+      loadChecklists(currentUser);
     } catch {
       Alert.alert('Erreur', 'Impossible de sauvegarder');
     } finally {
@@ -440,7 +451,7 @@ export default function CheckListScreen({ navigation }) {
                 headers: { Authorization: `Bearer ${token}` }
               });
               Alert.alert('Succès', 'Check list supprimée');
-              loadChecklists();
+              loadChecklists(currentUser);
             } catch (error) {
               const msg = error?.response?.data?.message || error?.response?.data || error.message || 'Impossible de supprimer';
               Alert.alert('Erreur', msg.toString());

@@ -10,15 +10,14 @@ import { API_URL } from '../services/authService';
 
 const ADMIN_API = API_URL.replace('/auth', '/admin');
 
-const ROLES = ['ADMIN', 'MANAGER', 'AGENT', 'INSPECTEUR'];
+const ROLES = ['ADMIN', 'AGENT', 'CHEF_KN1', 'CHEF_KN2', 'CHEF_KN3'];
+
+const isChef = (role) => role === 'CHEF_KN1' || role === 'CHEF_KN2' || role === 'CHEF_KN3';
 
 const getRoleColor = (role) => {
-  switch (role) {
-    case 'ADMIN': return '#E74C3C';
-    case 'MANAGER': return '#E67E22';
-    case 'INSPECTEUR': return '#8E44AD';
-    default: return '#27AE60';
-  }
+  if (role === 'ADMIN') return '#E74C3C';
+  if (isChef(role)) return '#8E44AD';
+  return '#27AE60';
 };
 
 export default function AdminScreen({ navigation }) {
@@ -121,9 +120,10 @@ export default function AdminScreen({ navigation }) {
   const counts = {
     ALL: users.length,
     ADMIN: users.filter(u => u.role === 'ADMIN').length,
-    MANAGER: users.filter(u => u.role === 'MANAGER').length,
     AGENT: users.filter(u => u.role === 'AGENT').length,
-    INSPECTEUR: users.filter(u => u.role === 'INSPECTEUR').length,
+    CHEF_KN1: users.filter(u => u.role === 'CHEF_KN1').length,
+    CHEF_KN2: users.filter(u => u.role === 'CHEF_KN2').length,
+    CHEF_KN3: users.filter(u => u.role === 'CHEF_KN3').length,
   };
 
   return (
@@ -136,7 +136,7 @@ export default function AdminScreen({ navigation }) {
         </TouchableOpacity>
         <View style={styles.headerRow}>
           <View>
-            <Text style={styles.headerTitle}>Interface Admin</Text>
+            <Text style={styles.headerTitle}>Utilisateurs</Text>
             <Text style={styles.headerSub}>Gestion des utilisateurs</Text>
           </View>
           <TouchableOpacity style={styles.refreshBtn} onPress={loadUsers}>
@@ -158,9 +158,10 @@ export default function AdminScreen({ navigation }) {
         {[
           { key: 'ALL', label: 'Tous', color: '#C9A84C' },
           { key: 'ADMIN', label: 'Admins', color: '#E74C3C' },
-          { key: 'MANAGER', label: 'Managers', color: '#E67E22' },
           { key: 'AGENT', label: 'Agents', color: '#27AE60' },
-          { key: 'INSPECTEUR', label: 'Inspect.', color: '#8E44AD' },
+          { key: 'CHEF_KN1', label: 'KN1', color: '#8E44AD' },
+          { key: 'CHEF_KN2', label: 'KN2', color: '#8E44AD' },
+          { key: 'CHEF_KN3', label: 'KN3', color: '#8E44AD' },
         ].map(item => (
           <TouchableOpacity
             key={item.key}
