@@ -95,18 +95,21 @@ export default function ReferentielsScreen({ navigation }) {
       setUploadProgress({ current: i + 1, total });
       try {
         const formData = new FormData();
-        formData.append('file', {
-          uri: file.uri,
-          name: file.name,
-          type: 'application/pdf',
-        });
+        if (Platform.OS === 'web') {
+          // Sur web : utiliser l'objet File natif du navigateur (boundary géré automatiquement)
+          formData.append('file', file.file, file.name);
+        } else {
+          // Sur mobile : utiliser l'URI React Native
+          formData.append('file', { uri: file.uri, name: file.name, type: 'application/pdf' });
+        }
         formData.append('nom', file.name.replace(/\.pdf$/i, ''));
         if (uploadDesc.trim()) formData.append('description', uploadDesc.trim());
 
         await axios.post(REFERENTIEL_API, formData, {
           headers: {
             Authorization: `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data',
+            // Sur web : ne pas forcer Content-Type — le navigateur ajoute le boundary multipart
+            ...(Platform.OS !== 'web' && { 'Content-Type': 'multipart/form-data' }),
           },
         });
       } catch {
@@ -166,27 +169,32 @@ export default function ReferentielsScreen({ navigation }) {
     }
   };
 
+  const doDelete = async (ref) => {
+    try {
+      const token = await getToken();
+      await axios.delete(`${REFERENTIEL_API}/${ref.id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      loadReferentiels();
+    } catch {
+      Alert.alert('Erreur', 'Impossible de supprimer');
+    }
+  };
+
   const handleDelete = (ref) => {
+    if (Platform.OS === 'web') {
+      // window.confirm() est fiable sur web, Alert.alert avec boutons ne l'est pas
+      if (window.confirm(`Supprimer définitivement "${ref.nom}" ?`)) {
+        doDelete(ref);
+      }
+      return;
+    }
     Alert.alert(
       'Supprimer',
       `Supprimer définitivement "${ref.nom}" ?`,
       [
         { text: 'Annuler', style: 'cancel' },
-        {
-          text: 'Supprimer',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              const token = await getToken();
-              await axios.delete(`${REFERENTIEL_API}/${ref.id}`, {
-                headers: { Authorization: `Bearer ${token}` },
-              });
-              loadReferentiels();
-            } catch {
-              Alert.alert('Erreur', 'Impossible de supprimer');
-            }
-          },
-        },
+        { text: 'Supprimer', style: 'destructive', onPress: () => doDelete(ref) },
       ]
     );
   };
