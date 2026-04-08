@@ -16,6 +16,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 
 @Configuration
@@ -34,6 +35,9 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/admin/**").hasAnyRole("ADMIN", "CHEF_KN1", "CHEF_KN2", "CHEF_KN3")
+                .requestMatchers(HttpMethod.POST, "/api/referentiels").hasAnyRole("ADMIN", "CHEF_KN1", "CHEF_KN2", "CHEF_KN3")
+                .requestMatchers(HttpMethod.DELETE, "/api/referentiels/**").hasAnyRole("ADMIN", "CHEF_KN1", "CHEF_KN2", "CHEF_KN3")
+                .requestMatchers(HttpMethod.GET, "/api/referentiels/**").authenticated()
                 .requestMatchers("/api/planning/**").authenticated()
                 .requestMatchers("/api/checklists/**").authenticated()
                 .requestMatchers("/api/tasks/**").authenticated()

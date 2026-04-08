@@ -130,7 +130,16 @@ const FOLDERS = {
     title: '6 - Référenciels',
     color: '#C9A84C',
     icon: '📚',
-    subFolders: []
+    subFolders: [
+      {
+        id: 'REFERENTIELS_PDF',
+        title: 'Documents Référentiels',
+        subtitle: 'Procédures, normes et référentiels PDF',
+        icon: '📄',
+        screen: 'Referentiels',
+        params: {},
+      },
+    ]
   },
 };
 

@@ -23,6 +23,7 @@ import TableauIndicateursScreen from './app/screens/TableauIndicateursScreen';
 import ListeCollaborateursScreen from './app/screens/ListeCollaborateursScreen';
 import RexScreen from './app/screens/RexScreen';
 import RaceScreen from './app/screens/RaceScreen';
+import ReferentielsScreen from './app/screens/ReferentielsScreen';
 
 const Stack = createStackNavigator();
 
@@ -51,6 +52,7 @@ export default function App() {
           <Stack.Screen name="ListeCollaborateurs" component={ListeCollaborateursScreen} />
           <Stack.Screen name="Rex" component={RexScreen} />
           <Stack.Screen name="Race" component={RaceScreen} />
+          <Stack.Screen name="Referentiels" component={ReferentielsScreen} />
 
 
         </Stack.Navigator>
