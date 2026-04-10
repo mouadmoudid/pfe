@@ -16,7 +16,7 @@ const DOSSIERS = [
   { id: 'CAPITAL_HUMAIN', title: '7 - C.H - Capital Humain', icon: '👨‍👩‍👧‍👦', color: '#16A085' },
 ];
 
-const isChef = (role) => role === 'CHEF_KN1' || role === 'CHEF_KN2' || role === 'CHEF_KN3';
+const isChef = (role) => role === 'CPGX' || role === 'CSPR' || role === 'CET';
 
 const getRoleColor = (role) => {
   if (role === 'ADMIN') return '#E74C3C';

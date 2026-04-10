@@ -10,9 +10,9 @@ import { API_URL } from '../services/authService';
 
 const ROLES = [
   { value: 'AGENT', label: 'Agent', icon: '👷', desc: 'Saisie terrain' },
-  { value: 'CHEF_KN1', label: 'Chef KN1', icon: '👨‍💼', desc: 'Responsable KN1' },
-  { value: 'CHEF_KN2', label: 'Chef KN2', icon: '👨‍💼', desc: 'Chef KN2' },
-  { value: 'CHEF_KN3', label: 'Chef KN3', icon: '👨‍💼', desc: 'Grand Chef KN3' },
+  { value: 'CPGX', label: 'CPGX', icon: '👨‍💼', desc: 'Chef CPGX' },
+  { value: 'CSPR', label: 'CSPR', icon: '👨‍💼', desc: 'Chef CSPR' },
+  { value: 'CET', label: 'CET', icon: '👨‍💼', desc: 'Chef CET' },
 ];
 
 export default function RegisterScreen({ navigation }) {

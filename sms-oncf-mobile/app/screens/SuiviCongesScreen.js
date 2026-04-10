@@ -28,7 +28,7 @@ const MOIS = [
   { label: 'Décembre', value: 12 },
 ];
 
-const canEdit = (role) => role === 'ADMIN' || role === 'CHEF_KN1';
+const canEdit = (role) => role === 'ADMIN' || role === 'CPGX';
 
 const getDateDebutSemaine = (semaine, annee) => {
   const date = new Date(annee, 0, 1 + (semaine - 1) * 7);

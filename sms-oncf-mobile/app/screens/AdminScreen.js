@@ -10,9 +10,9 @@ import { API_URL } from '../services/authService';
 
 const ADMIN_API = API_URL.replace('/auth', '/admin');
 
-const ROLES = ['ADMIN', 'AGENT', 'CHEF_KN1', 'CHEF_KN2', 'CHEF_KN3'];
+const ROLES = ['ADMIN', 'AGENT', 'CPGX', 'CSPR', 'CET'];
 
-const isChef = (role) => role === 'CHEF_KN1' || role === 'CHEF_KN2' || role === 'CHEF_KN3';
+const isChef = (role) => role === 'CPGX' || role === 'CSPR' || role === 'CET';
 
 const getRoleColor = (role) => {
   if (role === 'ADMIN') return '#E74C3C';
@@ -121,9 +121,9 @@ export default function AdminScreen({ navigation }) {
     ALL: users.length,
     ADMIN: users.filter(u => u.role === 'ADMIN').length,
     AGENT: users.filter(u => u.role === 'AGENT').length,
-    CHEF_KN1: users.filter(u => u.role === 'CHEF_KN1').length,
-    CHEF_KN2: users.filter(u => u.role === 'CHEF_KN2').length,
-    CHEF_KN3: users.filter(u => u.role === 'CHEF_KN3').length,
+    CPGX: users.filter(u => u.role === 'CPGX').length,
+    CSPR: users.filter(u => u.role === 'CSPR').length,
+    CET: users.filter(u => u.role === 'CET').length,
   };
 
   return (
@@ -159,9 +159,9 @@ export default function AdminScreen({ navigation }) {
           { key: 'ALL', label: 'Tous', color: '#C9A84C' },
           { key: 'ADMIN', label: 'Admins', color: '#E74C3C' },
           { key: 'AGENT', label: 'Agents', color: '#27AE60' },
-          { key: 'CHEF_KN1', label: 'KN1', color: '#8E44AD' },
-          { key: 'CHEF_KN2', label: 'KN2', color: '#8E44AD' },
-          { key: 'CHEF_KN3', label: 'KN3', color: '#8E44AD' },
+          { key: 'CPGX', label: 'CPGX', color: '#8E44AD' },
+          { key: 'CSPR', label: 'CSPR', color: '#8E44AD' },
+          { key: 'CET', label: 'CET', color: '#8E44AD' },
         ].map(item => (
           <TouchableOpacity
             key={item.key}

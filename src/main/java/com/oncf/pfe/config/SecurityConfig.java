@@ -18,7 +18,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
-import org.springframework.http.HttpMethod;
+
 
 @Configuration
 @EnableWebSecurity
@@ -35,9 +35,9 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers("/api/admin/**").hasAnyRole("ADMIN", "CHEF_KN1", "CHEF_KN2", "CHEF_KN3")
-                .requestMatchers(HttpMethod.POST, "/api/referentiels").hasAnyRole("ADMIN", "CHEF_KN1", "CHEF_KN2", "CHEF_KN3")
-                .requestMatchers(HttpMethod.DELETE, "/api/referentiels/**").hasAnyRole("ADMIN", "CHEF_KN1", "CHEF_KN2", "CHEF_KN3")
+                .requestMatchers("/api/admin/**").hasAnyRole("ADMIN", "CPGX", "CSPR", "CET")
+                .requestMatchers(HttpMethod.POST, "/api/referentiels").hasAnyRole("ADMIN", "CPGX", "CSPR", "CET")
+                .requestMatchers(HttpMethod.DELETE, "/api/referentiels/**").hasAnyRole("ADMIN", "CPGX", "CSPR", "CET")
                 .requestMatchers(HttpMethod.GET, "/api/referentiels/**").authenticated()
                 .requestMatchers("/api/planning/**").authenticated()
                 .requestMatchers("/api/checklists/**").authenticated()
@@ -46,8 +46,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/fiche-suivi/**").authenticated()
                 .requestMatchers("/api/rex/**").authenticated()
                 .requestMatchers(HttpMethod.GET, "/api/conges/**").authenticated()
-                .requestMatchers(HttpMethod.POST, "/api/conges/**").hasAnyRole("ADMIN", "CHEF_KN1")
-                .requestMatchers(HttpMethod.DELETE, "/api/conges/**").hasAnyRole("ADMIN", "CHEF_KN1")
+                .requestMatchers(HttpMethod.POST, "/api/conges/**").hasAnyRole("ADMIN", "CPGX")
+                .requestMatchers(HttpMethod.DELETE, "/api/conges/**").hasAnyRole("ADMIN", "CPGX")
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session
