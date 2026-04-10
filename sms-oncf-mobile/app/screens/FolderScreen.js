@@ -141,6 +141,62 @@ const FOLDERS = {
       },
     ]
   },
+  'CAPITAL_HUMAIN': {
+    title: 'C.H - Capital Humain',
+    color: '#16A085',
+    icon: '👨‍👩‍👧‍👦',
+    subFolders: [
+      {
+        id: 'SUIVI_CONGES',
+        title: 'Suivi de Congés',
+        subtitle: 'Gestion et suivi des congés du personnel',
+        icon: '🏖️',
+        screen: 'SuiviConges',
+      },
+      {
+        id: 'SUIVI_ASTREINTE',
+        title: 'Suivi Astreinte',
+        subtitle: 'Suivi des astreintes et permanences',
+        icon: '📡',
+        screen: null,
+      },
+      {
+        id: 'ELEMENT_SOLDE',
+        title: 'Élément de Solde',
+        subtitle: 'Éléments de paie et de solde',
+        icon: '💰',
+        screen: null,
+      },
+      {
+        id: 'ACCIDENT_TRAVAIL',
+        title: 'Accident Travail',
+        subtitle: 'Déclaration et suivi des accidents de travail',
+        icon: '🚨',
+        screen: null,
+      },
+      {
+        id: 'STAGES',
+        title: 'Stages',
+        subtitle: 'Gestion des stages et stagiaires',
+        icon: '🎓',
+        screen: null,
+      },
+      {
+        id: 'TABLEAU_SERVICE',
+        title: 'Tableau de Service',
+        subtitle: 'Planning et tableau de service du personnel',
+        icon: '📆',
+        screen: null,
+      },
+      {
+        id: 'REGLEMENT_CH',
+        title: 'Règlement C.H',
+        subtitle: 'Règlement intérieur Capital Humain',
+        icon: '📜',
+        screen: null,
+      },
+    ]
+  },
 };
 
 export default function FolderScreen({ route, navigation }) {

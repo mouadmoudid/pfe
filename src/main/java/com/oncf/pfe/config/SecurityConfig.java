@@ -18,6 +18,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
+import org.springframework.http.HttpMethod;
 
 @Configuration
 @EnableWebSecurity
@@ -44,6 +45,9 @@ public class SecurityConfig {
                 .requestMatchers("/api/collaborateurs/**").authenticated()
                 .requestMatchers("/api/fiche-suivi/**").authenticated()
                 .requestMatchers("/api/rex/**").authenticated()
+                .requestMatchers(HttpMethod.GET, "/api/conges/**").authenticated()
+                .requestMatchers(HttpMethod.POST, "/api/conges/**").hasAnyRole("ADMIN", "CHEF_KN1")
+                .requestMatchers(HttpMethod.DELETE, "/api/conges/**").hasAnyRole("ADMIN", "CHEF_KN1")
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session

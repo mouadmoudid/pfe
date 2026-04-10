@@ -13,6 +13,7 @@ const DOSSIERS = [
   { id: 'REX', title: '4 - REX', icon: '🔄', color: '#E67E22' },
   { id: 'CULTURE_POSITIF', title: '5 - Culture Positif', icon: '🌟', color: '#27AE60' },
   { id: 'REFERENCIELS', title: '6 - Référenciels', icon: '📚', color: '#C9A84C' },
+  { id: 'CAPITAL_HUMAIN', title: '7 - C.H - Capital Humain', icon: '👨‍👩‍👧‍👦', color: '#16A085' },
 ];
 
 const isChef = (role) => role === 'CHEF_KN1' || role === 'CHEF_KN2' || role === 'CHEF_KN3';
