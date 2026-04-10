@@ -153,12 +153,12 @@ const FOLDERS = {
         icon: '🏖️',
         screen: 'SuiviConges',
       },
-      {
-        id: 'SUIVI_ASTREINTE',
-        title: 'Suivi Astreinte',
-        subtitle: 'Suivi des astreintes et permanences',
-        icon: '📡',
-        screen: null,
+      { id: 'SUIVI_ASTREINTE',
+        title: 'Suivi Astreinte', 
+        subtitle: 'Planning des astreintes', 
+        icon: '📡', 
+        screen: 'SuiviAstreinte', 
+        params: {} 
       },
       {
         id: 'ELEMENT_SOLDE',

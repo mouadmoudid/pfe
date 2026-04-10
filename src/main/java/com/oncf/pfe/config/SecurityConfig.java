@@ -48,6 +48,9 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/conges/**").authenticated()
                 .requestMatchers(HttpMethod.POST, "/api/conges/**").hasAnyRole("ADMIN", "CPGX")
                 .requestMatchers(HttpMethod.DELETE, "/api/conges/**").hasAnyRole("ADMIN", "CPGX")
+                .requestMatchers(HttpMethod.GET, "/api/astreinte/**").authenticated()
+                .requestMatchers(HttpMethod.POST, "/api/astreinte/**").hasAnyRole("ADMIN", "CPGX")
+                .requestMatchers(HttpMethod.DELETE, "/api/astreinte/**").hasAnyRole("ADMIN", "CPGX")
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session
