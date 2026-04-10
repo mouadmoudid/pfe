@@ -51,6 +51,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/astreinte/**").authenticated()
                 .requestMatchers(HttpMethod.POST, "/api/astreinte/**").hasAnyRole("ADMIN", "CPGX")
                 .requestMatchers(HttpMethod.DELETE, "/api/astreinte/**").hasAnyRole("ADMIN", "CPGX")
+                .requestMatchers("/api/questionnaire/**").authenticated()
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session

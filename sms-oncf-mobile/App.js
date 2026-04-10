@@ -26,6 +26,8 @@ import RaceScreen from './app/screens/RaceScreen';
 import ReferentielsScreen from './app/screens/ReferentielsScreen';
 import SuiviCongesScreen from './app/screens/SuiviCongesScreen';
 import SuiviAstreinteScreen from './app/screens/SuiviAstreinteScreen';
+import CulturePositiveScreen from './app/screens/CulturePositiveScreen';
+
 
 
 const Stack = createStackNavigator();
@@ -58,6 +60,7 @@ export default function App() {
           <Stack.Screen name="Referentiels" component={ReferentielsScreen} />
           <Stack.Screen name="SuiviConges" component={SuiviCongesScreen} />
           <Stack.Screen name="SuiviAstreinte" component={SuiviAstreinteScreen} />
+          <Stack.Screen name="CulturePositive" component={CulturePositiveScreen} />
 
           
 

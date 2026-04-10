@@ -124,7 +124,16 @@ const FOLDERS = {
     title: '5 - Culture Positif',
     color: '#27AE60',
     icon: '🌟',
-    subFolders: []
+    subFolders: [
+      {
+        id: 'QUESTIONNAIRE_CULTURE',
+        title: 'Questionnaire d\'évaluation de la Culture',
+        subtitle: '42 questions · Anonyme · Exercice annuel',
+        icon: '📝',
+        screen: 'CulturePositive',
+        params: {},
+      },
+    ]
   },
   'REFERENCIELS': {
     title: '6 - Référenciels',
