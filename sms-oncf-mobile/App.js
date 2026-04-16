@@ -27,6 +27,8 @@ import ReferentielsScreen from './app/screens/ReferentielsScreen';
 import SuiviCongesScreen from './app/screens/SuiviCongesScreen';
 import SuiviAstreinteScreen from './app/screens/SuiviAstreinteScreen';
 import CulturePositiveScreen from './app/screens/CulturePositiveScreen';
+import RemonteeInfoScreen from './app/screens/RemonteeInfoScreen';
+
 
 
 
@@ -61,9 +63,7 @@ export default function App() {
           <Stack.Screen name="SuiviConges" component={SuiviCongesScreen} />
           <Stack.Screen name="SuiviAstreinte" component={SuiviAstreinteScreen} />
           <Stack.Screen name="CulturePositive" component={CulturePositiveScreen} />
-
-          
-
+          <Stack.Screen name="RemonteeInfo" component={RemonteeInfoScreen} />
 
         </Stack.Navigator>
       </NavigationContainer>

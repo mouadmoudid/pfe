@@ -133,6 +133,14 @@ const FOLDERS = {
         screen: 'CulturePositive',
         params: {},
       },
+      {
+        id: 'REMONTEE_INFO',
+        title: 'Remontée d\'information',
+        subtitle: 'Collecte des retours terrain',
+        icon: '📢',
+        screen: 'RemonteeInfo',
+        params: {},
+      },
     ]
   },
   'REFERENCIELS': {

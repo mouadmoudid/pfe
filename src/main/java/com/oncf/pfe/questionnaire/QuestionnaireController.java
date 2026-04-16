@@ -25,9 +25,10 @@ public class QuestionnaireController {
     public ResponseEntity<List<QuestionnaireCampagne>> getCampagnes(Authentication auth) {
         User user = (User) auth.getPrincipal();
         String role = user.getRole() != null ? user.getRole().name() : "";
-        if (role.equals("ADMIN") || role.equals("CPGX")) {
-            return ResponseEntity.ok(campagneRepo.findAllByOrderByExerciceDesc());
-        }
+        if (role.equals("ADMIN") || role.equals("CPGX") || 
+                role.equals("CSPR") || role.equals("CET")) {
+                return ResponseEntity.ok(campagneRepo.findAllByOrderByExerciceDesc());
+            }
         return ResponseEntity.ok(campagneRepo.findByStatutOrderByExerciceDesc("OUVERT"));
     }
 
