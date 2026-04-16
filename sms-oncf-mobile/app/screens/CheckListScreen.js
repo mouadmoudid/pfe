@@ -144,6 +144,27 @@ const ITEMS_COLLABORATEUR = [
       'Consigne de sécurité des travaux et consignes communes',
     ]
   },
+  {
+    section: 'Documentation',
+    sousSection: 'Existence, tenue et mise à jour',
+    points: [
+      'Guides pratiques',
+      'Règlements S2B, S9A, S9B et leurs consignes',
+      'SP320',
+      'Référentiels LGV',
+      'Généralités sur les Appareils Voie de la LGV',
+      'Interventions sur les Appareils de Voie UIC 60E1 avec aiguille 60E1A4 de la LGV',
+      'Interventions sur les voies de la LGV',
+      'Maintenance de la géométrie des Voies LGV',
+      'Maintenance des Appareils de dilatation pour Ouvrage d\'Art de la LGV',
+      'Méthodes de réparation et de remplacement des rails sur la LGV',
+      'Normes de maintenance Voie et Adv. LGV',
+      'Organisation de la Maintenance de la Voie, des Appareils de Voie et des Appareils de Dilatation d\'Ouvrage d\'Art de la LGV',
+      'Organisation de la surveillance et de la maintenance des rails sur la LGV',
+      'Sécurité technique sur les chantiers voie de la LGV',
+      'Tournées de surveillance des voies de la LGV et de leurs abords',
+    ]
+  },
 ];
 
 const ITEMS_CHANTIER = [
@@ -304,7 +325,7 @@ export default function CheckListScreen({ navigation }) {
   const [generating, setGenerating] = useState(false);
   const [collaborateurs, setCollaborateurs] = useState([]);
   const [collabSearch, setCollabSearch] = useState('');
-  const [docGlobal, setDocGlobal] = useState({ existence: 'OUI', miseAJour: 'OUI' });
+  const [docGlobal, setDocGlobal] = useState({ existence: 'OUI', miseAJour: 'OUI', action: '' });
 
   const [infos, setInfos] = useState({
     siteUp: '',
@@ -385,7 +406,7 @@ export default function CheckListScreen({ navigation }) {
       });
     });
     setItemsState(initial);
-    setDocGlobal({ existence: 'OUI', miseAJour: 'OUI' });
+    setDocGlobal({ existence: 'OUI', miseAJour: 'OUI', action: '' });
   };
 
   const handleSave = async () => {
@@ -422,7 +443,7 @@ export default function CheckListScreen({ navigation }) {
           sousSection: 'Documents à usage courant',
           pointCle: '__GLOBAL__',
           cotation: 'S',
-          constatation: `Existence:${docGlobal.existence}|MiseAJour:${docGlobal.miseAJour}`,
+          constatation: `Existence:${docGlobal.existence}|MiseAJour:${docGlobal.miseAJour}|Action:${docGlobal.action || ''}`,
           regularisation: '',
           ordre: ordre++,
         });
@@ -438,7 +459,7 @@ export default function CheckListScreen({ navigation }) {
       setStep(0);
       setType(null);
       setItemsState({});
-      setDocGlobal({ existence: 'OUI', miseAJour: 'OUI' });
+      setDocGlobal({ existence: 'OUI', miseAJour: 'OUI', action: '' });
       setInfos({
         siteUp: '', dateControle: new Date().toISOString().split('T')[0],
         reference: 'DR.PSC.M1C.CISF.024',
@@ -490,11 +511,12 @@ export default function CheckListScreen({ navigation }) {
       const data = detail.data;
 
       const globalItem = (data.items || []).find(i => i.pointCle === '__GLOBAL__');
-      let docExistence = 'OUI', docMiseAJour = 'OUI';
+      let docExistence = 'OUI', docMiseAJour = 'OUI', docAction = '';
       if (globalItem?.constatation) {
         const parts = globalItem.constatation.split('|');
         docExistence = parts[0]?.replace('Existence:', '') || 'OUI';
         docMiseAJour = parts[1]?.replace('MiseAJour:', '') || 'OUI';
+        docAction = parts[2]?.replace('Action:', '') || '';
       }
 
       const grouped = {};
@@ -588,6 +610,12 @@ export default function CheckListScreen({ navigation }) {
                 Mise à jour: ${docMiseAJour}
               </td>
             </tr>
+            ${docAction ? `
+            <tr style="background:#E8F5E9;">
+              <td colspan="2" style="font-weight:bold;font-size:11px;">Action</td>
+              <td colspan="3" style="font-size:11px;">${docAction}</td>
+            </tr>
+            ` : ''}
           `;
         }
       });
@@ -1208,6 +1236,16 @@ export default function CheckListScreen({ navigation }) {
                   </View>
                 </View>
               </View>
+
+              <Text style={[styles.docFieldLabel, { marginTop: 12 }]}>Action</Text>
+              <TextInput
+                style={[styles.smallInput, { marginTop: 6, height: 70, textAlignVertical: 'top' }]}
+                placeholder="Actions réalisées ou programmées..."
+                placeholderTextColor="#607D8B"
+                multiline
+                value={docGlobal.action || ''}
+                onChangeText={v => setDocGlobal({ ...docGlobal, action: v })}
+              />
             </View>
           )}
 

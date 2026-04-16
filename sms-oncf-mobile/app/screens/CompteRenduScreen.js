@@ -445,6 +445,16 @@ export default function CompteRenduScreen({ navigation }) {
           </tr>
         `).join('');
 
+        // Documentation section — existence/miseAJour/action depuis __GLOBAL__
+        const globalDocItem = items.find(i => i.pointCle === '__GLOBAL__');
+        let docEx = 'OUI', docMaj = 'OUI', docActionCR = '';
+        if (globalDocItem?.constatation) {
+          const parts = globalDocItem.constatation.split('|');
+          docEx = parts[0]?.replace('Existence:', '') || 'OUI';
+          docMaj = parts[1]?.replace('MiseAJour:', '') || 'OUI';
+          docActionCR = parts[2]?.replace('Action:', '') || '';
+        }
+
         const section2Html = section2.lieu || section2.constatations ? `
           <tr>
             <td style="font-size:11px;">${section2.lieu || ''}</td>
@@ -591,7 +601,25 @@ export default function CompteRenduScreen({ navigation }) {
             ${section2Html}
           </table>
 
-          <div class="section-title">3. OUTILS ET AGRES DE SECURITE :</div>
+          <div class="section-title">3. DOCUMENTATION :</div>
+          <table>
+            <tr>
+              <th style="width:40%;">Rubrique</th>
+              <th style="width:30%;">État</th>
+              <th style="width:30%;">Action</th>
+            </tr>
+            <tr style="background:#E8F5E9;">
+              <td style="font-weight:bold;font-size:11px;">Existence et Mise à jour — Documents à usage courant</td>
+              <td style="font-size:11px;">
+                <span style="font-weight:bold;color:${docEx === 'OUI' ? '#27AE60' : '#E74C3C'};">Existence: ${docEx}</span>
+                &nbsp;|&nbsp;
+                <span style="font-weight:bold;color:${docMaj === 'OUI' ? '#27AE60' : '#E74C3C'};">Mise à jour: ${docMaj}</span>
+              </td>
+              <td style="font-size:11px;">${docActionCR || 'RAS'}</td>
+            </tr>
+          </table>
+
+          <div class="section-title">4. OUTILS ET AGRES DE SECURITE :</div>
           <table>
             <tr>
               <th>Désignation</th>
@@ -604,7 +632,7 @@ export default function CompteRenduScreen({ navigation }) {
             ${agresHtml}
           </table>
 
-          <div class="section-title">4. INDICATEURS DE FIABILITE HUMAINE :</div>
+          <div class="section-title">5. INDICATEURS DE FIABILITE HUMAINE :</div>
           <table>
             <tr>
               <th>Rubriques</th>
@@ -614,7 +642,7 @@ export default function CompteRenduScreen({ navigation }) {
             ${indicateursHtml}
           </table>
 
-          <div class="section-title">5. DIVERS (Sécurité prestataires externes et internes) :</div>
+          <div class="section-title">6. DIVERS (Sécurité prestataires externes et internes) :</div>
           <table>
             <tr>
               <th>Rubriques</th>
