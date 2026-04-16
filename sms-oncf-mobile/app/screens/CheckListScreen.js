@@ -45,11 +45,23 @@ const ITEMS_COLLABORATEUR = [
       'Limitation inopinée de vitesse',
       'Mesures de sécurité à prendre pour l\'emploi des lorrys poussés à bras',
       'Disposition à prendre pour la protection des travaux exécutés sous couvert d\'une voie interceptée',
+    ]
+  },
+  {
+    section: 'Procédures collaborateur',
+    sousSection: 'Règlements S9A et leurs consignes',
+    points: [
       'Protection des travaux exécutés sous le régime de l\'interception de voie',
       'Mesures à prendre pour la circulation et le stationnement des engins',
-      'Règles à respecter par l\'agent d\'accompagnement en cas de refoulement',
+    ]
+  },
+  {
+    section: 'Procédures collaborateur',
+    sousSection: 'Règlements S9B et leurs consignes',
+    points: [
+      'Règles à respecter par l\'agent d\'accompagnement du train de travaux en cas de refoulement',
       'Engagement et dégagement d\'une voie interceptée par un train de travaux',
-      'Immobilisation provisoire des aiguillages, leur cadenassement',
+      'Immobilisation provisoire des aiguillages, leur cadenassement et les conditions de leur franchissement',
       'Circulation sans utilisation de ERTMS N2 sur LGV par un train travaux',
     ]
   },
@@ -69,9 +81,15 @@ const ITEMS_COLLABORATEUR = [
   },
   {
     section: 'Procédures collaborateur',
+    sousSection: 'Guide pratiques Voie',
+    points: [
+      'Toutes les prescriptions de sécurité que stipulent les guides pratiques pour la réalisation des divers travaux de maintenance sur voie en LRS-Voie avec joints et appareils de voie',
+    ]
+  },
+  {
+    section: 'Procédures collaborateur',
     sousSection: 'Référentiels LGV',
     points: [
-      'Toutes les prescriptions de sécurité des guides pratiques',
       'Prescription de sécurité sur les interventions',
       'Normes de maintenance Voie et AdV LGV',
       'Sécurité technique sur les chantiers voie de la LGV',
