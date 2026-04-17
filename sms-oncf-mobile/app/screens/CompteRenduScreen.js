@@ -169,66 +169,79 @@ export default function CompteRenduScreen({ navigation }) {
       const items = data.items || [];
       const isChantier = data.type === 'CHANTIER';
 
-      const globalItem = items.find(i => i.pointCle === '__GLOBAL__');
-      let docExistence = 'OUI', docMiseAJour = 'OUI';
-      if (globalItem?.constatation) {
-        const parts = globalItem.constatation.split('|');
-        docExistence = parts[0]?.replace('Existence:', '') || 'OUI';
-        docMiseAJour = parts[1]?.replace('MiseAJour:', '') || 'OUI';
-      }
-
       const date = data.dateControle || new Date().toLocaleDateString('fr-FR');
 
       let html = '';
 
       if (isChantier) {
-        // Generate CHANTIER report
-        const chantierSections = [
-          { section: 'Collaborateurs sécurité', sousSection: 'Rôles' },
-          { section: 'Avant départ au chantier', sousSection: 'Préparation' },
-          { section: 'Au Chantier', sousSection: 'Mise en place' },
-          { section: 'Au Chantier', sousSection: 'Circulation' },
-          { section: 'À la Fin des Travaux', sousSection: 'Clôture' },
-          { section: 'Consignes', sousSection: 'Vérification' },
-          { section: 'Documents', sousSection: 'Vérification documents' },
-          { section: 'Agrès', sousSection: 'Vérification agrès' },
-          { section: 'Environnement', sousSection: 'État des lieux' },
+        // ===== CHANTIER REPORT =====
+
+        // Section 1 — COLLABORATEURS/PROCEDURES
+        const chantierProcSections = [
+          'Collaborateurs sécurité',
+          'Avant départ au chantier',
+          'Au Chantier',
+          'À la Fin des Travaux',
         ];
+        const procRows = chantierProcSections
+          .filter(sec => items.some(i => i.section === sec))
+          .map(sec => {
+            const sectionItems = items.filter(i => i.section === sec && i.pointCle !== '__GLOBAL__');
+            const actualSousSections = [...new Set(sectionItems.map(i => i.sousSection))];
+            const nonConformites = actualSousSections
+              .map(ss => {
+                const cot = getMoyenneSousSection(sectionItems, ss);
+                return `<span style="display:block;padding:1px 0;">${ss}&nbsp;: <b style="color:${cotationColor(cot)};">${cot}</b></span>`;
+              }).join('');
+            return { section: sec, nonConformites };
+          });
+        const procHasNonConformite = procRows.some(r =>
+          r.nonConformites.includes('>A<') || r.nonConformites.includes('>M<')
+        );
+        const collaborateurControle = data.collaborateurNom || data.chantierNom || '—';
+        const fonctionControle = data.chantierType || '—';
+        const section1ChantierHtml = procRows.length > 0 ? `
+          <tr>
+            <td rowspan="${procRows.length}" style="vertical-align:middle;font-weight:bold;font-size:11px;text-align:center;">
+              ${collaborateurControle}<br/>
+              <small style="color:#607D8B;">${fonctionControle}</small>
+            </td>
+            ${procRows.map((row, idx) => `
+              ${idx > 0 ? '</tr><tr>' : ''}
+              <td style="font-size:11px;color:#E67E22;">${row.section}</td>
+              <td style="font-size:10px;">${row.nonConformites || '<span style="color:#27AE60;">S</span>'}</td>
+              ${idx === 0 ? `
+              <td rowspan="${procRows.length}" style="vertical-align:middle;font-size:10px;color:#607D8B;">
+                Sur les Connaissances / Vif
+              </td>
+              <td rowspan="${procRows.length}" style="vertical-align:middle;font-size:10px;">
+                ${procHasNonConformite ? 'Sensibiliser le collaborateur sur les écarts relevés.' : 'RAS'}
+              </td>` : ''}
+            `).join('')}
+          </tr>
+        ` : `<tr><td colspan="5" style="text-align:center;color:#607D8B;font-size:11px;">Aucune donnée</td></tr>`;
 
-        const indicateurs = [
-          { label: 'Indicateurs d\'alerte professionnels', sousSection: 'Indicateurs d\'alerte professionnels' },
-          { label: 'Indicateurs d\'alerte sociologiques', sousSection: 'Indicateurs d\'alerte sociologiques' },
-          { label: 'Indicateurs d\'alerte psychologiques', sousSection: 'Indicateurs d\'alerte psychologiques' },
-          { label: 'Indicateurs d\'alerte physiologiques et médicaux', sousSection: 'Indicateurs d\'alerte physiologiques et médicaux' },
-        ];
-
-        const chantierRows = chantierSections.map(sec => {
-          const moyenne = getMoyenneSousSection(items.filter(i => i.section === sec.section), sec.sousSection);
-          return { section: sec.section, sousSection: sec.sousSection, moyenne };
-        }).filter(row => items.some(i => i.section === row.section && i.sousSection === row.sousSection));
-
-        const indicateursHtml = indicateurs.map(ind => {
-          const constat = getIndicateurConstat(items, ind.sousSection);
-          return `
-            <tr>
-              <td style="font-size:11px;">${ind.label}</td>
-              <td style="text-align:center;font-size:11px;color:${constat === 'RAS' ? '#27AE60' : '#E67E22'};">${constat}</td>
-              <td style="font-size:11px;"></td>
-            </tr>
-          `;
-        }).join('');
-
+        // Section 2 — INSTALLATIONS ET EQUIPEMENTS (autres constatations)
         const section2Html = section2.lieu || section2.constatations ? `
           <tr>
             <td style="font-size:11px;">${section2.lieu || ''}</td>
             <td style="font-size:11px;">${section2.constatations || 'RAS'}</td>
             <td style="font-size:11px;">${section2.isKm || ''}</td>
-            <td style="font-size:11px;">${section2.actions || ''}</td>
+            <td style="font-size:11px;">${section2.actions || 'RAS'}</td>
           </tr>
-        ` : `
-          <tr><td colspan="4" style="text-align:center;color:#607D8B;font-size:11px;">RAS</td></tr>
-        `;
+        ` : `<tr><td colspan="4" style="text-align:center;color:#607D8B;font-size:11px;">RAS</td></tr>`;
 
+        // Section 3 — DOCUMENTATION (__GLOBAL__)
+        const globalDocItemC = items.find(i => i.pointCle === '__GLOBAL__');
+        let docExC = 'OUI', docMajC = 'OUI', docActionC = '';
+        if (globalDocItemC?.constatation) {
+          const parts = globalDocItemC.constatation.split('|');
+          docExC = parts[0]?.replace('Existence:', '') || 'OUI';
+          docMajC = parts[1]?.replace('MiseAJour:', '') || 'OUI';
+          docActionC = parts[2]?.replace('Action:', '') || '';
+        }
+
+        // Section 4 — OUTILS ET AGRES DE SECURITE
         const agresHtml = section4.map(a => `
           <tr>
             <td style="font-size:11px;font-weight:bold;">${a.nom}</td>
@@ -243,6 +256,47 @@ export default function CompteRenduScreen({ navigation }) {
             <td style="font-size:10px;color:#E74C3C;">${a.actions}</td>
           </tr>`).join('');
 
+        // Section 5 — INDICATEURS DE FIABILITE HUMAINE
+        const indicateurs = [
+          { label: 'Indicateurs d\'alerte professionnels', sousSection: 'Indicateurs d\'alerte professionnels' },
+          { label: 'Indicateurs d\'alerte sociologiques', sousSection: 'Indicateurs d\'alerte sociologiques' },
+          { label: 'Indicateurs d\'alerte psychologiques', sousSection: 'Indicateurs d\'alerte psychologiques' },
+          { label: 'Indicateurs d\'alerte physiologiques et médicaux', sousSection: 'Indicateurs d\'alerte physiologiques et médicaux' },
+        ];
+        const indicateursHtml = indicateurs.map(ind => {
+          const constat = getIndicateurConstat(items, ind.sousSection);
+          return `
+            <tr>
+              <td style="font-size:11px;">${ind.label}</td>
+              <td style="text-align:center;font-size:11px;color:${constat === 'RAS' ? '#27AE60' : '#E67E22'};">${constat}</td>
+              <td style="font-size:11px;"></td>
+            </tr>
+          `;
+        }).join('');
+
+        // Section 6 — ENVIRONNEMENT (État des lieux + sous-sections)
+        const environItems = items.filter(i => i.section === 'Environnement');
+        const environGrouped = {};
+        environItems.forEach(item => {
+          if (!environGrouped[item.sousSection]) environGrouped[item.sousSection] = [];
+          environGrouped[item.sousSection].push(item);
+        });
+        const environHtml = Object.entries(environGrouped).map(([ss, ssItems]) => {
+          const constatations = ssItems
+            .filter(i => i.constatation && i.constatation.trim())
+            .map(i => i.constatation).join(' / ') || 'RAS';
+          const regularisations = ssItems
+            .filter(i => i.regularisation && i.regularisation.trim())
+            .map(i => i.regularisation).join(' / ') || 'RAS';
+          return `
+            <tr>
+              <td style="font-weight:bold;font-size:11px;">${ss}</td>
+              <td style="font-size:11px;">${constatations}</td>
+              <td style="font-size:11px;">${regularisations}</td>
+            </tr>`;
+        }).join('') || `<tr><td colspan="3" style="text-align:center;color:#607D8B;font-size:11px;">RAS</td></tr>`;
+
+        // Section 7 — OBSERVATIONS GÉNÉRALES
         const section7Html = section7.map(row => `
           <tr>
             <td style="font-size:11px;">${row.rubrique || ''}</td>
@@ -321,37 +375,48 @@ export default function CompteRenduScreen({ navigation }) {
             </div>
           </div>
 
-          <div class="section-title">1. CONTRÔLE CHANTIER :</div>
+          <div class="section-title">1. COLLABORATEURS/PROCEDURES :</div>
           <table>
             <tr>
-              <th style="width:25%;">Section</th>
-              <th style="width:25%;">Sous-section</th>
-              <th style="width:15%;">Évaluation</th>
-              <th style="width:35%;">Actions correctives</th>
+              <th style="width:18%;">Collaborateurs contrôlés</th>
+              <th style="width:20%;">Constitution (ou sujet)</th>
+              <th style="width:27%;">Non-conformités relevées</th>
+              <th style="width:17%;">Nature de contrôle</th>
+              <th style="width:18%;">Actions réalisées ou programmées</th>
             </tr>
-            ${chantierRows.map((row, idx) => `
-              <tr>
-                <td style="font-size:11px;font-weight:bold;">${row.section}</td>
-                <td style="font-size:11px;">${row.sousSection}</td>
-                <td style="text-align:center;font-weight:bold;color:${cotationColor(row.moyenne)};background:${cotationColor(row.moyenne)}20;padding:4px 8px;">
-                  ${row.moyenne}
-                </td>
-                <td style="font-size:10px;"></td>
-              </tr>
-            `).join('')}
+            ${section1ChantierHtml}
           </table>
 
-          <div class="section-title">2. INDICATEURS D'ALERTE FIABILITÉ HUMAINE :</div>
+          <div class="section-title">2. INSTALLATIONS ET EQUIPEMENTS :</div>
           <table>
             <tr>
-              <th style="width:50%;">Indicateur</th>
-              <th style="width:20%;">Constat</th>
-              <th style="width:30%;">Actions</th>
+              <th style="width:25%;">Lieu</th>
+              <th style="width:35%;">Constatations</th>
+              <th style="width:15%;">IS/Km</th>
+              <th style="width:25%;">Actions</th>
             </tr>
-            ${indicateursHtml}
+            ${section2Html}
           </table>
 
-          <div class="section-title">3. AGRÈS DE SÉCURITÉ :</div>
+          <div class="section-title">3. DOCUMENTATION :</div>
+          <table>
+            <tr>
+              <th style="width:40%;">Rubrique</th>
+              <th style="width:30%;">État</th>
+              <th style="width:30%;">Action</th>
+            </tr>
+            <tr style="background:#E8F5E9;">
+              <td style="font-weight:bold;font-size:11px;">Existence et Mise à jour — Documents à usage courant</td>
+              <td style="font-size:11px;">
+                <span style="font-weight:bold;color:${docExC === 'OUI' ? '#27AE60' : '#E74C3C'};">Existence: ${docExC}</span>
+                &nbsp;|&nbsp;
+                <span style="font-weight:bold;color:${docMajC === 'OUI' ? '#27AE60' : '#E74C3C'};">Mise à jour: ${docMajC}</span>
+              </td>
+              <td style="font-size:11px;">${docActionC || 'RAS'}</td>
+            </tr>
+          </table>
+
+          <div class="section-title">4. OUTILS ET AGRES DE SECURITE :</div>
           <table>
             <tr>
               <th style="width:25%;">Désignation</th>
@@ -364,18 +429,27 @@ export default function CompteRenduScreen({ navigation }) {
             ${agresHtml}
           </table>
 
-          <div class="section-title">4. AUTRES CONSTATIONS :</div>
+          <div class="section-title">5. INDICATEURS DE FIABILITE HUMAINE :</div>
           <table>
             <tr>
-              <th style="width:25%;">Lieu</th>
-              <th style="width:35%;">Constatations</th>
-              <th style="width:15%;">KM</th>
-              <th style="width:25%;">Actions</th>
+              <th style="width:50%;">Indicateur</th>
+              <th style="width:20%;">Constat</th>
+              <th style="width:30%;">Actions</th>
             </tr>
-            ${section2Html}
+            ${indicateursHtml}
           </table>
 
-          <div class="section-title">5. OBSERVATIONS GÉNÉRALES :</div>
+          <div class="section-title">6. ENVIRONNEMENT :</div>
+          <table>
+            <tr>
+              <th style="width:25%;">Rubriques</th>
+              <th style="width:40%;">Constatations</th>
+              <th style="width:35%;">Régularisation</th>
+            </tr>
+            ${environHtml}
+          </table>
+
+          <div class="section-title">7. OBSERVATIONS GÉNÉRALES :</div>
           <table>
             <tr>
               <th style="width:25%;">Rubrique</th>
@@ -411,13 +485,6 @@ export default function CompteRenduScreen({ navigation }) {
         const hasNonConformite = items
           .filter(i => i.section === 'Procédures collaborateur')
           .some(i => i.cotation === 'A' || i.cotation === 'M');
-
-        const section1Rows = sousSections.map(ss => {
-          const moyenne = getMoyenneSousSection(
-            items.filter(i => i.section === 'Procédures collaborateur'), ss
-          );
-          return { sousSection: ss, moyenne };
-        }).filter(row => items.some(i => i.sousSection === row.sousSection));
 
         const indicateurs = [
           { label: 'Indicateurs d\'alerte professionnels', sousSection: 'Indicateurs d\'alerte professionnels' },
@@ -480,32 +547,26 @@ export default function CompteRenduScreen({ navigation }) {
             <td style="font-size:10px;color:#E74C3C;">${a.actions}</td>
           </tr>`).join('');
 
-        const section1Html = section1Rows.length > 0 ? `
+        const procItems = items.filter(i => i.section === 'Procédures collaborateur' && i.pointCle !== '__GLOBAL__');
+        const nonConformitesCollab = sousSections
+          .filter(ss => procItems.some(i => i.sousSection === ss))
+          .map(ss => {
+            const cot = getMoyenneSousSection(procItems, ss);
+            return `<span style="display:block;padding:1px 0;">${ss}&nbsp;: <b style="color:${cotationColor(cot)};">${cot}</b></span>`;
+          }).join('');
+
+        const section1Html = nonConformitesCollab ? `
             <tr>
-              <td rowspan="${section1Rows.length}" style="vertical-align:middle;font-weight:bold;font-size:11px;text-align:center;">
+              <td style="font-weight:bold;font-size:11px;text-align:center;">
                 ${data.collaborateurNom || '-'}<br/>
                 <small style="color:#607D8B;">${data.collaborateurMatricule || ''}</small>
               </td>
-              <td rowspan="${section1Rows.length}" style="vertical-align:middle;font-size:11px;text-align:center;">
-                Technicien Maintenance Voie LGV
-              </td>
-              ${section1Rows.map((row, idx) => `
-                ${idx > 0 ? '</tr><tr>' : ''}
-                <td style="font-size:11px;color:#E67E22;">${row.sousSection}</td>
-                <td style="text-align:center;font-weight:bold;color:${cotationColor(row.moyenne)};background:${cotationColor(row.moyenne)}20;padding:4px 8px;">
-                  ${row.moyenne}
-                </td>
-                ${idx === 0 ? `
-                <td rowspan="${section1Rows.length}" style="vertical-align:middle;font-size:10px;color:#607D8B;">
-                  Sur les Connaissances / Vif
-                </td>
-                <td rowspan="${section1Rows.length}" style="vertical-align:middle;font-size:10px;">
-                  ${hasNonConformite ? 'Sensibiliser le collaborateur sur les écarts relevés.' : 'RAS'}
-                </td>
-                ` : ''}
-              `).join('')}
+              <td style="font-size:11px;text-align:center;">Procédures collaborateur</td>
+              <td style="font-size:10px;">${nonConformitesCollab}</td>
+              <td style="font-size:10px;color:#607D8B;">Sur les Connaissances / Vif</td>
+              <td style="font-size:10px;">${hasNonConformite ? 'Sensibiliser le collaborateur sur les écarts relevés.' : 'RAS'}</td>
             </tr>
-            ` : `<tr><td colspan="6" style="text-align:center;color:#607D8B;">Aucune donnée</td></tr>`;
+            ` : `<tr><td colspan="5" style="text-align:center;color:#607D8B;">Aucune donnée</td></tr>`;
 
         html = `
           <!DOCTYPE html><html><head><meta charset="UTF-8">

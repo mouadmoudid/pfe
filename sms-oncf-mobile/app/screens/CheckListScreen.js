@@ -511,18 +511,16 @@ export default function CheckListScreen({ navigation }) {
         });
       });
 
-      // Ajouter item global Documentation pour COLLABORATEUR
-      if (type === 'COLLABORATEUR') {
-        items.push({
-          section: 'Documentation',
-          sousSection: 'Documents à usage courant',
-          pointCle: '__GLOBAL__',
-          cotation: 'S',
-          constatation: `Existence:${docGlobal.existence}|MiseAJour:${docGlobal.miseAJour}|Action:${docGlobal.action || ''}`,
-          regularisation: '',
-          ordre: ordre++,
-        });
-      }
+      // Ajouter item global Documentation pour COLLABORATEUR et CHANTIER
+      items.push({
+        section: type === 'COLLABORATEUR' ? 'Documentation' : 'Documents',
+        sousSection: 'Documents à usage courant',
+        pointCle: '__GLOBAL__',
+        cotation: 'S',
+        constatation: `Existence:${docGlobal.existence}|MiseAJour:${docGlobal.miseAJour}|Action:${docGlobal.action || ''}`,
+        regularisation: '',
+        ordre: ordre++,
+      });
 
       await axios.post(CHECKLIST_API, {
         type,
@@ -597,6 +595,7 @@ export default function CheckListScreen({ navigation }) {
       const grouped = {};
       (data.items || [])
         .filter(i => i.pointCle !== '__GLOBAL__')
+        .sort((a, b) => (a.ordre ?? 0) - (b.ordre ?? 0))
         .forEach(item => {
           if (!grouped[item.section]) grouped[item.section] = {};
           if (!grouped[item.section][item.sousSection])
@@ -673,7 +672,7 @@ export default function CheckListScreen({ navigation }) {
           ${rowsHtml}
         `;
 
-        if (section === 'Documentation') {
+        if (section === 'Documentation' || section === 'Documents') {
           sectionsHtml += `
             <tr style="background:#E8F5E9;">
               <td style="font-weight:bold;font-size:11px;">Existence et Mise à jour</td>
@@ -1262,11 +1261,11 @@ export default function CheckListScreen({ navigation }) {
             </View>
           ))}
 
-          {/* Bloc global Documentation — uniquement pour COLLABORATEUR */}
-          {type === 'COLLABORATEUR' && (
+          {/* Bloc global Documentation — Existence et Mise à jour */}
+          {(
             <View style={styles.docGlobalBox}>
               <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Documentation</Text>
+                <Text style={styles.sectionTitle}>{type === 'COLLABORATEUR' ? 'Documentation' : 'Documents'}</Text>
                 <Text style={styles.sousSectionTitle}>Existence et Mise à jour — Documents à usage courant *</Text>
               </View>
 
