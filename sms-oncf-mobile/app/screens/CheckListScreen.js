@@ -204,7 +204,7 @@ const ITEMS_CHANTIER = [
   },
   {
     section: 'Collaborateurs sécurité',
-    sousSection: 'Rôles',
+    sousSection: 'Disponibilité et habilitation ',
     points: [
       'Réalisateur', 'Chefs des chantiers élémentaires',
       'Mécanicien train travaux', 'Agent d\'accompagnement',
@@ -214,71 +214,124 @@ const ITEMS_CHANTIER = [
   },
   {
     section: 'Avant départ au chantier',
-    sousSection: 'Préparation',
+    sousSection: 'Organisation Interception/ DPG',
     points: [
       'Identification de la nature et de l\'étendue du chantier global',
       'Identification des points particuliers (obstacles, tracé, câbles)',
       'Modalité de demande DPG',
       'Prise en compte de la CE S6A n°2 pour les DPG',
+    ]
+  },
+   {
+    section: 'Avant départ au chantier',
+    sousSection: 'Trains travaux',
+    points: [
       'Consistance et adéquation aux travaux envisagés',
       'Modalités d\'en/dégagement des trains travaux',
-      'Ordre de circulation des trains travaux',
       'Essais de freins', 'Eclairage et signaux des engins',
       'Dotation en bulletins I et Consignes de circulation',
     ]
   },
   {
     section: 'Au Chantier',
-    sousSection: 'Mise en place',
+    sousSection: 'Protection des travaux',
     points: [
       'Mise en place de la DCP (couverture)',
       'Confirmation de mise en place DCP et repérage',
       'Repérage des chantiers élémentaires',
       'Application des mesures de sécurité prévues par les consignes travaux',
+    ]
+  },
+    {
+    section: 'Au Chantier',
+    sousSection: 'Protection contre les dangers électriques',
+    points: [
+      'Liaisons du retour du courant de traction',
+    ]
+  },
+      {
+    section: 'Au Chantier',
+    sousSection: 'Protection contre les dangers électriques',
+    points: [
       'Tenue réglementaire et gilet de sécurité',
-      'Dispositif d\'annonce si nécessaire',
+      'Dispositif d’annonce si nécessaire',
     ]
   },
   {
     section: 'Au Chantier',
-    sousSection: 'Circulation',
+    sousSection: 'Trains de travaux ',
     points: [
       'Repérage des trains de travaux et engins',
       'Vitesses sur chantier et sur le parcours d\'approche',
       'Disponibilité et conformité des documents nécessaires',
-      'Respect et conformité des charges utiles',
-      'Sens de Travail du Ttx', 'Conformité des signaux des Ttx',
+      'Conformité des signaux des trains de travaux',
+      'Sens de Travail du Ttx',
     ]
   },
   {
     section: 'À la Fin des Travaux',
-    sousSection: 'Clôture',
+    sousSection: 'Continuité voie et dégagement des obstacles',
     points: [
       'Continuité de la voie est rétablie, Voie praticable à la vitesse prescrite',
+      'Les installations télécoms, signalisation et courant de traction sont opérationnelles',
       'Retrait de la DCP et DCM du chantier',
       'Dégagement des Ttx et des obstacles',
-      'Les enregistrements des paramètres laissés en voie Après intervention',
+      'Dégagement des trains de travaux',
+      'Les enregistrements des paramètres laissés en voie',
     ]
   },
   {
-    section: 'Consignes',
-    sousSection: 'Vérification',
+    section: 'Documentation',
+    sousSection: 'Consignes',
     points: [
       'Consigne a l\'usage du réalisateur',
       'Consigne a l\'usage de l\'agent d\'accompagnement de Ttx',
       'Consigne des travaux de nivellement de la voie et adv par BML',
+      'Travaux de meulage et reprofilage mécanique des rails (VC & AdV)',
+      'Consigne des travaux de nivellement de la voie et adv par BML',
+      'Consigne des travaux de nivellement localises et redressage des rails fausses par EMV',
       'Tournées périodiques des collaborateurs voie',
       'Tournées de surveillance des zones PILOT',
+      'Consigne des tournées de surveillance lors de la période chaude sur le parcours du dt102v LGV 2024 ',
+      'Tournées de surveillance spéciales en cas d\'intempéries',
+      'Classement, surveillance et remplacement des traverses fissurées',
     ]
   },
   {
     section: 'Documents',
-    sousSection: 'Vérification documents',
+    sousSection: 'Documents d’organisation',
     points: [
       'Avis Hebdomadaire de travaux (AHT)',
       'Consigne journalière d\'organisation des travaux',
-      'Programme GEST', 'Carnet DPG', 'Carnet des dépêches',
+      'Programme GEST', 
+      'Consigne inter directions PIC/PFL/PMM',
+      'Carnet DPG', 'Carnet des dépêches',
       'Bulletin I', 'Règlement S9A : Travaux sur les voies',
+      'Règlement S9Bn°6 : Trains de travaux', 'Consigne S6A n°2',
+    ]
+  },
+    {
+    section: 'Documents',
+    sousSection: 'Documents de chantier',
+    points: [
+      'Carnet DPG', 
+      'Carnet des dépêches',
+    ]
+  },
+    {
+    section: 'Documents',
+    sousSection: 'Documents des trains ',
+    points: [
+      'Consigne de circulation pour agent d’accompagnement',
+      'Bulletin I', 
+    ]
+  },
+    {
+    section: 'Documents',
+    sousSection: 'Documents de référence',
+    points: [
+      'Règlement S9A : Travaux sur les voies',
+      'CG S9A n°1 et CG S9A n°2',
       'Règlement S9Bn°6 : Trains de travaux', 'Consigne S6A n°2',
     ]
   },
@@ -301,13 +354,35 @@ const ITEMS_CHANTIER = [
     ]
   },
   {
-    section: 'Environnement',
+    section: 'Installations/Site',
+    sousSection: 'Voie exploitée',
+    points: [
+      'Etat de l\'installation',
+      'Dégagement du gabarit : matériaux, matériel et engins',
+      'Emplacements de garages pour le personnel (accotement), itinéraires à suivre ',
+    ]
+  },
+    {
+    section: 'Environnement de travail',
     sousSection: 'État des lieux',
     points: [
-      'État atmosphérique',
-      'Interférence avec des chantiers des autres disciplines',
       'Adéquation de l\'éclairage du chantier',
       'Délimitation du chantier vis-à-vis des circulations',
+    ]
+  },
+      {
+    section: 'Environnement de travail',
+    sousSection: 'Environnement externe',
+    points: [
+      'Etat atmosphérique',
+      'Interférence avec des chantiers des autres disciplines',
+    ]
+  },
+      {
+    section: 'Documents SMS',
+    sousSection: 'Registre RACI',
+    points: [
+      'Tenue et accessibilité.',
     ]
   },
 ];
