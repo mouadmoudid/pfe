@@ -90,19 +90,37 @@ export default function CompteRenduScreen({ navigation }) {
 
       // Remplir la section "Autre constations" pour les checklists chantier
       if (res.data.type === 'CHANTIER') {
-        // Exclure les items de type agrès (Completude/Etat/Validité) des constatations
+        // Exclure les items de type agrès (Completude/Etat/Validité), __GLOBAL__ et les sections
+        // traitées séparément dans le compte rendu (procédures, documents, indicateurs, environnement)
+        const sectionsExclues = [
+          'Indicateurs de fiabilité humaine',
+          'Collaborateurs sécurité',
+          'Avant départ au chantier',
+          'Au Chantier',
+          'À la Fin des Travaux',
+          'Documentation',
+          'Documents',
+          'Agrès',
+          'Environnement de travail',
+        ];
         const constatations = items
-          .filter(item => 
+          .filter(item =>
+            item.pointCle !== '__GLOBAL__' &&
+            !sectionsExclues.includes(item.section) &&
             item.constatation && item.constatation.trim() !== '' &&
             !/Completude\s*:/i.test(item.constatation) &&
             !/Etat\s*:/i.test(item.constatation) &&
-            !/Validit\s*e\s*:/i.test(item.constatation)
+            !/Validit[ée]\s*:/i.test(item.constatation)
           )
           .map(item => item.constatation)
           .join('\n');
 
         const actions = items
-          .filter(item => item.regularisation && item.regularisation.trim() !== '')
+          .filter(item =>
+            item.pointCle !== '__GLOBAL__' &&
+            !sectionsExclues.includes(item.section) &&
+            item.regularisation && item.regularisation.trim() !== ''
+          )
           .map(item => item.regularisation)
           .join('\n');
 
@@ -160,6 +178,14 @@ export default function CompteRenduScreen({ navigation }) {
     setSection7(updated);
   };
 
+  const addSection7Row = () => {
+    setSection7([...section7, { rubrique: '', constatations: '', actions: '' }]);
+  };
+
+  const removeSection7Row = (idx) => {
+    setSection7(section7.filter((_, i) => i !== idx));
+  };
+
   const generatePDF = async () => {
     setGenerating(true);
     try {
@@ -188,16 +214,16 @@ export default function CompteRenduScreen({ navigation }) {
           .map(sec => {
             const sectionItems = items.filter(i => i.section === sec && i.pointCle !== '__GLOBAL__');
             const actualSousSections = [...new Set(sectionItems.map(i => i.sousSection))];
-            const nonConformites = actualSousSections
+            const sousSectionsHtml = actualSousSections
+              .map(ss => `<span style="display:block;padding:1px 0;">${ss}</span>`)
+              .join('');
+            const cotationsHtml = actualSousSections
               .map(ss => {
                 const cot = getMoyenneSousSection(sectionItems, ss);
-                return `<span style="display:block;padding:1px 0;">${ss}&nbsp;: <b style="color:${cotationColor(cot)};">${cot}</b></span>`;
+                return `<span style="display:block;padding:1px 0;font-weight:bold;color:${cotationColor(cot)};">${cot}</span>`;
               }).join('');
-            return { section: sec, nonConformites };
+            return { section: sec, sousSectionsHtml, cotationsHtml };
           });
-        const procHasNonConformite = procRows.some(r =>
-          r.nonConformites.includes('>A<') || r.nonConformites.includes('>M<')
-        );
         const collaborateurControle = data.collaborateurNom || data.chantierNom || '—';
         const fonctionControle = data.chantierType || '—';
         const section1ChantierHtml = procRows.length > 0 ? `
@@ -209,25 +235,26 @@ export default function CompteRenduScreen({ navigation }) {
             ${procRows.map((row, idx) => `
               ${idx > 0 ? '</tr><tr>' : ''}
               <td style="font-size:11px;color:#E67E22;">${row.section}</td>
-              <td style="font-size:10px;">${row.nonConformites || '<span style="color:#27AE60;">S</span>'}</td>
+              <td style="font-size:10px;">${row.sousSectionsHtml || ''}</td>
+              <td style="font-size:10px;text-align:center;">${row.cotationsHtml || ''}</td>
               ${idx === 0 ? `
               <td rowspan="${procRows.length}" style="vertical-align:middle;font-size:10px;color:#607D8B;">
                 Sur les Connaissances / Vif
               </td>
               <td rowspan="${procRows.length}" style="vertical-align:middle;font-size:10px;">
-                ${procHasNonConformite ? 'Sensibiliser le collaborateur sur les écarts relevés.' : 'RAS'}
+                Sensibiliser le collaborateur sur les écarts relevés.
               </td>` : ''}
             `).join('')}
           </tr>
-        ` : `<tr><td colspan="5" style="text-align:center;color:#607D8B;font-size:11px;">Aucune donnée</td></tr>`;
+        ` : `<tr><td colspan="6" style="text-align:center;color:#607D8B;font-size:11px;">Aucune donnée</td></tr>`;
 
         // Section 2 — INSTALLATIONS ET EQUIPEMENTS (autres constatations)
         const section2Html = section2.lieu || section2.constatations ? `
           <tr>
             <td style="font-size:11px;">${section2.lieu || ''}</td>
-            <td style="font-size:11px;">${section2.constatations || 'RAS'}</td>
+            <td style="font-size:11px;">${section2.constatations || ''}</td>
             <td style="font-size:11px;">${section2.isKm || ''}</td>
-            <td style="font-size:11px;">${section2.actions || 'RAS'}</td>
+            <td style="font-size:11px;">${section2.actions || ''}</td>
           </tr>
         ` : `<tr><td colspan="4" style="text-align:center;color:#607D8B;font-size:11px;">RAS</td></tr>`;
 
@@ -378,11 +405,12 @@ export default function CompteRenduScreen({ navigation }) {
           <div class="section-title">1. COLLABORATEURS/PROCEDURES :</div>
           <table>
             <tr>
-              <th style="width:18%;">Collaborateurs contrôlés</th>
-              <th style="width:20%;">Constitution (ou sujet)</th>
-              <th style="width:27%;">Non-conformités relevées</th>
-              <th style="width:17%;">Nature de contrôle</th>
-              <th style="width:18%;">Actions réalisées ou programmées</th>
+              <th style="width:15%;">Collaborateurs contrôlés</th>
+              <th style="width:17%;">Constitution (ou sujet)</th>
+              <th style="width:22%;">Sous-sections</th>
+              <th style="width:8%;">Cotation</th>
+              <th style="width:18%;">Nature de contrôle</th>
+              <th style="width:20%;">Actions réalisées ou programmées</th>
             </tr>
             ${section1ChantierHtml}
           </table>
@@ -482,10 +510,6 @@ export default function CompteRenduScreen({ navigation }) {
           'Consignes locales', 'Guide pratiques Voie', 'Référentiels LGV',
         ];
 
-        const hasNonConformite = items
-          .filter(i => i.section === 'Procédures collaborateur')
-          .some(i => i.cotation === 'A' || i.cotation === 'M');
-
         const indicateurs = [
           { label: 'Indicateurs d\'alerte professionnels', sousSection: 'Indicateurs d\'alerte professionnels' },
           { label: 'Indicateurs d\'alerte sociologiques', sousSection: 'Indicateurs d\'alerte sociologiques' },
@@ -525,7 +549,7 @@ export default function CompteRenduScreen({ navigation }) {
         const section2Html = section2.lieu || section2.constatations ? `
           <tr>
             <td style="font-size:11px;">${section2.lieu || ''}</td>
-            <td style="font-size:11px;">${section2.constatations || 'RAS'}</td>
+            <td style="font-size:11px;">${section2.constatations || ''}</td>
             <td style="font-size:11px;">${section2.isKm || ''}</td>
             <td style="font-size:11px;">${section2.actions || ''}</td>
           </tr>
@@ -548,25 +572,29 @@ export default function CompteRenduScreen({ navigation }) {
           </tr>`).join('');
 
         const procItems = items.filter(i => i.section === 'Procédures collaborateur' && i.pointCle !== '__GLOBAL__');
-        const nonConformitesCollab = sousSections
-          .filter(ss => procItems.some(i => i.sousSection === ss))
+        const filteredSousSections = sousSections.filter(ss => procItems.some(i => i.sousSection === ss));
+        const sousSectionsCollabHtml = filteredSousSections
+          .map(ss => `<span style="display:block;padding:1px 0;">${ss}</span>`)
+          .join('');
+        const cotationsCollabHtml = filteredSousSections
           .map(ss => {
             const cot = getMoyenneSousSection(procItems, ss);
-            return `<span style="display:block;padding:1px 0;">${ss}&nbsp;: <b style="color:${cotationColor(cot)};">${cot}</b></span>`;
+            return `<span style="display:block;padding:1px 0;font-weight:bold;color:${cotationColor(cot)};">${cot}</span>`;
           }).join('');
 
-        const section1Html = nonConformitesCollab ? `
+        const section1Html = filteredSousSections.length > 0 ? `
             <tr>
               <td style="font-weight:bold;font-size:11px;text-align:center;">
                 ${data.collaborateurNom || '-'}<br/>
                 <small style="color:#607D8B;">${data.collaborateurMatricule || ''}</small>
               </td>
               <td style="font-size:11px;text-align:center;">Procédures collaborateur</td>
-              <td style="font-size:10px;">${nonConformitesCollab}</td>
+              <td style="font-size:10px;">${sousSectionsCollabHtml}</td>
+              <td style="font-size:10px;text-align:center;">${cotationsCollabHtml}</td>
               <td style="font-size:10px;color:#607D8B;">Sur les Connaissances / Vif</td>
-              <td style="font-size:10px;">${hasNonConformite ? 'Sensibiliser le collaborateur sur les écarts relevés.' : 'RAS'}</td>
+              <td style="font-size:10px;">Sensibiliser le collaborateur sur les écarts relevés.</td>
             </tr>
-            ` : `<tr><td colspan="5" style="text-align:center;color:#607D8B;">Aucune donnée</td></tr>`;
+            ` : `<tr><td colspan="6" style="text-align:center;color:#607D8B;">Aucune donnée</td></tr>`;
 
         html = `
           <!DOCTYPE html><html><head><meta charset="UTF-8">
@@ -641,12 +669,12 @@ export default function CompteRenduScreen({ navigation }) {
           <div class="section-title">1. COLLABORATEURS/PROCEDURES :</div>
           <table>
             <tr>
-              <th style="width:20%;">Collaborateur</th>
+              <th style="width:18%;">Collaborateur</th>
               <th style="width:15%;">Fonction</th>
-              <th style="width:20%;">Sous-section</th>
-              <th style="width:10%;">Évaluation</th>
-              <th style="width:20%;">Objectif</th>
-              <th style="width:15%;">Actions</th>
+              <th style="width:23%;">Sous-sections</th>
+              <th style="width:8%;">Cotation</th>
+              <th style="width:18%;">Objectif</th>
+              <th style="width:18%;">Actions</th>
             </tr>
             ${section1Html}
           </table>
@@ -962,7 +990,12 @@ export default function CompteRenduScreen({ navigation }) {
 
             {section7.map((row, idx) => (
               <View key={idx} style={styles.agreRow}>
-                <Text style={styles.agreLabel}>Ligne {idx + 1}</Text>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Text style={styles.agreLabel}>Ligne {idx + 1}</Text>
+                  <TouchableOpacity onPress={() => removeSection7Row(idx)} style={styles.removeRowBtn}>
+                    <Text style={styles.removeRowBtnText}>✕ Supprimer</Text>
+                  </TouchableOpacity>
+                </View>
                 <TextInput style={styles.input}
                   placeholder="Rubriques..."
                   placeholderTextColor="#607D8B"
@@ -980,6 +1013,10 @@ export default function CompteRenduScreen({ navigation }) {
                   onChangeText={v => updateSection7(idx, 'actions', v)} />
               </View>
             ))}
+
+            <TouchableOpacity style={styles.addRowBtn} onPress={addSection7Row}>
+              <Text style={styles.addRowBtnText}>+ Ajouter une ligne</Text>
+            </TouchableOpacity>
           </View>
 
           <TouchableOpacity
@@ -1080,6 +1117,14 @@ const styles = StyleSheet.create({
   agreFields: { flexDirection: 'row', gap: 12, marginBottom: 8 },
   agreField: { flex: 1 },
   agreLabel: { color: '#607D8B', fontSize: 11, marginBottom: 6 },
+  addRowBtn: {
+    marginTop: 10, borderWidth: 1, borderColor: '#C9A84C',
+    borderRadius: 8, padding: 10, alignItems: 'center',
+    borderStyle: 'dashed',
+  },
+  addRowBtnText: { color: '#C9A84C', fontSize: 13, fontWeight: 'bold' },
+  removeRowBtn: { paddingVertical: 2, paddingHorizontal: 8 },
+  removeRowBtnText: { color: '#E74C3C', fontSize: 11 },
   ouiNonRow: { flexDirection: 'row', gap: 6 },
   ouiNonBtn: {
     flex: 1, paddingVertical: 8,
