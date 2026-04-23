@@ -28,6 +28,8 @@ import SuiviCongesScreen from './app/screens/SuiviCongesScreen';
 import SuiviAstreinteScreen from './app/screens/SuiviAstreinteScreen';
 import CulturePositiveScreen from './app/screens/CulturePositiveScreen';
 import RemonteeInfoScreen from './app/screens/RemonteeInfoScreen';
+import CartographieRisquesScreen from './app/screens/CartographieRisquesScreen';
+import RegistreDangersScreen from './app/screens/RegistreDangersScreen';
 
 
 
@@ -64,6 +66,9 @@ export default function App() {
           <Stack.Screen name="SuiviAstreinte" component={SuiviAstreinteScreen} />
           <Stack.Screen name="CulturePositive" component={CulturePositiveScreen} />
           <Stack.Screen name="RemonteeInfo" component={RemonteeInfoScreen} />
+          <Stack.Screen name="CartographieRisques" component={CartographieRisquesScreen} />
+          <Stack.Screen name="RegistreDangers" component={RegistreDangersScreen} />
+
 
         </Stack.Navigator>
       </NavigationContainer>

@@ -95,7 +95,24 @@ const FOLDERS = {
     title: '3 - Gestion des Risques',
     color: '#E74C3C',
     icon: '⚠️',
-    subFolders: []
+    subFolders: [
+      {
+        id: 'CARTOGRAPHIE_RISQUES',
+        title: 'Cartographie des Risques',
+        subtitle: 'Identification et maîtrise des risques LGV',
+        icon: '⚠️',
+        screen: 'CartographieRisques',
+        params: {},
+      },
+      {
+        id: 'REGISTRE_DANGERS',
+        title: 'Registre des Dangers',
+        subtitle: 'Par année — 5 dernières années',
+        icon: '📋',
+        screen: 'RegistreDangers',
+        params: {},
+      }
+    ]
   },
   'REX': {
     title: '4 - REX',

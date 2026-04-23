@@ -53,6 +53,8 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.DELETE, "/api/astreinte/**").hasAnyRole("ADMIN", "CPGX")
                 .requestMatchers("/api/questionnaire/**").authenticated()
                 .requestMatchers("/api/remontee/**").authenticated()
+                .requestMatchers("/api/risques/**").authenticated()
+                .requestMatchers("/api/registre/**").authenticated()
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session
