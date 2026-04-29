@@ -20,19 +20,19 @@ public class QuestionnaireController {
     // ===== CAMPAGNES =====
 
     // Liste toutes les campagnes
-    // ADMIN/CPGX voient tout, autres voient OUVERT uniquement
+    // ADMIN/CGPX voient tout, autres voient OUVERT uniquement
     @GetMapping("/campagnes")
     public ResponseEntity<List<QuestionnaireCampagne>> getCampagnes(Authentication auth) {
         User user = (User) auth.getPrincipal();
         String role = user.getRole() != null ? user.getRole().name() : "";
-        if (role.equals("ADMIN") || role.equals("CPGX") || 
+        if (role.equals("ADMIN") || role.equals("CGPX") || 
                 role.equals("CSPR") || role.equals("CET")) {
                 return ResponseEntity.ok(campagneRepo.findAllByOrderByExerciceDesc());
             }
         return ResponseEntity.ok(campagneRepo.findByStatutOrderByExerciceDesc("OUVERT"));
     }
 
-    // Créer une nouvelle campagne — ADMIN/CPGX uniquement
+    // Créer une nouvelle campagne — ADMIN/CGPX uniquement
     @PostMapping("/campagnes")
     public ResponseEntity<QuestionnaireCampagne> createCampagne(
             @RequestBody QuestionnaireCampagne campagne,
@@ -43,7 +43,7 @@ public class QuestionnaireController {
         return ResponseEntity.ok(campagneRepo.save(campagne));
     }
 
-    // Ouvrir ou fermer une campagne — ADMIN/CPGX uniquement
+    // Ouvrir ou fermer une campagne — ADMIN/CGPX uniquement
     @PatchMapping("/campagnes/{id}/statut")
     public ResponseEntity<QuestionnaireCampagne> updateStatut(
             @PathVariable Long id,
@@ -54,7 +54,7 @@ public class QuestionnaireController {
         }).orElse(ResponseEntity.notFound().build());
     }
 
-    // Supprimer une campagne — ADMIN/CPGX uniquement
+    // Supprimer une campagne — ADMIN/CGPX uniquement
     @DeleteMapping("/campagnes/{id}")
     public ResponseEntity<Void> deleteCampagne(@PathVariable Long id) {
         campagneRepo.deleteById(id);
@@ -76,7 +76,7 @@ public class QuestionnaireController {
             .orElse(ResponseEntity.badRequest().body("Campagne introuvable pour cet exercice"));
     }
 
-    // Résultats agrégés anonymes — ADMIN/CPGX uniquement
+    // Résultats agrégés anonymes — ADMIN/CGPX uniquement
     @GetMapping("/resultats")
     public ResponseEntity<Map<String, Object>> getResultats(@RequestParam Integer exercice) {
         return ResponseEntity.ok(service.getResultats(exercice));

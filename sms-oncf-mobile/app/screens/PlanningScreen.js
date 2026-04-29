@@ -12,7 +12,7 @@ import { API_URL } from '../services/authService';
 const PLANNING_API = API_URL.replace('/auth', '/planning');
 const TASK_API = API_URL.replace('/auth', '/tasks');
 
-const isChef = (role) => role === 'CPGX' || role === 'CSPR' || role === 'CET';
+const isChef = (role) => role === 'CGPX' || role === 'CSPR' || role === 'CET';
 const screenWidth = Dimensions.get('window').width;
 
 const CATEGORIES = [

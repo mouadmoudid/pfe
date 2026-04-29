@@ -14,7 +14,7 @@ import { API_URL } from '../services/authService';
 const REFERENTIEL_API = API_URL.replace('/auth', '/referentiels');
 
 const canManage = (role) =>
-  role === 'ADMIN' || role === 'CPGX' || role === 'CSPR' || role === 'CET';
+  role === 'ADMIN' || role === 'CGPX' || role === 'CSPR' || role === 'CET';
 
 const formatSize = (bytes) => {
   if (!bytes) return '—';

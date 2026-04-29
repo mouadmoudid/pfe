@@ -13,7 +13,7 @@ import { API_URL } from '../services/authService';
 const AST_API = API_URL.replace('/auth', '/astreinte');
 const USERS_API = API_URL.replace('/auth', '/admin/users');
 
-const canEdit = (role) => role === 'ADMIN' || role === 'CPGX';
+const canEdit = (role) => role === 'ADMIN' || role === 'CGPX';
 
 const formatS = (n) => n < 10 ? `S0${n}` : `S${n}`;
 

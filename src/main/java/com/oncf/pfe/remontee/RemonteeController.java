@@ -19,7 +19,7 @@ public class RemonteeController {
     private final RemonteeCampagneRepository campagneRepo;
 
     private boolean isManager(String role) {
-        return role.equals("ADMIN") || role.equals("CPGX") ||
+        return role.equals("ADMIN") || role.equals("CGPX") ||
                role.equals("CSPR") || role.equals("CET");
     }
 
@@ -101,7 +101,7 @@ public class RemonteeController {
         );
     }
 
-    // Résultats anonymisés — ADMIN/CPGX/CSPR/CET uniquement
+    // Résultats anonymisés — ADMIN/CGPX/CSPR/CET uniquement
     @GetMapping("/resultats")
     public ResponseEntity<List<RemonteeResultatResponse>> getResultats(
             @RequestParam Integer exercice,

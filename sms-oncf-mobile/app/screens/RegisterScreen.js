@@ -10,7 +10,7 @@ import { API_URL } from '../services/authService';
 
 const ROLES = [
   { value: 'AGENT', label: 'Agent', icon: '👷', desc: 'Saisie terrain' },
-  { value: 'CPGX', label: 'CPGX', icon: '👨‍💼', desc: 'KN1' },
+  { value: 'CGPX', label: 'CGPX', icon: '👨‍💼', desc: 'KN1' },
   { value: 'CSPR', label: 'CSPR', icon: '👨‍💼', desc: 'KN2' },
   { value: 'CET', label: 'CET', icon: '👨‍💼', desc: 'KN3' },
 ];

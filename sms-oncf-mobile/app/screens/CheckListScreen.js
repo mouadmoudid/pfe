@@ -387,7 +387,7 @@ const ITEMS_CHANTIER = [
   },
 ];
 
-const isChef = (role) => role === 'CPGX' || role === 'CSPR' || role === 'CET';
+const isChef = (role) => role === 'CGPX' || role === 'CSPR' || role === 'CET';
 
 export default function CheckListScreen({ navigation }) {
   const [checklists, setChecklists] = useState([]);

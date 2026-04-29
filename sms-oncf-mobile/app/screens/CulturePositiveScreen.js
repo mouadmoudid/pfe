@@ -12,7 +12,7 @@ import { API_URL } from '../services/authService';
 
 const Q_API = API_URL.replace('/auth', '/questionnaire');
 
-const canManage = (role) => role === 'ADMIN' || role === 'CPGX' || role === 'CSPR' || role === 'CET';
+const canManage = (role) => role === 'ADMIN' || role === 'CGPX' || role === 'CSPR' || role === 'CET';
 
 const AXES = [
   { id: 'axe1', label: 'Axe 1 : Confiance et Engagement', questions: ['q2','q3','q4','q5','q6','q7'] },

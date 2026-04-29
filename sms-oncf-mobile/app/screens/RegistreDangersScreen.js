@@ -11,7 +11,7 @@ import * as Sharing from 'expo-sharing';
 import { API_URL } from '../services/authService';
 
 const API = API_URL.replace('/auth', '/registre');
-const canEdit = (role) => role === 'ADMIN' || role === 'CPGX';
+const canEdit = (role) => role === 'ADMIN' || role === 'CGPX';
 
 // ===== CONFIG CRITICITÉ =====
 const CRIT = {
