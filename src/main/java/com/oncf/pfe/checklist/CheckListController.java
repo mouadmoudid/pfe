@@ -5,6 +5,7 @@ import com.oncf.pfe.checklist.dto.CheckListResponse;
 import com.oncf.pfe.user.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,10 +20,18 @@ public class CheckListController {
     private final CheckListService checkListService;
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN','CGPX','CSPR','CET')")
     public ResponseEntity<CheckListResponse> create(
             @RequestBody CheckListRequest request,
             Authentication auth) {
         User user = (User) auth.getPrincipal();
+        // Le type CHANTIER est réservé à ADMIN et CGPX
+        if (CheckListType.CHANTIER.equals(request.getType())) {
+            String role = user.getRole().name();
+            if (!role.equals("ADMIN") && !role.equals("CGPX")) {
+                return ResponseEntity.status(403).build();
+            }
+        }
         return ResponseEntity.ok(checkListService.createCheckList(request, user));
     }
 
@@ -50,6 +59,7 @@ public class CheckListController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','CGPX')")
     public ResponseEntity<String> deleteChecklist(@PathVariable Long id, Authentication auth) {
         User user = (User) auth.getPrincipal();
         checkListService.deleteCheckList(id, user);

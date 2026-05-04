@@ -66,7 +66,7 @@ export default function DashboardScreen({ navigation }) {
           </View>
         </View>
 
-        {(user?.role === 'ADMIN' || isChef(user?.role)) && (
+        {user?.role === 'ADMIN' && (
           <TouchableOpacity
             style={styles.adminBtn}
             onPress={() => navigation.navigate('Admin')}

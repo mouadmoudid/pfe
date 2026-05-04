@@ -2,6 +2,7 @@ package com.oncf.pfe.user;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,20 +16,23 @@ public class UserController {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    // Liste tous les utilisateurs
+    // Liste tous les utilisateurs — ADMIN uniquement
     @GetMapping("/users")
+    @PreAuthorize("hasAnyRole('ADMIN','CGPX','CSPR','CET')")
     public ResponseEntity<List<User>> getAllUsers() {
         return ResponseEntity.ok(userRepository.findAll());
     }
 
-    // Liste tous les agents (collaborateurs)
+    // Liste tous les agents — accessible aux 4 rôles superviseurs
     @GetMapping("/agents")
+    @PreAuthorize("hasAnyRole('ADMIN','CGPX','CSPR','CET')")
     public ResponseEntity<List<User>> getAgents() {
         return ResponseEntity.ok(userRepository.findByRole(Role.AGENT));
     }
 
-    // Activer / désactiver un compte
+    // Activer / désactiver un compte — ADMIN uniquement
     @PatchMapping("/users/{id}/toggle")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<String> toggleUser(@PathVariable Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
@@ -37,8 +41,9 @@ public class UserController {
         return ResponseEntity.ok(user.isEnabled() ? "Compte activé" : "Compte désactivé");
     }
 
-    // Changer le rôle
+    // Changer le rôle — ADMIN uniquement
     @PatchMapping("/users/{id}/role")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<String> changeRole(
             @PathVariable Long id,
             @RequestParam Role role) {
@@ -49,15 +54,17 @@ public class UserController {
         return ResponseEntity.ok("Rôle mis à jour : " + role);
     }
 
-    // Supprimer
+    // Supprimer — ADMIN uniquement
     @DeleteMapping("/users/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<String> deleteUser(@PathVariable Long id) {
         userRepository.deleteById(id);
         return ResponseEntity.ok("Utilisateur supprimé");
     }
 
-        // Toggle collaborateur status
+    // Toggle collaborateur status — ADMIN uniquement
     @PatchMapping("/users/{id}/collaborateur")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<String> toggleCollaborateur(@PathVariable Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
@@ -66,8 +73,9 @@ public class UserController {
         return ResponseEntity.ok(user.isCollaborateur() ? "Marqué collaborateur" : "Retiré collaborateur");
     }
 
-    // Liste uniquement les collaborateurs (agents marqués)
+    // Liste des collaborateurs — accessible aux 4 rôles superviseurs
     @GetMapping("/collaborateurs")
+    @PreAuthorize("hasAnyRole('ADMIN','CGPX','CSPR','CET')")
     public ResponseEntity<List<User>> getCollaborateurs() {
         return ResponseEntity.ok(
             userRepository.findAll().stream()
@@ -76,7 +84,9 @@ public class UserController {
         );
     }
 
+    // Recherche par matricule — accessible aux 4 rôles superviseurs
     @GetMapping("/by-matricule/{matricule}")
+    @PreAuthorize("hasAnyRole('ADMIN','CGPX','CSPR','CET')")
     public ResponseEntity<?> getByMatricule(@PathVariable String matricule) {
         return userRepository.findAll().stream()
             .filter(u -> matricule.equals(u.getMatricule()))

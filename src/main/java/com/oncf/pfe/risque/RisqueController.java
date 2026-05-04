@@ -2,6 +2,7 @@ package com.oncf.pfe.risque;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -30,11 +31,13 @@ public class RisqueController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN','CGPX','CSPR','CET')")
     public ResponseEntity<RisqueEntry> create(@RequestBody RisqueEntry entry) {
         return ResponseEntity.ok(repo.save(entry));
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','CGPX','CSPR','CET')")
     public ResponseEntity<RisqueEntry> update(@PathVariable Long id, @RequestBody RisqueEntry entry) {
         return repo.findById(id).map(existing -> {
             existing.setFacteur(entry.getFacteur());
@@ -49,6 +52,7 @@ public class RisqueController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','CGPX','CSPR','CET')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         repo.deleteById(id);
         return ResponseEntity.ok().build();

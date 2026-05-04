@@ -12,7 +12,7 @@ import { API_URL } from '../services/authService';
 
 const RISQUE_API = API_URL.replace('/auth', '/risques');
 
-const canEdit = (role) => role === 'ADMIN' || role === 'CGPX';
+const canEdit = (role) => ['ADMIN', 'CGPX', 'CSPR', 'CET'].includes(role);
 
 // ===== CRITICITÉ =====
 const CRITICITE_CONFIG = {

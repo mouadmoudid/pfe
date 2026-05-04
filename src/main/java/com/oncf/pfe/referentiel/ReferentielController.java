@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -20,6 +21,7 @@ public class ReferentielController {
     private final ReferentielService referentielService;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAnyRole('ADMIN','CGPX','CSPR','CET')")
     public ResponseEntity<ReferentielResponse> upload(
             @RequestParam MultipartFile file,
             @RequestParam(required = false) String nom,
@@ -44,6 +46,7 @@ public class ReferentielController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','CGPX','CSPR','CET')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         referentielService.delete(id);
         return ResponseEntity.noContent().build();

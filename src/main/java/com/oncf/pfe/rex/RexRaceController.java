@@ -4,6 +4,7 @@ import com.oncf.pfe.user.User;
 import com.oncf.pfe.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
@@ -11,6 +12,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/rex")
 @RequiredArgsConstructor
+@PreAuthorize("hasAnyRole('ADMIN','CGPX','CSPR','CET')")
 public class RexRaceController {
 
     private final RexRepository rexRepository;

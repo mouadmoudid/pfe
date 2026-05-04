@@ -388,6 +388,8 @@ const ITEMS_CHANTIER = [
 ];
 
 const isChef = (role) => role === 'CGPX' || role === 'CSPR' || role === 'CET';
+const canEdit = (role) => role === 'ADMIN' || role === 'CGPX';
+const canCreateCheckListCollab = (role) => ['ADMIN', 'CGPX', 'CSPR', 'CET'].includes(role);
 
 export default function CheckListScreen({ navigation }) {
   const [checklists, setChecklists] = useState([]);
@@ -805,9 +807,11 @@ export default function CheckListScreen({ navigation }) {
                 {filteredCollab ? `Filtre : ${filteredCollab}` : 'Contrôle & Inspection — DRIC'}
               </Text>
             </View>
-            <TouchableOpacity style={styles.addBtn} onPress={() => setStep(1)}>
-              <Text style={styles.addBtnText}>+ Nouvelle</Text>
-            </TouchableOpacity>
+            {canCreateCheckListCollab(currentUser?.role) && (
+              <TouchableOpacity style={styles.addBtn} onPress={() => setStep(1)}>
+                <Text style={styles.addBtnText}>+ Nouvelle</Text>
+              </TouchableOpacity>
+            )}
           </View>
         </View>
 
@@ -862,12 +866,14 @@ export default function CheckListScreen({ navigation }) {
                           : <Text style={styles.pdfBtnText}>📄 Exporter PDF</Text>
                         }
                       </TouchableOpacity>
-                      <TouchableOpacity
-                        style={styles.deleteBtn}
-                        onPress={() => deleteChecklist(cl)}
-                      >
-                        <Text style={styles.deleteBtnText}>🗑 Supprimer</Text>
-                      </TouchableOpacity>
+                      {canEdit(currentUser?.role) && (
+                        <TouchableOpacity
+                          style={styles.deleteBtn}
+                          onPress={() => deleteChecklist(cl)}
+                        >
+                          <Text style={styles.deleteBtnText}>🗑 Supprimer</Text>
+                        </TouchableOpacity>
+                      )}
                     </View>
                   </View>
                 ))
@@ -999,16 +1005,18 @@ export default function CheckListScreen({ navigation }) {
             </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.typeCard, { borderColor: '#27AE60' }]}
-            onPress={() => { setType('CHANTIER'); initItems('CHANTIER'); setStep(3); }}
-          >
-            <Text style={styles.typeCardIcon}>🏗</Text>
-            <Text style={styles.typeCardTitle}>Check List Chantier</Text>
-            <Text style={styles.typeCardDesc}>
-              Contrôle d'un chantier — avant départ, au chantier, fin des travaux, agrès
-            </Text>
-          </TouchableOpacity>
+          {canEdit(currentUser?.role) && (
+            <TouchableOpacity
+              style={[styles.typeCard, { borderColor: '#27AE60' }]}
+              onPress={() => { setType('CHANTIER'); initItems('CHANTIER'); setStep(3); }}
+            >
+              <Text style={styles.typeCardIcon}>🏗</Text>
+              <Text style={styles.typeCardTitle}>Check List Chantier</Text>
+              <Text style={styles.typeCardDesc}>
+                Contrôle d'un chantier — avant départ, au chantier, fin des travaux, agrès
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
       </SafeAreaView>
     );

@@ -2,6 +2,7 @@ package com.oncf.pfe.registre;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -26,12 +27,14 @@ public class RegistreController {
 
     // Créer un danger
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN','CGPX')")
     public ResponseEntity<RegistreDanger> create(@RequestBody RegistreDanger danger) {
         return ResponseEntity.ok(repo.save(danger));
     }
 
     // Modifier un danger
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','CGPX')")
     public ResponseEntity<RegistreDanger> update(
             @PathVariable Long id,
             @RequestBody RegistreDanger body) {
@@ -53,6 +56,7 @@ public class RegistreController {
 
     // Supprimer un danger
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','CGPX')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         repo.deleteById(id);
         return ResponseEntity.ok().build();

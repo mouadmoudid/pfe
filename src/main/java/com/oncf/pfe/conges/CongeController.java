@@ -3,6 +3,7 @@ package com.oncf.pfe.conges;
 import com.oncf.pfe.user.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
@@ -26,6 +27,7 @@ public class CongeController {
     }
 
     @PostMapping("/config")
+    @PreAuthorize("hasAnyRole('ADMIN','CGPX')")
     public ResponseEntity<CongeConfig> saveConfig(
             @RequestBody CongeConfigRequest req,
             Authentication auth) {
@@ -34,6 +36,7 @@ public class CongeController {
     }
 
     @PostMapping("/entree")
+    @PreAuthorize("hasAnyRole('ADMIN','CGPX')")
     public ResponseEntity<Void> saveEntree(
             @RequestBody CongeEntreeRequest req,
             Authentication auth) {
@@ -43,6 +46,7 @@ public class CongeController {
     }
 
     @DeleteMapping("/config/{collaborateurId}/{annee}")
+    @PreAuthorize("hasAnyRole('ADMIN','CGPX')")
     public ResponseEntity<Void> deleteConfig(
             @PathVariable Long collaborateurId,
             @PathVariable Integer annee) {

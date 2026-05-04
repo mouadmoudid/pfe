@@ -5,6 +5,7 @@ import com.oncf.pfe.planning.dto.PlanningTaskResponse;
 import com.oncf.pfe.user.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,6 +20,7 @@ public class PlanningController {
     private final PlanningService planningService;
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN','CGPX')")
     public ResponseEntity<PlanningTaskResponse> createTask(
             @RequestBody PlanningTaskDto request,
             Authentication auth) {
@@ -27,6 +29,7 @@ public class PlanningController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN','CGPX','CSPR','CET')")
     public ResponseEntity<List<PlanningTaskResponse>> getAllByAnnee(
             @RequestParam(defaultValue = "0") Integer annee) {
         if (annee == 0) annee = Year.now().getValue();
@@ -46,6 +49,7 @@ public class PlanningController {
     }
 
     @PatchMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','CGPX')")
     public ResponseEntity<PlanningTaskResponse> updateTask(
             @PathVariable Long id,
             @RequestBody PlanningTaskDto request,
@@ -55,6 +59,7 @@ public class PlanningController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','CGPX')")
     public ResponseEntity<String> deleteTask(@PathVariable Long id) {
         planningService.deleteTask(id);
         return ResponseEntity.ok("Tâche supprimée");

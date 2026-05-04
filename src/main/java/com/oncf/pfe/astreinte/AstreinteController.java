@@ -3,6 +3,7 @@ package com.oncf.pfe.astreinte;
 import com.oncf.pfe.user.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
@@ -33,6 +34,7 @@ public class AstreinteController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN','CGPX')")
     public ResponseEntity<Void> saveAstreinte(
             @RequestBody AstreinteRequest req,
             Authentication auth) {
@@ -42,6 +44,7 @@ public class AstreinteController {
     }
 
     @PostMapping("/collaborateur/{collaborateurId}/annee/{annee}")
+    @PreAuthorize("hasAnyRole('ADMIN','CGPX')")
     public ResponseEntity<Void> addCollaborateur(
             @PathVariable Long collaborateurId,
             @PathVariable Integer annee,
@@ -52,6 +55,7 @@ public class AstreinteController {
     }
 
     @DeleteMapping("/collaborateur/{collaborateurId}/annee/{annee}")
+    @PreAuthorize("hasAnyRole('ADMIN','CGPX')")
     public ResponseEntity<Void> removeCollaborateur(
             @PathVariable Long collaborateurId,
             @PathVariable Integer annee) {

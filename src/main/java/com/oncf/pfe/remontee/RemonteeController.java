@@ -3,6 +3,7 @@ package com.oncf.pfe.remontee;
 import com.oncf.pfe.user.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -36,6 +37,7 @@ public class RemonteeController {
     }
 
     @PostMapping("/campagnes")
+    @PreAuthorize("hasAnyRole('ADMIN','CGPX','CSPR','CET')")
     public ResponseEntity<RemonteeCampagne> createCampagne(
             @RequestBody RemonteeCampagne campagne,
             Authentication auth) {
@@ -46,6 +48,7 @@ public class RemonteeController {
     }
 
     @PatchMapping("/campagnes/{id}/statut")
+    @PreAuthorize("hasAnyRole('ADMIN','CGPX','CSPR','CET')")
     public ResponseEntity<RemonteeCampagne> updateStatut(
             @PathVariable Long id,
             @RequestParam String statut) {
@@ -56,6 +59,7 @@ public class RemonteeController {
     }
 
     @DeleteMapping("/campagnes/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','CGPX','CSPR','CET')")
     public ResponseEntity<Void> deleteCampagne(@PathVariable Long id) {
         campagneRepo.deleteById(id);
         return ResponseEntity.ok().build();

@@ -3,6 +3,7 @@ package com.oncf.pfe.questionnaire;
 import com.oncf.pfe.user.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
@@ -34,6 +35,7 @@ public class QuestionnaireController {
 
     // Créer une nouvelle campagne — ADMIN/CGPX uniquement
     @PostMapping("/campagnes")
+    @PreAuthorize("hasAnyRole('ADMIN','CGPX')")
     public ResponseEntity<QuestionnaireCampagne> createCampagne(
             @RequestBody QuestionnaireCampagne campagne,
             Authentication auth) {
@@ -45,6 +47,7 @@ public class QuestionnaireController {
 
     // Ouvrir ou fermer une campagne — ADMIN/CGPX uniquement
     @PatchMapping("/campagnes/{id}/statut")
+    @PreAuthorize("hasAnyRole('ADMIN','CGPX')")
     public ResponseEntity<QuestionnaireCampagne> updateStatut(
             @PathVariable Long id,
             @RequestParam String statut) {
@@ -56,6 +59,7 @@ public class QuestionnaireController {
 
     // Supprimer une campagne — ADMIN/CGPX uniquement
     @DeleteMapping("/campagnes/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','CGPX')")
     public ResponseEntity<Void> deleteCampagne(@PathVariable Long id) {
         campagneRepo.deleteById(id);
         return ResponseEntity.ok().build();
@@ -76,8 +80,9 @@ public class QuestionnaireController {
             .orElse(ResponseEntity.badRequest().body("Campagne introuvable pour cet exercice"));
     }
 
-    // Résultats agrégés anonymes — ADMIN/CGPX uniquement
+    // Résultats agrégés — ADMIN/CGPX/CSPR/CET
     @GetMapping("/resultats")
+    @PreAuthorize("hasAnyRole('ADMIN','CGPX','CSPR','CET')")
     public ResponseEntity<Map<String, Object>> getResultats(@RequestParam Integer exercice) {
         return ResponseEntity.ok(service.getResultats(exercice));
     }
