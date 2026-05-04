@@ -387,9 +387,10 @@ const ITEMS_CHANTIER = [
   },
 ];
 
-const isChef = (role) => role === 'CGPX' || role === 'CSPR' || role === 'CET';
-const canEdit = (role) => role === 'ADMIN' || role === 'CGPX';
-const canCreateCheckListCollab = (role) => ['ADMIN', 'CGPX', 'CSPR', 'CET'].includes(role);
+const isChef        = (role) => role === 'CGPX' || role === 'CSPR' || role === 'CET';
+const canEdit       = (role) => role === 'ADMIN' || role === 'CGPX';
+const canEditMedium = (role) => ['ADMIN', 'CGPX', 'CSPR', 'CET'].includes(role);
+const canView       = (role) => role !== 'AGENT';
 
 export default function CheckListScreen({ navigation }) {
   const [checklists, setChecklists] = useState([]);
@@ -807,7 +808,7 @@ export default function CheckListScreen({ navigation }) {
                 {filteredCollab ? `Filtre : ${filteredCollab}` : 'Contrôle & Inspection — DRIC'}
               </Text>
             </View>
-            {canCreateCheckListCollab(currentUser?.role) && (
+            {canEditMedium(currentUser?.role) && (
               <TouchableOpacity style={styles.addBtn} onPress={() => setStep(1)}>
                 <Text style={styles.addBtnText}>+ Nouvelle</Text>
               </TouchableOpacity>

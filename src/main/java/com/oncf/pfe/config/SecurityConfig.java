@@ -38,11 +38,8 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll()
 
-                // Administration — user management ADMIN uniquement
-                .requestMatchers(HttpMethod.GET,    "/api/admin/users").hasAnyRole("ADMIN","CGPX","CSPR","CET")
-                .requestMatchers(HttpMethod.GET,    "/api/admin/users/**").hasAnyRole("ADMIN","CGPX","CSPR","CET")
-                .requestMatchers(HttpMethod.PATCH,  "/api/admin/users/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.DELETE, "/api/admin/users/**").hasRole("ADMIN")
+                // Administration — gestion utilisateurs ADMIN uniquement
+                .requestMatchers("/api/admin/users/**").hasRole("ADMIN")
                 // Données lecture (agents, collaborateurs, by-matricule) → 4 rôles
                 .requestMatchers("/api/admin/**").hasAnyRole("ADMIN","CGPX","CSPR","CET")
 

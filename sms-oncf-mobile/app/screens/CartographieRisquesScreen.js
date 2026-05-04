@@ -12,7 +12,9 @@ import { API_URL } from '../services/authService';
 
 const RISQUE_API = API_URL.replace('/auth', '/risques');
 
-const canEdit = (role) => ['ADMIN', 'CGPX', 'CSPR', 'CET'].includes(role);
+const canEdit       = (role) => role === 'ADMIN' || role === 'CGPX';
+const canEditMedium = (role) => ['ADMIN', 'CGPX', 'CSPR', 'CET'].includes(role);
+const canView       = (role) => role !== 'AGENT';
 
 // ===== CRITICITÉ =====
 const CRITICITE_CONFIG = {
@@ -279,7 +281,7 @@ th { background:#0A1628;color:white;padding:6px;font-size:9px;text-align:left;bo
             <Text style={styles.headerSub}>{filtered.length} risque(s) · LGV ONCF</Text>
           </View>
           <View style={{ flexDirection: 'row', gap: 8 }}>
-            {canEdit(userRole) && (
+            {canEditMedium(userRole) && (
               <TouchableOpacity style={styles.addBtn} onPress={openAdd}>
                 <Text style={styles.addBtnText}>+ Risque</Text>
               </TouchableOpacity>
@@ -342,7 +344,7 @@ th { background:#0A1628;color:white;padding:6px;font-size:9px;text-align:left;bo
               <View style={styles.emptyBox}>
                 <Text style={styles.emptyIcon}>⚠️</Text>
                 <Text style={styles.emptyText}>Aucun risque trouvé</Text>
-                {canEdit(userRole) && (
+                {canEditMedium(userRole) && (
                   <Text style={styles.emptySubText}>
                     Appuyez sur "+ Risque" pour ajouter une entrée
                   </Text>
@@ -390,7 +392,7 @@ th { background:#0A1628;color:white;padding:6px;font-size:9px;text-align:left;bo
                     ) : null}
 
                     {/* Actions */}
-                    {canEdit(userRole) && (
+                    {canEditMedium(userRole) && (
                       <View style={styles.cardActions}>
                         <TouchableOpacity style={styles.editBtn} onPress={() => openEdit(r)}>
                           <Text style={styles.editBtnText}>✏️ Modifier</Text>
