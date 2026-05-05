@@ -107,6 +107,7 @@ public class RemonteeController {
 
     // Résultats anonymisés — ADMIN/CGPX/CSPR/CET uniquement
     @GetMapping("/resultats")
+    @PreAuthorize("hasAnyRole('ADMIN','CGPX','CSPR','CET')")
     public ResponseEntity<List<RemonteeResultatResponse>> getResultats(
             @RequestParam Integer exercice,
             Authentication auth) {

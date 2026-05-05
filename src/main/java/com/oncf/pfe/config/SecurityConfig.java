@@ -43,28 +43,38 @@ public class SecurityConfig {
                 // Données lecture (agents, collaborateurs, by-matricule) → 4 rôles
                 .requestMatchers("/api/admin/**").hasAnyRole("ADMIN","CGPX","CSPR","CET")
 
-                // Planning — lecture 4 rôles, écriture ADMIN/CGPX
-                .requestMatchers(HttpMethod.GET,    "/api/planning/**").hasAnyRole("ADMIN","CGPX","CSPR","CET")
+                // RACI — AGENT peut consulter uniquement
+                .requestMatchers(HttpMethod.GET,    "/api/raci/**").authenticated()
+                .requestMatchers(HttpMethod.POST,   "/api/raci/**").hasAnyRole("ADMIN","CGPX","CSPR","CET")
+                .requestMatchers(HttpMethod.DELETE, "/api/raci/**").hasAnyRole("ADMIN","CGPX","CSPR","CET")
+
+                // Planning — lecture authentifiée (getAllByAnnee bloqué par @PreAuthorize dans le controller)
+                // AGENT peut voir /my et /category (Planning K Veille), pas la liste complète
+                .requestMatchers(HttpMethod.GET,    "/api/planning/**").authenticated()
                 .requestMatchers(HttpMethod.POST,   "/api/planning/**").hasAnyRole("ADMIN","CGPX")
                 .requestMatchers(HttpMethod.PATCH,  "/api/planning/**").hasAnyRole("ADMIN","CGPX")
                 .requestMatchers(HttpMethod.DELETE, "/api/planning/**").hasAnyRole("ADMIN","CGPX")
 
-                // Checklists — création 4 rôles (type CHANTIER filtré en controller), suppression ADMIN/CGPX
-                .requestMatchers(HttpMethod.GET,    "/api/checklists/**").authenticated()
+                // Checklists — AGENT exclu sauf /raci (lecture registre RACI autorisée)
+                .requestMatchers(HttpMethod.GET,    "/api/checklists/raci").authenticated()
+                .requestMatchers(HttpMethod.GET,    "/api/checklists/**").hasAnyRole("ADMIN","CGPX","CSPR","CET")
                 .requestMatchers(HttpMethod.POST,   "/api/checklists/**").hasAnyRole("ADMIN","CGPX","CSPR","CET")
-                .requestMatchers(HttpMethod.PATCH,  "/api/checklists/**").authenticated()
+                .requestMatchers(HttpMethod.PATCH,  "/api/checklists/**").hasAnyRole("ADMIN","CGPX","CSPR","CET")
                 .requestMatchers(HttpMethod.DELETE, "/api/checklists/**").hasAnyRole("ADMIN","CGPX")
 
-                // Questionnaire — campagnes gérées ADMIN/CGPX ; résultats 4 rôles ; soumission authentifiée
+                // Compte Rendu KN1 — AGENT exclu
+                .requestMatchers("/api/compterendu/**").hasAnyRole("ADMIN","CGPX","CSPR","CET")
+
+                // Questionnaire — AGENT peut remplir et voir campagnes ouvertes, pas résultats ni gérer
                 .requestMatchers(HttpMethod.POST,   "/api/questionnaire/campagnes/**").hasAnyRole("ADMIN","CGPX")
                 .requestMatchers(HttpMethod.PATCH,  "/api/questionnaire/campagnes/**").hasAnyRole("ADMIN","CGPX")
                 .requestMatchers(HttpMethod.DELETE, "/api/questionnaire/campagnes/**").hasAnyRole("ADMIN","CGPX")
-                .requestMatchers(HttpMethod.GET,    "/api/questionnaire/campagnes").hasAnyRole("ADMIN","CGPX","CSPR","CET")
+                .requestMatchers(HttpMethod.GET,    "/api/questionnaire/campagnes").authenticated()
                 .requestMatchers(HttpMethod.GET,    "/api/questionnaire/resultats").hasAnyRole("ADMIN","CGPX","CSPR","CET")
                 .requestMatchers(HttpMethod.POST,   "/api/questionnaire").authenticated()
                 .requestMatchers("/api/questionnaire/**").authenticated()
 
-                // Remontée — campagnes gérées 4 rôles ; soumission authentifiée
+                // Remontée — AGENT peut soumettre/modifier la sienne, pas résultats ni gérer campagnes
                 .requestMatchers(HttpMethod.POST,   "/api/remontee/campagnes/**").hasAnyRole("ADMIN","CGPX","CSPR","CET")
                 .requestMatchers(HttpMethod.PATCH,  "/api/remontee/campagnes/**").hasAnyRole("ADMIN","CGPX","CSPR","CET")
                 .requestMatchers(HttpMethod.DELETE, "/api/remontee/campagnes/**").hasAnyRole("ADMIN","CGPX","CSPR","CET")
@@ -72,43 +82,49 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST,   "/api/remontee").authenticated()
                 .requestMatchers("/api/remontee/**").authenticated()
 
-                // Risques — lecture authentifiée, écriture 4 rôles
+                // Risques — AGENT peut consulter/filtrer/exporter, pas modifier
                 .requestMatchers(HttpMethod.GET,    "/api/risques/**").authenticated()
                 .requestMatchers(HttpMethod.POST,   "/api/risques/**").hasAnyRole("ADMIN","CGPX","CSPR","CET")
                 .requestMatchers(HttpMethod.PUT,    "/api/risques/**").hasAnyRole("ADMIN","CGPX","CSPR","CET")
                 .requestMatchers(HttpMethod.DELETE, "/api/risques/**").hasAnyRole("ADMIN","CGPX","CSPR","CET")
 
-                // Registre — lecture authentifiée, écriture ADMIN/CGPX
+                // Registre Dangers — AGENT peut consulter/exporter, pas modifier
                 .requestMatchers(HttpMethod.GET,    "/api/registre/**").authenticated()
                 .requestMatchers(HttpMethod.POST,   "/api/registre/**").hasAnyRole("ADMIN","CGPX")
                 .requestMatchers(HttpMethod.PUT,    "/api/registre/**").hasAnyRole("ADMIN","CGPX")
                 .requestMatchers(HttpMethod.DELETE, "/api/registre/**").hasAnyRole("ADMIN","CGPX")
 
-                // Référentiels — lecture authentifiée, upload/suppression 4 rôles
+                // Référentiels — AGENT peut consulter et télécharger, pas ajouter/supprimer
                 .requestMatchers(HttpMethod.GET,    "/api/referentiels/**").authenticated()
                 .requestMatchers(HttpMethod.POST,   "/api/referentiels/**").hasAnyRole("ADMIN","CGPX","CSPR","CET")
                 .requestMatchers(HttpMethod.DELETE, "/api/referentiels/**").hasAnyRole("ADMIN","CGPX","CSPR","CET")
 
-                // Congés — lecture authentifiée, écriture ADMIN/CGPX
+                // Congés — AGENT peut consulter et exporter, pas saisir
                 .requestMatchers(HttpMethod.GET,    "/api/conges/**").authenticated()
                 .requestMatchers(HttpMethod.POST,   "/api/conges/**").hasAnyRole("ADMIN","CGPX")
                 .requestMatchers(HttpMethod.PUT,    "/api/conges/**").hasAnyRole("ADMIN","CGPX")
                 .requestMatchers(HttpMethod.DELETE, "/api/conges/**").hasAnyRole("ADMIN","CGPX")
 
-                // Astreinte — lecture authentifiée, écriture ADMIN/CGPX
+                // Astreinte — AGENT peut consulter, pas marquer
                 .requestMatchers(HttpMethod.GET,    "/api/astreinte/**").authenticated()
                 .requestMatchers(HttpMethod.POST,   "/api/astreinte/**").hasAnyRole("ADMIN","CGPX")
                 .requestMatchers(HttpMethod.DELETE, "/api/astreinte/**").hasAnyRole("ADMIN","CGPX")
 
-                // REX, RACE, Veille — 4 rôles (AGENT exclu)
+                // REX, RACE — AGENT exclu de tout
                 .requestMatchers("/api/rex/**").hasAnyRole("ADMIN","CGPX","CSPR","CET")
                 .requestMatchers("/api/race/**").hasAnyRole("ADMIN","CGPX","CSPR","CET")
-                .requestMatchers("/api/veille/**").hasAnyRole("ADMIN","CGPX","CSPR","CET")
+
+                // Veille — AGENT peut voir planning K seulement
+                .requestMatchers(HttpMethod.GET,    "/api/veille/planning/**").authenticated()
+                .requestMatchers(HttpMethod.GET,    "/api/veille/**").hasAnyRole("ADMIN","CGPX","CSPR","CET")
+                .requestMatchers(HttpMethod.POST,   "/api/veille/**").hasAnyRole("ADMIN","CGPX")
+
+                // Fiche Suivi — AGENT exclu
+                .requestMatchers("/api/fiche-suivi/**").hasAnyRole("ADMIN","CGPX","CSPR","CET")
 
                 // Divers — tous authentifiés
                 .requestMatchers("/api/tasks/**").authenticated()
                 .requestMatchers("/api/collaborateurs/**").authenticated()
-                .requestMatchers("/api/fiche-suivi/**").authenticated()
 
                 .anyRequest().authenticated()
             )

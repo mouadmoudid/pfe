@@ -10,7 +10,7 @@ const DOSSIERS = [
   { id: 'CONTROLE_INSPECTION', title: '1 - Contrôle et Inspection', icon: '🔍', color: '#4A90D9' },
   { id: 'VEILLE', title: '2 - Veille', icon: '👁', color: '#8E44AD' },
   { id: 'GESTION_RISQUES', title: '3 - Gestion des Risques', icon: '⚠️', color: '#E74C3C' },
-  { id: 'REX', title: '4 - REX', icon: '🔄', color: '#E67E22' },
+  { id: 'REX', title: '4 - REX', icon: '🔄', color: '#E67E22', agentHidden: true },
   { id: 'CULTURE_POSITIF', title: '5 - Culture Positif', icon: '🌟', color: '#27AE60' },
   { id: 'REFERENCIELS', title: '6 - Référenciels', icon: '📚', color: '#C9A84C' },
   { id: 'CAPITAL_HUMAIN', title: '7 - C.H - Capital Humain', icon: '👨‍👩‍👧‍👦', color: '#16A085' },
@@ -86,7 +86,7 @@ export default function DashboardScreen({ navigation }) {
 
         <Text style={styles.sectionTitle}>Dossiers SMS</Text>
           <View style={styles.grid}>
-            {DOSSIERS.map((d) => (
+            {DOSSIERS.filter(d => !(d.agentHidden && user?.role === 'AGENT')).map((d) => (
               <TouchableOpacity
                 key={d.id}
                 style={[styles.card, { borderLeftColor: d.color }]}

@@ -4,6 +4,7 @@ import {
   ScrollView
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAuth } from '../context/AuthContext';
 
 const FOLDERS = {
   'CONTROLE_INSPECTION': {
@@ -233,9 +234,21 @@ const FOLDERS = {
   },
 };
 
+// Sous-dossiers cachés pour le rôle AGENT par catégorie
+const AGENT_HIDDEN = {
+  CONTROLE_INSPECTION: new Set(['PLANNING_ANNUEL', 'K_CHECK_LIST', 'COMPTE_RENDU_KN1', 'RAPPORT_PERIODIQUE']),
+  VEILLE: new Set(['FICHE_SUIVI', 'TABLEAU_INDICATEURS', 'LISTE_COLLABORATEURS']),
+};
+
 export default function FolderScreen({ route, navigation }) {
   const { folderId } = route.params;
   const folder = FOLDERS[folderId];
+  const { user } = useAuth();
+  const isAgent = user?.role === 'AGENT';
+
+  const visibleSubFolders = isAgent && AGENT_HIDDEN[folderId]
+    ? folder.subFolders.filter(sub => !AGENT_HIDDEN[folderId].has(sub.id))
+    : folder.subFolders;
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -250,13 +263,13 @@ export default function FolderScreen({ route, navigation }) {
       </View>
 
       <ScrollView style={styles.content}>
-        {folder.subFolders.length === 0 ? (
+        {visibleSubFolders.length === 0 ? (
           <View style={styles.emptyBox}>
             <Text style={styles.emptyIcon}>🚧</Text>
             <Text style={styles.emptyText}>En cours de développement</Text>
           </View>
         ) : (
-          folder.subFolders.map(sub => (
+          visibleSubFolders.map(sub => (
             <TouchableOpacity
               key={sub.id}
               style={[styles.subFolder, { borderLeftColor: folder.color }]}

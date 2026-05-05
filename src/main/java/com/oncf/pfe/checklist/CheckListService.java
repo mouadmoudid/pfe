@@ -68,6 +68,29 @@ public class CheckListService {
                 .stream().map(this::toResponse).toList();
     }
 
+    public List<CheckListResponse> getRaciData(int annee, int mois, User currentUser) {
+        return checkListRepository.findAll().stream()
+                .filter(cl -> cl.getDateControle() != null
+                        && cl.getDateControle().getYear() == annee
+                        && cl.getDateControle().getMonthValue() == mois)
+                .filter(cl -> {
+                    if (currentUser.getRole() != Role.AGENT) return true;
+                    // AGENT : uniquement les checklists où il est le collaborateur contrôlé
+                    String mat = currentUser.getMatricule();
+                    if (mat != null && !mat.isBlank()) {
+                        return mat.equalsIgnoreCase(cl.getCollaborateurMatricule());
+                    }
+                    // fallback si pas de matricule : comparer par nom
+                    return currentUser.getFullName() != null
+                            && currentUser.getFullName().equalsIgnoreCase(cl.getCollaborateurNom());
+                })
+                .map(cl -> {
+                    cl.setItems(itemRepository.findByCheckListId(cl.getId()));
+                    return toResponse(cl);
+                })
+                .toList();
+    }
+
     public CheckListResponse getById(Long id) {
         CheckList cl = checkListRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Check list non trouvée"));

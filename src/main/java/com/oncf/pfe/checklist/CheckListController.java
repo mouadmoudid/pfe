@@ -36,22 +36,26 @@ public class CheckListController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN','CGPX','CSPR','CET')")
     public ResponseEntity<List<CheckListResponse>> getAll() {
         return ResponseEntity.ok(checkListService.getAllCheckLists());
     }
 
     @GetMapping("/my")
+    @PreAuthorize("hasAnyRole('ADMIN','CGPX','CSPR','CET')")
     public ResponseEntity<List<CheckListResponse>> getMy(Authentication auth) {
         User user = (User) auth.getPrincipal();
         return ResponseEntity.ok(checkListService.getMyCheckLists(user));
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','CGPX','CSPR','CET')")
     public ResponseEntity<CheckListResponse> getById(@PathVariable Long id) {
         return ResponseEntity.ok(checkListService.getById(id));
     }
 
     @PatchMapping("/{id}/status")
+    @PreAuthorize("hasAnyRole('ADMIN','CGPX','CSPR','CET')")
     public ResponseEntity<CheckListResponse> updateStatus(
             @PathVariable Long id,
             @RequestParam CheckListStatus status) {
@@ -69,22 +73,14 @@ public class CheckListController {
     @GetMapping("/raci")
     public ResponseEntity<List<CheckListResponse>> getRaciData(
             @RequestParam int annee,
-            @RequestParam int mois) {
-        
-        List<CheckListResponse> all = checkListService.getAllCheckLists();
-        
-        return ResponseEntity.ok(
-            all.stream()
-                .filter(cl -> {
-                    if (cl.getDateControle() == null) return false;
-                    return cl.getDateControle().getYear() == annee &&
-                        cl.getDateControle().getMonthValue() == mois;
-                })
-                .toList()
-        );
+            @RequestParam int mois,
+            Authentication auth) {
+        User currentUser = (User) auth.getPrincipal();
+        return ResponseEntity.ok(checkListService.getRaciData(annee, mois, currentUser));
     }
 
     @GetMapping("/{id}/collaborateur-info")
+    @PreAuthorize("hasAnyRole('ADMIN','CGPX','CSPR','CET')")
     public ResponseEntity<Map<String, String>> getCollaborateurInfo(@PathVariable Long id) {
         CheckListResponse cl = checkListService.getById(id);
         Map<String, String> info = new java.util.HashMap<>();

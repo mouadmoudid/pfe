@@ -20,10 +20,13 @@ const MOIS_NOMS = [
 
 const KN_OPTIONS = ['KN1', 'KN2', 'KN3'];
 
+const canExport = (role) => role !== 'AGENT';
+
 export default function RACIScreen({ navigation }) {
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [step, setStep] = useState(0); // 0=période, 1=tableau
+  const [userRole, setUserRole] = useState('');
 
   const currentYear = new Date().getFullYear();
   const currentMonth = new Date().getMonth() + 1;
@@ -42,6 +45,12 @@ export default function RACIScreen({ navigation }) {
 
   const getToken = async () => await AsyncStorage.getItem('token');
 
+  React.useEffect(() => {
+    AsyncStorage.getItem('user').then(u => {
+      if (u) setUserRole(JSON.parse(u).role || '');
+    });
+  }, []);
+
   const loadChecklists = async () => {
     setLoading(true);
     try {
@@ -51,21 +60,11 @@ export default function RACIScreen({ navigation }) {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      // Charger les détails de chaque checklist
-      const detailed = await Promise.all(
-        res.data.map(async (cl) => {
-          const detail = await axios.get(`${CL_API}/${cl.id}`, {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-          return detail.data;
-        })
-      );
-
-      setChecklists(detailed);
+      setChecklists(res.data);
 
       // Init raciMeta avec KN1 par défaut
       const meta = {};
-      detailed.forEach(cl => {
+      res.data.forEach(cl => {
         meta[cl.id] = {
           kn: 'KN1',
           responsable: cl.createdByName || '',
@@ -421,16 +420,18 @@ export default function RACIScreen({ navigation }) {
               <Text style={styles.headerTitle}>RACI — {MOIS_NOMS[mois]} {annee}</Text>
               <Text style={styles.headerSub}>{checklists.length} checklist(s)</Text>
             </View>
-            <TouchableOpacity
-              style={[styles.generateBtn, generating && { opacity: 0.6 }]}
-              onPress={generateRACIPDF}
-              disabled={generating}
-            >
-              {generating
-                ? <ActivityIndicator color="#0A1628" size="small" />
-                : <Text style={styles.generateBtnText}>📄 PDF</Text>
-              }
-            </TouchableOpacity>
+            {canExport(userRole) && (
+              <TouchableOpacity
+                style={[styles.generateBtn, generating && { opacity: 0.6 }]}
+                onPress={generateRACIPDF}
+                disabled={generating}
+              >
+                {generating
+                  ? <ActivityIndicator color="#0A1628" size="small" />
+                  : <Text style={styles.generateBtnText}>📄 PDF</Text>
+                }
+              </TouchableOpacity>
+            )}
           </View>
         </View>
 

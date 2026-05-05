@@ -12,8 +12,9 @@ import { API_URL } from '../services/authService';
 
 const R_API = API_URL.replace('/auth', '/remontee');
 
-const canManage = (role) => role === 'ADMIN' || role === 'CGPX';
 const canViewAll = (role) => role === 'ADMIN' || role === 'CGPX' || role === 'CSPR' || role === 'CET';
+// Alias : gestion campagnes = 4 rôles (AGENT exclu)
+const canManage = canViewAll;
 
 export default function RemonteeInfoScreen({ navigation }) {
   const [step, setStep] = useState(0); // 0=campagnes, 1=formulaire, 2=résultats

@@ -4,6 +4,7 @@ import com.oncf.pfe.user.UserRepository;
 import com.oncf.pfe.user.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Optional;
@@ -11,6 +12,7 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/fiche-suivi")
 @RequiredArgsConstructor
+@PreAuthorize("hasAnyRole('ADMIN','CGPX','CSPR','CET')")
 public class FicheSuiviController {
 
     private final FicheSuiviRepository ficheSuiviRepository;
