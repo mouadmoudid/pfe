@@ -204,7 +204,7 @@ export default function PlanningScreen({ navigation }) {
     return { start, duration };
   };
 
-  const isCanCreate = user?.role === 'ADMIN' || user?.role === 'MANAGER' || isChef(user?.role);
+  const isCanCreate = user?.role === 'ADMIN' || user?.role === 'CGPX';
 
   return (
     <SafeAreaView style={styles.safe}>

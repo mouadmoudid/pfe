@@ -12,7 +12,8 @@ import { API_URL } from '../services/authService';
 
 const Q_API = API_URL.replace('/auth', '/questionnaire');
 
-const canManage = (role) => role === 'ADMIN' || role === 'CGPX' || role === 'CSPR' || role === 'CET';
+const canManageCampagne = (role) => role === 'ADMIN' || role === 'CGPX';
+const canViewResults    = (role) => ['ADMIN', 'CGPX', 'CSPR', 'CET'].includes(role);
 
 const AXES = [
   { id: 'axe1', label: 'Axe 1 : Confiance et Engagement', questions: ['q2','q3','q4','q5','q6','q7'] },
@@ -352,7 +353,7 @@ ${resultats.commentaires?.length > 0 ? `
               <Text style={styles.headerTitle}>🌟 Culture Positive de Sécurité</Text>
               <Text style={styles.headerSub}>Questionnaire d'évaluation annuel</Text>
             </View>
-            {canManage(userRole) && (
+            {canManageCampagne(userRole) && (
               <TouchableOpacity style={styles.addBtn} onPress={() => setShowAddCampagne(true)}>
                 <Text style={styles.addBtnText}>+ Campagne</Text>
               </TouchableOpacity>
@@ -368,11 +369,11 @@ ${resultats.commentaires?.length > 0 ? `
                 <View style={styles.emptyBox}>
                   <Text style={styles.emptyIcon}>📋</Text>
                   <Text style={styles.emptyText}>
-                    {canManage(userRole)
+                    {canManageCampagne(userRole)
                       ? 'Aucune campagne créée'
                       : 'Aucun questionnaire disponible pour le moment'}
                   </Text>
-                  {canManage(userRole) && (
+                  {canManageCampagne(userRole) && (
                     <Text style={styles.emptySubText}>Créez une campagne et ouvrez-la pour que les collaborateurs puissent répondre</Text>
                   )}
                 </View>
@@ -406,8 +407,8 @@ ${resultats.commentaires?.length > 0 ? `
                         </TouchableOpacity>
                       )}
 
-                      {/* Boutons gestionnaire */}
-                      {canManage(userRole) && (
+                      {/* Ouvrir/Fermer et Supprimer — ADMIN/CGPX uniquement */}
+                      {canManageCampagne(userRole) && (
                         <>
                           <TouchableOpacity
                             style={[styles.toggleBtn, { backgroundColor: c.statut === 'OUVERT' ? '#E74C3C20' : '#27AE6020', borderColor: c.statut === 'OUVERT' ? '#E74C3C' : '#27AE60' }]}
@@ -417,14 +418,6 @@ ${resultats.commentaires?.length > 0 ? `
                               {c.statut === 'OUVERT' ? '🔒 Fermer' : '🔓 Ouvrir'}
                             </Text>
                           </TouchableOpacity>
-
-                          <TouchableOpacity
-                            style={styles.resultsBtn}
-                            onPress={() => handleViewResultats(c)}
-                          >
-                            <Text style={styles.resultsBtnText}>📊 Résultats</Text>
-                          </TouchableOpacity>
-
                           <TouchableOpacity
                             style={styles.deleteBtn}
                             onPress={() => handleDeleteCampagne(c)}
@@ -432,6 +425,15 @@ ${resultats.commentaires?.length > 0 ? `
                             <Text style={styles.deleteBtnText}>🗑</Text>
                           </TouchableOpacity>
                         </>
+                      )}
+                      {/* Résultats — 4 rôles (ADMIN, CGPX, CSPR, CET) */}
+                      {canViewResults(userRole) && (
+                        <TouchableOpacity
+                          style={styles.resultsBtn}
+                          onPress={() => handleViewResultats(c)}
+                        >
+                          <Text style={styles.resultsBtnText}>📊 Résultats</Text>
+                        </TouchableOpacity>
                       )}
                     </View>
                   </View>
