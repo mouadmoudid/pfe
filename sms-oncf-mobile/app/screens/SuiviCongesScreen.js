@@ -6,8 +6,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as Print from 'expo-print';
-import * as Sharing from 'expo-sharing';
+import { generateAndSharePDF } from '../utils/pdfUtils';
 import { API_URL } from '../services/authService';
 
 const CONGES_API = API_URL.replace('/auth', '/conges');
@@ -316,17 +315,7 @@ table { width:100%;border-collapse:collapse;font-size:9px; }
 </table>
 </body></html>`;
 
-      const { uri } = await Print.printToFileAsync({
-        html,
-        base64: false,
-        width: 842,
-        height: 595,
-      });
-      await Sharing.shareAsync(uri, {
-        mimeType: 'application/pdf',
-        dialogTitle: `Suivi Congés ${selectedAnnee}`,
-        UTI: 'com.adobe.pdf',
-      });
+      await generateAndSharePDF(html, { dialogTitle: `Suivi Congés ${selectedAnnee}` });
     } catch (e) {
       Alert.alert('Erreur', 'Impossible de générer le PDF');
     } finally {

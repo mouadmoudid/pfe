@@ -6,8 +6,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as Print from 'expo-print';
-import * as Sharing from 'expo-sharing';
+import { generateAndSharePDF } from '../utils/pdfUtils';
 import { API_URL } from '../services/authService';
 
 const AST_API = API_URL.replace('/auth', '/astreinte');
@@ -253,14 +252,7 @@ table { width:100%;border-collapse:collapse; }
 </table>
 </body></html>`;
 
-      const { uri } = await Print.printToFileAsync({
-        html, base64: false, width: 842, height: 595,
-      });
-      await Sharing.shareAsync(uri, {
-        mimeType: 'application/pdf',
-        dialogTitle: `Planning Astreintes ${selectedAnnee}`,
-        UTI: 'com.adobe.pdf',
-      });
+      await generateAndSharePDF(html, { dialogTitle: `Planning Astreintes ${selectedAnnee}` });
     } catch {
       Alert.alert('Erreur', 'Impossible de générer le PDF');
     } finally {
@@ -318,12 +310,7 @@ th { background:#16A085;color:white;padding:6px 8px;font-size:11px;text-align:le
 </div>
 </body></html>`;
 
-      const { uri } = await Print.printToFileAsync({ html, base64: false });
-      await Sharing.shareAsync(uri, {
-        mimeType: 'application/pdf',
-        dialogTitle: `Astreinte ${formatS(selectedSemaine)} ${selectedAnnee}`,
-        UTI: 'com.adobe.pdf',
-      });
+      await generateAndSharePDF(html, { dialogTitle: `Astreinte ${formatS(selectedSemaine)} ${selectedAnnee}` });
     } catch {
       Alert.alert('Erreur', 'Impossible de générer le PDF');
     } finally {

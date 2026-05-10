@@ -6,8 +6,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as Print from 'expo-print';
-import * as Sharing from 'expo-sharing';
+import { generateAndSharePDF } from '../utils/pdfUtils';
 import { API_URL } from '../services/authService';
 
 const R_API = API_URL.replace('/auth', '/remontee');
@@ -287,12 +286,7 @@ ${solutionsHtml || '<p style="color:#607D8B;font-size:10px;">Aucune réponse</p>
 </div>
 </body></html>`;
 
-      const { uri } = await Print.printToFileAsync({ html, base64: false });
-      await Sharing.shareAsync(uri, {
-        mimeType: 'application/pdf',
-        dialogTitle: `Remontée Info ${selectedCampagne?.exercice}`,
-        UTI: 'com.adobe.pdf',
-      });
+      await generateAndSharePDF(html, { dialogTitle: `Remontée Info ${selectedCampagne?.exercice}` });
     } catch { Alert.alert('Erreur', 'Impossible de générer le PDF'); }
     finally { setGenerating(false); }
   };

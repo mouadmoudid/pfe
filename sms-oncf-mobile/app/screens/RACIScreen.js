@@ -6,8 +6,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as Print from 'expo-print';
-import * as Sharing from 'expo-sharing';
+import { generateAndSharePDF } from '../utils/pdfUtils';
 import QRCode from 'react-native-qrcode-svg';
 import { API_URL } from '../services/authService';
 
@@ -220,12 +219,7 @@ export default function RACIScreen({ navigation }) {
         </body></html>
         `;
 
-        const { uri } = await Print.printToFileAsync({ html, base64: false });
-        await Sharing.shareAsync(uri, {
-        mimeType: 'application/pdf',
-        dialogTitle: `Fiche — ${nom}`,
-        UTI: 'com.adobe.pdf',
-        });
+        await generateAndSharePDF(html, { dialogTitle: `Fiche — ${nom}` });
     } catch {
         Alert.alert('Erreur', 'Impossible de générer le PDF');
     } finally {
@@ -322,12 +316,7 @@ export default function RACIScreen({ navigation }) {
         + '<tbody>' + (rows || emptyRow) + '</tbody>'
         + '</table></body></html>';
 
-      const { uri } = await Print.printToFileAsync({ html, base64: false });
-      await Sharing.shareAsync(uri, {
-        mimeType: 'application/pdf',
-        dialogTitle: 'RACI ' + periodeStr,
-        UTI: 'com.adobe.pdf',
-      });
+      await generateAndSharePDF(html, { dialogTitle: 'RACI ' + periodeStr });
     } catch {
       Alert.alert('Erreur', 'Impossible de générer le RACI');
     } finally {

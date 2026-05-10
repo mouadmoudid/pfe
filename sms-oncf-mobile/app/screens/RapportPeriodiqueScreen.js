@@ -6,8 +6,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as Print from 'expo-print';
-import * as Sharing from 'expo-sharing';
+import { generateAndSharePDF } from '../utils/pdfUtils';
 import { API_URL } from '../services/authService';
 
 const PLANNING_API = API_URL.replace('/auth', '/planning');
@@ -294,12 +293,7 @@ export default function RapportPeriodiqueScreen({ navigation }) {
         </body></html>
       `;
 
-      const { uri } = await Print.printToFileAsync({ html, base64: false });
-      await Sharing.shareAsync(uri, {
-        mimeType: 'application/pdf',
-        dialogTitle: `Rapport Périodique ${MOIS_NOMS[mois]} ${annee}`,
-        UTI: 'com.adobe.pdf',
-      });
+      await generateAndSharePDF(html, { dialogTitle: `Rapport Périodique ${MOIS_NOMS[mois]} ${annee}` });
 
     } catch (err) {
       Alert.alert('Erreur', 'Impossible de générer le PDF');

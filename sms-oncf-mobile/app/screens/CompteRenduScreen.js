@@ -6,8 +6,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as Print from 'expo-print';
-import * as Sharing from 'expo-sharing';
+import { generateAndSharePDF } from '../utils/pdfUtils';
 import { API_URL } from '../services/authService';
 
 const CL_API = API_URL.replace('/auth', '/checklists');
@@ -757,15 +756,10 @@ export default function CompteRenduScreen({ navigation }) {
         `;
       } // End of else block for COLLABORATEUR
 
-      const { uri } = await Print.printToFileAsync({ html, base64: false });
       const dialogTitle = isChantier
         ? `Compte Rendu Chantier — ${data.chantierNom || 'Chantier'}`
         : `Compte Rendu KN1 — ${data.collaborateurNom}`;
-      await Sharing.shareAsync(uri, {
-        mimeType: 'application/pdf',
-        dialogTitle,
-        UTI: 'com.adobe.pdf',
-      });
+      await generateAndSharePDF(html, { dialogTitle });
     } catch (err) {
       Alert.alert('Erreur', 'Impossible de générer le PDF');
     } finally {

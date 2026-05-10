@@ -6,8 +6,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as Print from 'expo-print';
-import * as Sharing from 'expo-sharing';
+import { generateAndSharePDF } from '../utils/pdfUtils';
 import { API_URL } from '../services/authService';
 
 const RISQUE_API = API_URL.replace('/auth', '/risques');
@@ -249,12 +248,7 @@ th { background:#0A1628;color:white;padding:6px;font-size:9px;text-align:left;bo
 </div>
 </body></html>`;
 
-      const { uri } = await Print.printToFileAsync({ html, base64: false, width: 842, height: 595 });
-      await Sharing.shareAsync(uri, {
-        mimeType: 'application/pdf',
-        dialogTitle: 'Cartographie des Risques',
-        UTI: 'com.adobe.pdf',
-      });
+      await generateAndSharePDF(html, { dialogTitle: 'Cartographie des Risques' });
     } catch {
       Alert.alert('Erreur', 'Impossible de générer le PDF');
     } finally {

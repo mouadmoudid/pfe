@@ -6,8 +6,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as Print from 'expo-print';
-import * as Sharing from 'expo-sharing';
+import { generateAndSharePDF } from '../utils/pdfUtils';
 import { API_URL } from '../services/authService';
 
 const USERS_API = API_URL.replace('/auth', '/admin/users');
@@ -190,12 +189,7 @@ td { padding: 4px 6px; border: 1px solid #ddd; vertical-align: middle; }
 
 </body></html>`;
 
-      const { uri } = await Print.printToFileAsync({ html, base64: false });
-      await Sharing.shareAsync(uri, {
-        mimeType: 'application/pdf',
-        dialogTitle: `Liste Collaborateurs Sécurité ${new Date().getFullYear()}`,
-        UTI: 'com.adobe.pdf',
-      });
+      await generateAndSharePDF(html, { dialogTitle: `Liste Collaborateurs Sécurité ${new Date().getFullYear()}` });
     } catch {
       Alert.alert('Erreur', 'Impossible de générer le PDF');
     } finally {

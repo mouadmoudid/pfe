@@ -6,8 +6,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as Print from 'expo-print';
-import * as Sharing from 'expo-sharing';
+import { generateAndSharePDF } from '../utils/pdfUtils';
 import { API_URL } from '../services/authService';
 
 const RACE_API = API_URL.replace('/auth', '/rex/race');
@@ -230,12 +229,7 @@ ${section('Recommandations', race.recommandations)}
 
 </body></html>`;
 
-      const { uri } = await Print.printToFileAsync({ html, base64: false });
-      await Sharing.shareAsync(uri, {
-        mimeType: 'application/pdf',
-        dialogTitle: `RACE N°${race.numero}/${race.annee}`,
-        UTI: 'com.adobe.pdf',
-      });
+      await generateAndSharePDF(html, { dialogTitle: `RACE N°${race.numero}/${race.annee}` });
     } catch {
       Alert.alert('Erreur', 'Impossible de générer le PDF');
     } finally {

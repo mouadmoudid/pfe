@@ -6,8 +6,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as Print from 'expo-print';
-import * as Sharing from 'expo-sharing';
+import { generateAndSharePDF } from '../utils/pdfUtils';
 import { API_URL } from '../services/authService';
 
 const Q_API = API_URL.replace('/auth', '/questionnaire');
@@ -327,12 +326,7 @@ ${resultats.commentaires?.length > 0 ? `
 <div style="margin-top:12px;text-align:right;font-size:9px;color:#607D8B;">Généré le ${new Date().toLocaleDateString('fr-FR')} — Données anonymes</div>
 </body></html>`;
 
-      const { uri } = await Print.printToFileAsync({ html, base64: false });
-      await Sharing.shareAsync(uri, {
-        mimeType: 'application/pdf',
-        dialogTitle: `Résultats Culture Sécurité ${selectedCampagne?.exercice}`,
-        UTI: 'com.adobe.pdf',
-      });
+      await generateAndSharePDF(html, { dialogTitle: `Résultats Culture Sécurité ${selectedCampagne?.exercice}` });
     } catch {
       Alert.alert('Erreur', 'Impossible de générer le PDF');
     } finally {
