@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet,
   ScrollView, ActivityIndicator, Alert, Modal,
-  TextInput
+  TextInput, Platform
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import axios from 'axios';
@@ -575,30 +575,25 @@ export default function CheckListScreen({ navigation }) {
   };
 
   const deleteChecklist = async (cl) => {
-    Alert.alert(
-      'Confirmation',
-      `Supprimer la checklist ${cl.type === 'COLLABORATEUR' ? cl.collaborateurNom : cl.chantierNom} ?`,
-      [
-        { text: 'Annuler', style: 'cancel' },
-        {
-          text: 'Supprimer',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              const token = await getToken();
-              await axios.delete(`${CHECKLIST_API}/${cl.id}`, {
-                headers: { Authorization: `Bearer ${token}` }
-              });
-              Alert.alert('Succès', 'Check list supprimée');
-              loadChecklists(currentUser);
-            } catch (error) {
-              const msg = error?.response?.data?.message || error?.response?.data || error.message || 'Impossible de supprimer';
-              Alert.alert('Erreur', msg.toString());
-            }
-          }
-        }
-      ]
-    );
+    const nom = cl.type === 'COLLABORATEUR' ? cl.collaborateurNom : cl.chantierNom;
+    const confirmed = Platform.OS === 'web'
+      ? window.confirm(`Supprimer la checklist ${nom} ?`)
+      : await new Promise(resolve => Alert.alert('Confirmation', `Supprimer la checklist ${nom} ?`, [
+          { text: 'Annuler', style: 'cancel', onPress: () => resolve(false) },
+          { text: 'Supprimer', style: 'destructive', onPress: () => resolve(true) },
+        ]));
+    if (!confirmed) return;
+    try {
+      const token = await getToken();
+      await axios.delete(`${CHECKLIST_API}/${cl.id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      Alert.alert('Succès', 'Check list supprimée');
+      loadChecklists(currentUser);
+    } catch (error) {
+      const msg = error?.response?.data?.message || error?.response?.data || error.message || 'Impossible de supprimer';
+      Alert.alert('Erreur', msg.toString());
+    }
   };
 
   const generatePDF = async (cl) => {
@@ -1182,14 +1177,16 @@ export default function CheckListScreen({ navigation }) {
                       {canEdit(currentUser?.role) && (
                         <TouchableOpacity
                           style={styles.deletePointBtn}
-                          onPress={() => Alert.alert(
-                            'Supprimer la tâche',
-                            `"${point.text.length > 60 ? point.text.substring(0, 57) + '...' : point.text}"`,
-                            [
-                              { text: 'Annuler', style: 'cancel' },
-                              { text: 'Supprimer', style: 'destructive', onPress: () => deletePoint(si, point.id) },
-                            ]
-                          )}
+                          onPress={async () => {
+                            const label = point.text.length > 60 ? point.text.substring(0, 57) + '...' : point.text;
+                            const confirmed = Platform.OS === 'web'
+                              ? window.confirm(`Supprimer la tâche ?\n"${label}"`)
+                              : await new Promise(resolve => Alert.alert('Supprimer la tâche', `"${label}"`, [
+                                  { text: 'Annuler', style: 'cancel', onPress: () => resolve(false) },
+                                  { text: 'Supprimer', style: 'destructive', onPress: () => resolve(true) },
+                                ]));
+                            if (confirmed) deletePoint(si, point.id);
+                          }}
                         >
                           <Text style={styles.deletePointBtnText}>✕</Text>
                         </TouchableOpacity>

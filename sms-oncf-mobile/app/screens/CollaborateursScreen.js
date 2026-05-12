@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet,
-  ScrollView, ActivityIndicator, Alert, TextInput
+  ScrollView, ActivityIndicator, Alert, TextInput, Platform
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import axios from 'axios';
@@ -38,28 +38,23 @@ export default function CollaborateursScreen({ navigation }) {
 
   const toggleCollaborateur = async (user) => {
     const action = user.collaborateur ? 'retirer de' : 'ajouter à';
-    Alert.alert(
-      'Confirmer',
-      `Voulez-vous ${action} la liste des collaborateurs ${user.fullName} ?`,
-      [
-        { text: 'Annuler', style: 'cancel' },
-        {
-          text: 'Confirmer',
-          onPress: async () => {
-            try {
-              const token = await getToken();
-              await axios.patch(
-                `${ADMIN_API}/users/${user.id}/collaborateur`, {},
-                { headers: { Authorization: `Bearer ${token}` } }
-              );
-              loadAgents();
-            } catch {
-              Alert.alert('Erreur', 'Impossible de modifier le statut');
-            }
-          }
-        }
-      ]
-    );
+    const confirmed = Platform.OS === 'web'
+      ? window.confirm(`Voulez-vous ${action} la liste des collaborateurs ${user.fullName} ?`)
+      : await new Promise(resolve => Alert.alert('Confirmer', `Voulez-vous ${action} la liste des collaborateurs ${user.fullName} ?`, [
+          { text: 'Annuler', style: 'cancel', onPress: () => resolve(false) },
+          { text: 'Confirmer', onPress: () => resolve(true) },
+        ]));
+    if (!confirmed) return;
+    try {
+      const token = await getToken();
+      await axios.patch(
+        `${ADMIN_API}/users/${user.id}/collaborateur`, {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      loadAgents();
+    } catch {
+      Alert.alert('Erreur', 'Impossible de modifier le statut');
+    }
   };
 
   const collaborateurs = agents.filter(a => a.collaborateur);

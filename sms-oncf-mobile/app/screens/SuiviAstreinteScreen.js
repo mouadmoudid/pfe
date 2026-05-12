@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet,
-  ScrollView, ActivityIndicator, Alert, Modal, TextInput
+  ScrollView, ActivityIndicator, Alert, Modal, TextInput, Platform
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import axios from 'axios';
@@ -174,23 +174,23 @@ export default function SuiviAstreinteScreen({ navigation }) {
     }
   };
 
-  const handleRemoveCollab = (collab) => {
-    Alert.alert('Confirmation', `Retirer ${collab.fullName} du planning ${selectedAnnee} ?`, [
-      { text: 'Annuler', style: 'cancel' },
-      {
-        text: 'Retirer', style: 'destructive', onPress: async () => {
-          try {
-            const token = await getToken();
-            await axios.delete(`${AST_API}/collaborateur/${collab.collaborateurId}/annee/${selectedAnnee}`, {
-              headers: { Authorization: `Bearer ${token}` }
-            });
-            loadPlanning(selectedAnnee);
-          } catch {
-            Alert.alert('Erreur', 'Impossible de retirer');
-          }
-        }
-      }
-    ]);
+  const handleRemoveCollab = async (collab) => {
+    const confirmed = Platform.OS === 'web'
+      ? window.confirm(`Retirer ${collab.fullName} du planning ${selectedAnnee} ?`)
+      : await new Promise(resolve => Alert.alert('Confirmation', `Retirer ${collab.fullName} du planning ${selectedAnnee} ?`, [
+          { text: 'Annuler', style: 'cancel', onPress: () => resolve(false) },
+          { text: 'Retirer', style: 'destructive', onPress: () => resolve(true) },
+        ]));
+    if (!confirmed) return;
+    try {
+      const token = await getToken();
+      await axios.delete(`${AST_API}/collaborateur/${collab.collaborateurId}/annee/${selectedAnnee}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      loadPlanning(selectedAnnee);
+    } catch {
+      Alert.alert('Erreur', 'Impossible de retirer');
+    }
   };
 
   const handleVoirSemaine = (semaine) => {

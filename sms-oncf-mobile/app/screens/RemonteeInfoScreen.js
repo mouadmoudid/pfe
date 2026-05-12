@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, ScrollView,
-  ActivityIndicator, Alert, Modal, TextInput
+  ActivityIndicator, Alert, Modal, TextInput, Platform
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import axios from 'axios';
@@ -81,42 +81,40 @@ export default function RemonteeInfoScreen({ navigation }) {
 
   const handleToggleStatut = async (campagne) => {
     const newStatut = campagne.statut === 'OUVERT' ? 'FERME' : 'OUVERT';
-    Alert.alert('Confirmation',
-      newStatut === 'OUVERT'
-        ? `Ouvrir la campagne ${campagne.exercice} ?`
-        : `Fermer la campagne ${campagne.exercice} ?`,
-      [
-        { text: 'Annuler', style: 'cancel' },
-        {
-          text: newStatut === 'OUVERT' ? '🔓 Ouvrir' : '🔒 Fermer',
-          onPress: async () => {
-            try {
-              const token = await getToken();
-              await axios.patch(`${R_API}/campagnes/${campagne.id}/statut?statut=${newStatut}`, {}, {
-                headers: { Authorization: `Bearer ${token}` }
-              });
-              loadInitial();
-            } catch { Alert.alert('Erreur', 'Impossible de modifier le statut'); }
-          }
-        }
-      ]);
+    const msg = newStatut === 'OUVERT'
+      ? `Ouvrir la campagne ${campagne.exercice} ?`
+      : `Fermer la campagne ${campagne.exercice} ?`;
+    const confirmed = Platform.OS === 'web'
+      ? window.confirm(msg)
+      : await new Promise(resolve => Alert.alert('Confirmation', msg, [
+          { text: 'Annuler', style: 'cancel', onPress: () => resolve(false) },
+          { text: newStatut === 'OUVERT' ? 'Ouvrir' : 'Fermer', onPress: () => resolve(true) },
+        ]));
+    if (!confirmed) return;
+    try {
+      const token = await getToken();
+      await axios.patch(`${R_API}/campagnes/${campagne.id}/statut?statut=${newStatut}`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      loadInitial();
+    } catch { Alert.alert('Erreur', 'Impossible de modifier le statut'); }
   };
 
-  const handleDeleteCampagne = (campagne) => {
-    Alert.alert('Confirmation', `Supprimer la campagne ${campagne.exercice} et toutes ses réponses ?`, [
-      { text: 'Annuler', style: 'cancel' },
-      {
-        text: 'Supprimer', style: 'destructive', onPress: async () => {
-          try {
-            const token = await getToken();
-            await axios.delete(`${R_API}/campagnes/${campagne.id}`, {
-              headers: { Authorization: `Bearer ${token}` }
-            });
-            loadInitial();
-          } catch { Alert.alert('Erreur', 'Impossible de supprimer'); }
-        }
-      }
-    ]);
+  const handleDeleteCampagne = async (campagne) => {
+    const confirmed = Platform.OS === 'web'
+      ? window.confirm(`Supprimer la campagne ${campagne.exercice} et toutes ses réponses ?`)
+      : await new Promise(resolve => Alert.alert('Confirmation', `Supprimer la campagne ${campagne.exercice} et toutes ses réponses ?`, [
+          { text: 'Annuler', style: 'cancel', onPress: () => resolve(false) },
+          { text: 'Supprimer', style: 'destructive', onPress: () => resolve(true) },
+        ]));
+    if (!confirmed) return;
+    try {
+      const token = await getToken();
+      await axios.delete(`${R_API}/campagnes/${campagne.id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      loadInitial();
+    } catch { Alert.alert('Erreur', 'Impossible de supprimer'); }
   };
 
   const handleOpenForm = async (campagne) => {

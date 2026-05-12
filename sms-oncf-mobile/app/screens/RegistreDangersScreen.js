@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, ScrollView,
-  ActivityIndicator, Alert, Modal, TextInput
+  ActivityIndicator, Alert, Modal, TextInput, Platform
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import axios from 'axios';
@@ -146,17 +146,19 @@ export default function RegistreDangersScreen({ navigation }) {
     finally { setSaving(false); }
   };
 
-  const handleDelete = (d) => {
-    Alert.alert('Confirmation', `Supprimer ce danger ?\n"${d.danger?.substring(0,60)}..."`, [
-      { text: 'Annuler', style: 'cancel' },
-      { text: 'Supprimer', style: 'destructive', onPress: async () => {
-        try {
-          const token = await getToken();
-          await axios.delete(`${API}/${d.id}`, { headers: { Authorization: `Bearer ${token}` } });
-          loadDangers(selectedAnnee);
-        } catch { Alert.alert('Erreur', 'Impossible de supprimer'); }
-      }}
-    ]);
+  const handleDelete = async (d) => {
+    const confirmed = Platform.OS === 'web'
+      ? window.confirm(`Supprimer ce danger ?\n"${d.danger?.substring(0,60)}..."`)
+      : await new Promise(resolve => Alert.alert('Confirmation', `Supprimer ce danger ?\n"${d.danger?.substring(0,60)}..."`, [
+          { text: 'Annuler', style: 'cancel', onPress: () => resolve(false) },
+          { text: 'Supprimer', style: 'destructive', onPress: () => resolve(true) },
+        ]));
+    if (!confirmed) return;
+    try {
+      const token = await getToken();
+      await axios.delete(`${API}/${d.id}`, { headers: { Authorization: `Bearer ${token}` } });
+      loadDangers(selectedAnnee);
+    } catch { Alert.alert('Erreur', 'Impossible de supprimer'); }
   };
 
   // Années du registre (les 5 années avant l'année sélectionnée)

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet,
-  ScrollView, ActivityIndicator, Alert, Modal
+  ScrollView, ActivityIndicator, Alert, Modal, Platform
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import axios from 'axios';
@@ -48,27 +48,22 @@ export default function AdminScreen({ navigation }) {
 
   const toggleUser = async (user) => {
     const action = user.enabled ? 'désactiver' : 'activer';
-    Alert.alert(
-      'Confirmer',
-      `Voulez-vous ${action} le compte de ${user.fullName} ?`,
-      [
-        { text: 'Annuler', style: 'cancel' },
-        {
-          text: 'Confirmer',
-          onPress: async () => {
-            try {
-              const token = await getToken();
-              await axios.patch(`${ADMIN_API}/users/${user.id}/toggle`, {}, {
-                headers: { Authorization: `Bearer ${token}` }
-              });
-              loadUsers();
-            } catch {
-              Alert.alert('Erreur', 'Impossible de modifier le compte');
-            }
-          }
-        }
-      ]
-    );
+    const confirmed = Platform.OS === 'web'
+      ? window.confirm(`Voulez-vous ${action} le compte de ${user.fullName} ?`)
+      : await new Promise(resolve => Alert.alert('Confirmer', `Voulez-vous ${action} le compte de ${user.fullName} ?`, [
+          { text: 'Annuler', style: 'cancel', onPress: () => resolve(false) },
+          { text: 'Confirmer', onPress: () => resolve(true) },
+        ]));
+    if (!confirmed) return;
+    try {
+      const token = await getToken();
+      await axios.patch(`${ADMIN_API}/users/${user.id}/toggle`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      loadUsers();
+    } catch {
+      Alert.alert('Erreur', 'Impossible de modifier le compte');
+    }
   };
 
   const changeRole = async (userId, newRole) => {
@@ -88,28 +83,22 @@ export default function AdminScreen({ navigation }) {
   };
 
   const deleteUser = async (user) => {
-    Alert.alert(
-      'Supprimer',
-      `Supprimer définitivement le compte de ${user.fullName} ?`,
-      [
-        { text: 'Annuler', style: 'cancel' },
-        {
-          text: 'Supprimer',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              const token = await getToken();
-              await axios.delete(`${ADMIN_API}/users/${user.id}`, {
-                headers: { Authorization: `Bearer ${token}` }
-              });
-              loadUsers();
-            } catch {
-              Alert.alert('Erreur', 'Impossible de supprimer');
-            }
-          }
-        }
-      ]
-    );
+    const confirmed = Platform.OS === 'web'
+      ? window.confirm(`Supprimer définitivement le compte de ${user.fullName} ?`)
+      : await new Promise(resolve => Alert.alert('Supprimer', `Supprimer définitivement le compte de ${user.fullName} ?`, [
+          { text: 'Annuler', style: 'cancel', onPress: () => resolve(false) },
+          { text: 'Supprimer', style: 'destructive', onPress: () => resolve(true) },
+        ]));
+    if (!confirmed) return;
+    try {
+      const token = await getToken();
+      await axios.delete(`${ADMIN_API}/users/${user.id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      loadUsers();
+    } catch {
+      Alert.alert('Erreur', 'Impossible de supprimer');
+    }
   };
 
   const filteredUsers = users.filter(u => {

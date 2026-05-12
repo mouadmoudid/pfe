@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, ScrollView,
-  ActivityIndicator, Alert, Modal, TextInput
+  ActivityIndicator, Alert, Modal, TextInput, Platform
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import axios from 'axios';
@@ -140,19 +140,19 @@ export default function CartographieRisquesScreen({ navigation }) {
     }
   };
 
-  const handleDelete = (r) => {
-    Alert.alert('Confirmation', `Supprimer ce risque ?\n"${r.danger}"`, [
-      { text: 'Annuler', style: 'cancel' },
-      {
-        text: 'Supprimer', style: 'destructive', onPress: async () => {
-          try {
-            const token = await getToken();
-            await axios.delete(`${RISQUE_API}/${r.id}`, { headers: { Authorization: `Bearer ${token}` } });
-            loadInitial();
-          } catch { Alert.alert('Erreur', 'Impossible de supprimer'); }
-        }
-      }
-    ]);
+  const handleDelete = async (r) => {
+    const confirmed = Platform.OS === 'web'
+      ? window.confirm(`Supprimer ce risque ?\n"${r.danger}"`)
+      : await new Promise(resolve => Alert.alert('Confirmation', `Supprimer ce risque ?\n"${r.danger}"`, [
+          { text: 'Annuler', style: 'cancel', onPress: () => resolve(false) },
+          { text: 'Supprimer', style: 'destructive', onPress: () => resolve(true) },
+        ]));
+    if (!confirmed) return;
+    try {
+      const token = await getToken();
+      await axios.delete(`${RISQUE_API}/${r.id}`, { headers: { Authorization: `Bearer ${token}` } });
+      loadInitial();
+    } catch { Alert.alert('Erreur', 'Impossible de supprimer'); }
   };
 
   const generatePDF = async () => {

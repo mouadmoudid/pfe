@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet,
-  ScrollView, ActivityIndicator, Alert, TextInput, Modal
+  ScrollView, ActivityIndicator, Alert, TextInput, Modal, Platform
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import axios from 'axios';
@@ -203,23 +203,23 @@ export default function SuiviCongesScreen({ navigation }) {
     }
   };
 
-  const handleDeleteCollab = (collab) => {
-    Alert.alert('Confirmation', `Supprimer ${collab.fullName} de l'année ${selectedAnnee} ?`, [
-      { text: 'Annuler', style: 'cancel' },
-      {
-        text: 'Supprimer', style: 'destructive', onPress: async () => {
-          try {
-            const token = await getToken();
-            await axios.delete(`${CONGES_API}/config/${collab.collaborateurId}/${selectedAnnee}`, {
-              headers: { Authorization: `Bearer ${token}` }
-            });
-            loadTableau(selectedAnnee);
-          } catch {
-            Alert.alert('Erreur', 'Impossible de supprimer');
-          }
-        }
-      }
-    ]);
+  const handleDeleteCollab = async (collab) => {
+    const confirmed = Platform.OS === 'web'
+      ? window.confirm(`Supprimer ${collab.fullName} de l'année ${selectedAnnee} ?`)
+      : await new Promise(resolve => Alert.alert('Confirmation', `Supprimer ${collab.fullName} de l'année ${selectedAnnee} ?`, [
+          { text: 'Annuler', style: 'cancel', onPress: () => resolve(false) },
+          { text: 'Supprimer', style: 'destructive', onPress: () => resolve(true) },
+        ]));
+    if (!confirmed) return;
+    try {
+      const token = await getToken();
+      await axios.delete(`${CONGES_API}/config/${collab.collaborateurId}/${selectedAnnee}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      loadTableau(selectedAnnee);
+    } catch {
+      Alert.alert('Erreur', 'Impossible de supprimer');
+    }
   };
 
   const semaines = getSemainesDuMois(selectedMois, selectedAnnee || new Date().getFullYear());
