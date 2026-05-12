@@ -69,7 +69,7 @@ export default function SuiviCongesScreen({ navigation }) {
   const [newAnnee, setNewAnnee] = useState(new Date().getFullYear().toString());
   const [selectedCollabForAdd, setSelectedCollabForAdd] = useState(null);
   const [totalJoursInput, setTotalJoursInput] = useState('30');
-  const [editCellData, setEditCellData] = useState({ collaborateurId: null, semaine: null, valeur: '' });
+  const [editCellData, setEditCellData] = useState({ collaborateurId: null, semaine: null, type: 'realise', valeur: '' });
   const [editTotalData, setEditTotalData] = useState({ collaborateurId: null, fullName: '', valeur: '' });
 
   const getToken = async () => await AsyncStorage.getItem('token');
@@ -172,7 +172,8 @@ export default function SuiviCongesScreen({ navigation }) {
         collaborateurId: editCellData.collaborateurId,
         annee: selectedAnnee,
         semaine: editCellData.semaine,
-        joursConges: val,
+        type: editCellData.type,
+        jours: val,
       }, { headers: { Authorization: `Bearer ${token}` } });
       setShowEditCell(false);
       loadTableau(selectedAnnee);
@@ -253,25 +254,40 @@ export default function SuiviCongesScreen({ navigation }) {
       Object.entries(groupes).forEach(([fn, members]) => {
         // Ligne groupe
         const totalCols = allSemaines.reduce((acc, g) => acc + g.semaines.length, 0);
-        rows += `<tr><td colspan="${4 + totalCols + 2}" style="background:#E8F0F7;font-weight:bold;font-size:10px;padding:4px 6px;border:1px solid #ccc;">${fn}</td></tr>`;
+        rows += `<tr><td colspan="${3 + 1 + totalCols + 3}" style="background:#E8F0F7;font-weight:bold;font-size:10px;padding:4px 6px;border:1px solid #ccc;">${fn}</td></tr>`;
 
         members.forEach((row, idx) => {
-          const cells = allSemaines.flatMap(g =>
+          const bg = idx % 2 === 0 ? '#fff' : '#f9f9f9';
+          const cellsPrevu = allSemaines.flatMap(g =>
             g.semaines.map(s => {
-              const val = row.entrees[s] || '';
-              return `<td style="text-align:center;font-size:10px;padding:3px;border:1px solid #ddd;background:${idx % 2 === 0 ? '#fff' : '#f9f9f9'};">${val || ''}</td>`;
+              const val = row.entreesPrevu?.[s] || '';
+              return `<td style="text-align:center;font-size:9px;padding:2px;border:1px solid #ddd;background:${bg};color:#1E3A5F;font-weight:bold;">${val}</td>`;
+            })
+          ).join('');
+          const cellsRealise = allSemaines.flatMap(g =>
+            g.semaines.map(s => {
+              const val = row.entreesRealise?.[s] || '';
+              return `<td style="text-align:center;font-size:9px;padding:2px;border:1px solid #ddd;background:${bg};color:#16A085;font-weight:bold;">${val}</td>`;
             })
           ).join('');
 
           rows += `
             <tr>
-              <td style="font-size:10px;padding:3px 5px;border:1px solid #ddd;font-weight:bold;background:${idx % 2 === 0 ? '#fff' : '#f9f9f9'};">${row.fullName}</td>
-              <td style="font-size:10px;padding:3px 5px;border:1px solid #ddd;background:${idx % 2 === 0 ? '#fff' : '#f9f9f9'};">${row.matricule}</td>
-              <td style="font-size:10px;padding:3px 5px;border:1px solid #ddd;background:${idx % 2 === 0 ? '#fff' : '#f9f9f9'};">${row.fonctionAssuree}</td>
-              <td style="font-size:10px;padding:3px 5px;border:1px solid #ddd;background:${idx % 2 === 0 ? '#fff' : '#f9f9f9'};">${row.telephone}</td>
-              ${cells}
-              <td style="text-align:center;font-size:10px;font-weight:bold;padding:3px;border:1px solid #ddd;background:#E8F4FD;">${row.totalPris}</td>
-              <td style="text-align:center;font-size:10px;font-weight:bold;padding:3px;border:1px solid #ddd;color:${row.reliquat < 0 ? '#E74C3C' : '#27AE60'};background:#E8F4FD;">${row.reliquat}</td>
+              <td rowspan="2" style="font-size:10px;padding:3px 5px;border:1px solid #ddd;font-weight:bold;background:${bg};vertical-align:middle;">${row.fullName}<br/><span style="font-size:8px;color:#888;">Droits: ${row.totalJoursDroits}j</span></td>
+              <td rowspan="2" style="font-size:10px;padding:3px 5px;border:1px solid #ddd;background:${bg};vertical-align:middle;">${row.matricule}</td>
+              <td rowspan="2" style="font-size:10px;padding:3px 5px;border:1px solid #ddd;background:${bg};vertical-align:middle;">${row.fonctionAssuree}</td>
+              <td style="font-size:8px;padding:2px 4px;border:1px solid #ddd;background:#EBF5FF;color:#1E3A5F;font-weight:bold;">Prév</td>
+              ${cellsPrevu}
+              <td style="text-align:center;font-size:9px;font-weight:bold;padding:2px;border:1px solid #ddd;color:#1E3A5F;background:#EBF5FF;">${row.totalPrevu}</td>
+              <td style="border:1px solid #ddd;background:${bg};"></td>
+              <td style="border:1px solid #ddd;background:${bg};"></td>
+            </tr>
+            <tr>
+              <td style="font-size:8px;padding:2px 4px;border:1px solid #ddd;background:#E8F8F5;color:#16A085;font-weight:bold;">Réal</td>
+              ${cellsRealise}
+              <td style="border:1px solid #ddd;background:${bg};"></td>
+              <td style="text-align:center;font-size:9px;font-weight:bold;padding:2px;border:1px solid #ddd;color:#16A085;background:#E8F8F5;">${row.totalRealise}</td>
+              <td style="text-align:center;font-size:9px;font-weight:bold;padding:2px;border:1px solid #ddd;color:${row.reliquat < 0 ? '#E74C3C' : '#E67E22'};background:#E8F4FD;">${row.reliquat}</td>
             </tr>`;
         });
       });
@@ -304,10 +320,11 @@ table { width:100%;border-collapse:collapse;font-size:9px; }
       <th rowspan="2" style="background:#0A1628;color:white;padding:4px;font-size:9px;border:1px solid #ccc;">Noms</th>
       <th rowspan="2" style="background:#0A1628;color:white;padding:4px;font-size:9px;border:1px solid #ccc;">Mtrcle</th>
       <th rowspan="2" style="background:#0A1628;color:white;padding:4px;font-size:9px;border:1px solid #ccc;">Fonction</th>
-      <th rowspan="2" style="background:#0A1628;color:white;padding:4px;font-size:9px;border:1px solid #ccc;">Téléphone</th>
+      <th rowspan="2" style="background:#0A1628;color:white;padding:4px;font-size:9px;border:1px solid #ccc;">P/R</th>
       ${headerMois}
-      <th rowspan="2" style="background:#16A085;color:white;padding:4px;font-size:9px;border:1px solid #ccc;">Total CR</th>
-      <th rowspan="2" style="background:#16A085;color:white;padding:4px;font-size:9px;border:1px solid #ccc;">Reliquat</th>
+      <th rowspan="2" style="background:#1E3A5F;color:white;padding:4px;font-size:9px;border:1px solid #ccc;">Tot.Prév</th>
+      <th rowspan="2" style="background:#16A085;color:white;padding:4px;font-size:9px;border:1px solid #ccc;">Tot.Réal</th>
+      <th rowspan="2" style="background:#E67E22;color:white;padding:4px;font-size:9px;border:1px solid #ccc;">Reliquat</th>
     </tr>
     <tr>${headerSemaines}</tr>
   </thead>
@@ -458,14 +475,16 @@ table { width:100%;border-collapse:collapse;font-size:9px; }
                   <Text style={[styles.thCell, { width: 140 }]}>Nom</Text>
                   <Text style={[styles.thCell, { width: 70 }]}>Matricule</Text>
                   <Text style={[styles.thCell, { width: 80 }]}>Fonction</Text>
+                  <Text style={[styles.thCell, { width: 36 }]}>P/R</Text>
                   {semaines.map(s => (
                     <View key={s} style={[styles.thCell, { width: 48 }]}>
                       <Text style={styles.thCellText}>S{formatSize(s)}</Text>
                       <Text style={styles.thCellDate}>{getDateDebutSemaine(s, selectedAnnee)}</Text>
                     </View>
                   ))}
-                  <Text style={[styles.thCell, { width: 55, backgroundColor: '#16A085' }]}>Total</Text>
-                  <Text style={[styles.thCell, { width: 55, backgroundColor: '#16A085' }]}>Reliq.</Text>
+                  <Text style={[styles.thCell, { width: 52, backgroundColor: '#1E3A5F' }]}>Tot.P</Text>
+                  <Text style={[styles.thCell, { width: 52, backgroundColor: '#16A085' }]}>Tot.R</Text>
+                  <Text style={[styles.thCell, { width: 52, backgroundColor: '#E67E22' }]}>Reliq.</Text>
                   {canEdit(userRole) && <Text style={[styles.thCell, { width: 40 }]}></Text>}
                 </View>
 
@@ -477,58 +496,95 @@ table { width:100%;border-collapse:collapse;font-size:9px; }
                       <Text style={styles.groupText}>{fn}</Text>
                     </View>
 
-                    {/* Lignes collaborateurs */}
+                    {/* Lignes collaborateurs (2 sous-lignes : Prévu + Réalisé) */}
                     {members.map((row, idx) => (
-                      <View key={row.collaborateurId} style={[styles.dataRow, idx % 2 === 1 && styles.dataRowAlt]}>
-                        <View style={{ width: 140 }}>
-                          <Text style={styles.nameText}>{row.fullName}</Text>
+                      <View key={row.collaborateurId}>
+                        {/* Sous-ligne Prévu */}
+                        <View style={[styles.dataRow, idx % 2 === 1 && styles.dataRowAlt]}>
+                          <View style={{ width: 140 }}>
+                            <Text style={styles.nameText}>{row.fullName}</Text>
+                            {canEdit(userRole) ? (
+                              <TouchableOpacity onPress={() => {
+                                setEditTotalData({ collaborateurId: row.collaborateurId, fullName: row.fullName, valeur: row.totalJoursDroits?.toString() || '30' });
+                                setShowEditTotal(true);
+                              }}>
+                                <Text style={styles.totalDroitsText}>Droits: {row.totalJoursDroits}j ✏️</Text>
+                              </TouchableOpacity>
+                            ) : (
+                              <Text style={styles.totalDroitsText}>Droits: {row.totalJoursDroits}j</Text>
+                            )}
+                          </View>
+                          <Text style={[styles.dataCell, { width: 70 }]}>{row.matricule}</Text>
+                          <Text style={[styles.dataCell, { width: 80 }]}>{row.fonctionAssuree}</Text>
+                          <View style={[styles.typeCell, styles.typeCellPrevu]}>
+                            <Text style={styles.typeCellTextPrevu}>Prév</Text>
+                          </View>
+                          {semaines.map(s => {
+                            const val = row.entreesPrevu?.[s];
+                            return (
+                              <TouchableOpacity
+                                key={s}
+                                style={[styles.cellBtn, { width: 48 }, val && styles.cellBtnPrevu]}
+                                onPress={() => {
+                                  if (!canEdit(userRole)) return;
+                                  setEditCellData({ collaborateurId: row.collaborateurId, semaine: s, type: 'prevu', valeur: val?.toString() || '' });
+                                  setShowEditCell(true);
+                                }}
+                                disabled={!canEdit(userRole)}
+                              >
+                                <Text style={[styles.cellBtnText, val && styles.cellBtnTextPrevu]}>
+                                  {val || (canEdit(userRole) ? '+' : '')}
+                                </Text>
+                              </TouchableOpacity>
+                            );
+                          })}
+                          <Text style={[styles.totalCell, { width: 52, color: '#4A90D9' }]}>{row.totalPrevu || 0}</Text>
+                          <View style={{ width: 52 }} />
+                          <View style={{ width: 52 }} />
+                          {canEdit(userRole) && <View style={{ width: 40 }} />}
+                        </View>
+
+                        {/* Sous-ligne Réalisé */}
+                        <View style={[styles.dataRowSub, idx % 2 === 1 && styles.dataRowAlt]}>
+                          <View style={{ width: 140 }} />
+                          <View style={{ width: 70 }} />
+                          <View style={{ width: 80 }} />
+                          <View style={[styles.typeCell, styles.typeCellRealise]}>
+                            <Text style={styles.typeCellTextRealise}>Réal</Text>
+                          </View>
+                          {semaines.map(s => {
+                            const val = row.entreesRealise?.[s];
+                            return (
+                              <TouchableOpacity
+                                key={s}
+                                style={[styles.cellBtn, { width: 48 }, val && styles.cellBtnFilled]}
+                                onPress={() => {
+                                  if (!canEdit(userRole)) return;
+                                  setEditCellData({ collaborateurId: row.collaborateurId, semaine: s, type: 'realise', valeur: val?.toString() || '' });
+                                  setShowEditCell(true);
+                                }}
+                                disabled={!canEdit(userRole)}
+                              >
+                                <Text style={[styles.cellBtnText, val && styles.cellBtnTextFilled]}>
+                                  {val || (canEdit(userRole) ? '+' : '')}
+                                </Text>
+                              </TouchableOpacity>
+                            );
+                          })}
+                          <View style={{ width: 52 }} />
+                          <Text style={[styles.totalCell, { width: 52, color: '#16A085' }]}>{row.totalRealise || 0}</Text>
+                          <Text style={[styles.totalCell, { width: 52, color: row.reliquat < 0 ? '#E74C3C' : '#E67E22' }]}>
+                            {row.reliquat}
+                          </Text>
                           {canEdit(userRole) && (
-                            <TouchableOpacity onPress={() => {
-                              setEditTotalData({ collaborateurId: row.collaborateurId, fullName: row.fullName, valeur: row.totalJoursDroits?.toString() || '30' });
-                              setShowEditTotal(true);
-                            }}>
-                              <Text style={styles.totalDroitsText}>Droits: {row.totalJoursDroits}j ✏️</Text>
+                            <TouchableOpacity
+                              style={[styles.deleteRowBtn, { width: 40 }]}
+                              onPress={() => handleDeleteCollab(row)}
+                            >
+                              <Text style={{ color: '#E74C3C', fontSize: 14 }}>🗑</Text>
                             </TouchableOpacity>
-                          )}
-                          {!canEdit(userRole) && (
-                            <Text style={styles.totalDroitsText}>Droits: {row.totalJoursDroits}j</Text>
                           )}
                         </View>
-                        <Text style={[styles.dataCell, { width: 70 }]}>{row.matricule}</Text>
-                        <Text style={[styles.dataCell, { width: 80 }]}>{row.fonctionAssuree}</Text>
-
-                        {semaines.map(s => {
-                          const val = row.entrees[s];
-                          return (
-                            <TouchableOpacity
-                              key={s}
-                              style={[styles.cellBtn, { width: 48 }, val && styles.cellBtnFilled]}
-                              onPress={() => {
-                                if (!canEdit(userRole)) return;
-                                setEditCellData({ collaborateurId: row.collaborateurId, semaine: s, valeur: val?.toString() || '' });
-                                setShowEditCell(true);
-                              }}
-                              disabled={!canEdit(userRole)}
-                            >
-                              <Text style={[styles.cellBtnText, val && styles.cellBtnTextFilled]}>
-                                {val || (canEdit(userRole) ? '+' : '')}
-                              </Text>
-                            </TouchableOpacity>
-                          );
-                        })}
-
-                        <Text style={[styles.totalCell, { width: 55 }]}>{row.totalPris}</Text>
-                        <Text style={[styles.totalCell, { width: 55, color: row.reliquat < 0 ? '#E74C3C' : '#27AE60' }]}>
-                          {row.reliquat}
-                        </Text>
-                        {canEdit(userRole) && (
-                          <TouchableOpacity
-                            style={[styles.deleteRowBtn, { width: 40 }]}
-                            onPress={() => handleDeleteCollab(row)}
-                          >
-                            <Text style={{ color: '#E74C3C', fontSize: 14 }}>🗑</Text>
-                          </TouchableOpacity>
-                        )}
                       </View>
                     ))}
                   </View>
@@ -547,11 +603,13 @@ table { width:100%;border-collapse:collapse;font-size:9px; }
         )
       }
 
-      {/* Modal Saisie Cellule */}
+      {/* Modal Saisie Cellule (Prévu ou Réalisé) */}
       <Modal visible={showEditCell} transparent animationType="fade">
         <View style={styles.modalOverlay}>
-          <View style={styles.modalBox}>
-            <Text style={styles.modalTitle}>Jours de congés</Text>
+          <View style={[styles.modalBox, { borderColor: editCellData.type === 'prevu' ? '#4A90D9' : '#16A085' }]}>
+            <Text style={styles.modalTitle}>
+              {editCellData.type === 'prevu' ? 'Jours prévus' : 'Jours réalisés'}
+            </Text>
             <Text style={styles.modalSubtitle}>Semaine S{formatSize(editCellData.semaine || 0)}</Text>
             <TextInput
               style={styles.modalInput}
@@ -566,7 +624,11 @@ table { width:100%;border-collapse:collapse;font-size:9px; }
               <TouchableOpacity style={styles.modalCancel} onPress={() => setShowEditCell(false)}>
                 <Text style={styles.modalCancelText}>Annuler</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.modalConfirm, saving && { opacity: 0.6 }]} onPress={handleSaveCell} disabled={saving}>
+              <TouchableOpacity
+                style={[styles.modalConfirm, { backgroundColor: editCellData.type === 'prevu' ? '#4A90D9' : '#16A085' }, saving && { opacity: 0.6 }]}
+                onPress={handleSaveCell}
+                disabled={saving}
+              >
                 {saving ? <ActivityIndicator color="#fff" size="small" /> : <Text style={styles.modalConfirmText}>Sauvegarder</Text>}
               </TouchableOpacity>
             </View>
@@ -711,10 +773,24 @@ const styles = StyleSheet.create({
 
   dataRow: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: '#0F2137', paddingVertical: 4,
+    backgroundColor: '#0F2137', paddingVertical: 3,
+  },
+  dataRowSub: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: '#0F2137', paddingVertical: 3,
     borderBottomWidth: 0.5, borderBottomColor: '#2A4060',
+    marginBottom: 2,
   },
   dataRowAlt: { backgroundColor: '#0D1B2A' },
+
+  typeCell: {
+    width: 36, height: 32, alignItems: 'center', justifyContent: 'center',
+    borderWidth: 0.5, borderColor: '#2A4060',
+  },
+  typeCellPrevu: { backgroundColor: '#1A3A6A' },
+  typeCellRealise: { backgroundColor: '#0D3028' },
+  typeCellTextPrevu: { color: '#4A90D9', fontSize: 9, fontWeight: 'bold' },
+  typeCellTextRealise: { color: '#16A085', fontSize: 9, fontWeight: 'bold' },
 
   nameText: { color: '#FFFFFF', fontSize: 11, fontWeight: 'bold', paddingHorizontal: 4 },
   totalDroitsText: { color: '#C9A84C', fontSize: 9, paddingHorizontal: 4, marginTop: 2 },
@@ -728,8 +804,10 @@ const styles = StyleSheet.create({
     borderWidth: 0.5, borderColor: '#2A4060',
   },
   cellBtnFilled: { backgroundColor: '#16A08520' },
+  cellBtnPrevu: { backgroundColor: '#1E3A5F30' },
   cellBtnText: { color: '#607D8B', fontSize: 11 },
   cellBtnTextFilled: { color: '#16A085', fontWeight: 'bold', fontSize: 13 },
+  cellBtnTextPrevu: { color: '#4A90D9', fontWeight: 'bold', fontSize: 13 },
 
   totalCell: {
     color: '#FFFFFF', fontSize: 12, fontWeight: 'bold',

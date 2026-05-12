@@ -27,7 +27,10 @@ public class CongeEntree {
     @Column(nullable = false)
     private Integer semaine;
 
-    @Column(nullable = false)
+    @Column
+    private Integer joursPrevu;
+
+    @Column
     private Integer joursConges;
 
     @ManyToOne

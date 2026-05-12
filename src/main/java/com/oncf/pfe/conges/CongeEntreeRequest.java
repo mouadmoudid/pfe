@@ -7,5 +7,6 @@ public class CongeEntreeRequest {
     private Long collaborateurId;
     private Integer annee;
     private Integer semaine;
-    private Integer joursConges;
+    private String type; // "prevu" ou "realise"
+    private Integer jours;
 }
