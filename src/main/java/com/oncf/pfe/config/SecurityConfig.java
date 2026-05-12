@@ -38,6 +38,8 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll()
 
+                // Lecture liste utilisateurs — superviseurs autorisés
+                .requestMatchers(HttpMethod.GET, "/api/admin/users").hasAnyRole("ADMIN","CGPX","CSPR","CET")
                 // Administration — gestion utilisateurs ADMIN uniquement
                 .requestMatchers("/api/admin/users/**").hasRole("ADMIN")
                 // Données lecture (agents, collaborateurs, by-matricule) → 4 rôles
