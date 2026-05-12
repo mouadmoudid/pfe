@@ -416,6 +416,10 @@ export default function CheckListScreen({ navigation }) {
   });
 
   const [itemsState, setItemsState] = useState({});
+  const [customStructure, setCustomStructure] = useState([]);
+  const [showAddTask, setShowAddTask] = useState(false);
+  const [addTaskTarget, setAddTaskTarget] = useState(null);
+  const [newTaskText, setNewTaskText] = useState('');
 
   useEffect(() => {
     const init = async () => {
@@ -463,20 +467,19 @@ export default function CheckListScreen({ navigation }) {
   };
 
   const initItems = (checkType) => {
-    const structure = checkType === 'COLLABORATEUR' ? ITEMS_COLLABORATEUR : ITEMS_CHANTIER;
+    const source = checkType === 'COLLABORATEUR' ? ITEMS_COLLABORATEUR : ITEMS_CHANTIER;
+    let idCounter = 0;
+    const struct = source.map(sec => ({
+      ...sec,
+      points: sec.points.map(pt => ({ id: idCounter++, text: pt })),
+    }));
+    setCustomStructure(struct);
     const initial = {};
-    structure.forEach((section, si) => {
-      section.points.forEach((point, pi) => {
-        const key = `${si}_${pi}`;
-        if (isAgresDetail(section.sousSection, point, checkType)) {
-          initial[key] = {
-            cotation: 'S',
-            completude: 'Oui',
-            etat: 'Bon',
-            validite: '',
-            constatation: '',
-            regularisation: '',
-          };
+    struct.forEach((section) => {
+      section.points.forEach((point) => {
+        const key = String(point.id);
+        if (isAgresDetail(section.sousSection, point.text, checkType)) {
+          initial[key] = { cotation: 'S', completude: 'Oui', etat: 'Bon', validite: '', constatation: '', regularisation: '' };
         } else {
           initial[key] = { cotation: 'S', constatation: '', regularisation: '' };
         }
@@ -486,23 +489,45 @@ export default function CheckListScreen({ navigation }) {
     setDocGlobal({ existence: 'OUI', miseAJour: 'OUI', action: '' });
   };
 
+  const deletePoint = (si, pointId) => {
+    setCustomStructure(prev => prev.map((sec, idx) =>
+      idx === si ? { ...sec, points: sec.points.filter(p => p.id !== pointId) } : sec
+    ));
+    setItemsState(prev => {
+      const next = { ...prev };
+      delete next[String(pointId)];
+      return next;
+    });
+  };
+
+  const confirmAddTask = () => {
+    if (!newTaskText.trim()) { Alert.alert('Erreur', 'Saisissez le texte de la tâche'); return; }
+    const { si } = addTaskTarget;
+    const newId = Date.now();
+    setCustomStructure(prev => prev.map((sec, idx) =>
+      idx === si ? { ...sec, points: [...sec.points, { id: newId, text: newTaskText.trim() }] } : sec
+    ));
+    setItemsState(prev => ({ ...prev, [String(newId)]: { cotation: 'S', constatation: '', regularisation: '' } }));
+    setNewTaskText('');
+    setShowAddTask(false);
+  };
+
   const handleSave = async () => {
     setCreating(true);
     try {
       const token = await getToken();
-      const structure = type === 'COLLABORATEUR' ? ITEMS_COLLABORATEUR : ITEMS_CHANTIER;
       const items = [];
       let ordre = 0;
-      structure.forEach((section, si) => {
-        section.points.forEach((point, pi) => {
-          const key = `${si}_${pi}`;
+      customStructure.forEach((section) => {
+        section.points.forEach((point) => {
+          const key = String(point.id);
           const state = itemsState[key] || {};
-          const hasDetail = isAgresDetail(section.sousSection, point, type);
+          const hasDetail = isAgresDetail(section.sousSection, point.text, type);
 
           items.push({
             section: section.section,
             sousSection: section.sousSection,
-            pointCle: point,
+            pointCle: point.text,
             cotation: state.cotation || 'S',
             constatation: hasDetail
               ? `Completude:${state.completude || 'Oui'}|Etat:${state.etat || 'Bon'}|Validite:${state.validite || ''}|Note:${state.constatation || ''}`
@@ -1113,7 +1138,6 @@ export default function CheckListScreen({ navigation }) {
 
   // ===== SAISIE ITEMS =====
   if (step === 4) {
-    const structure = type === 'COLLABORATEUR' ? ITEMS_COLLABORATEUR : ITEMS_CHANTIER;
     return (
       <SafeAreaView style={styles.safe}>
         <View style={styles.header}>
@@ -1136,24 +1160,41 @@ export default function CheckListScreen({ navigation }) {
         </View>
 
         <ScrollView style={styles.itemsContainer}>
-          {structure.map((section, si) => (
+          {customStructure.map((section, si) => (
             <View key={si} style={styles.sectionBlock}>
               <View style={styles.sectionHeader}>
                 <Text style={styles.sectionTitle}>{section.section}</Text>
                 <Text style={styles.sousSectionTitle}>{section.sousSection}</Text>
               </View>
 
-              {section.points.map((point, pi) => {
-                const key = `${si}_${pi}`;
-                const hasDetail = isAgresDetail(section.sousSection, point, type);
+              {section.points.map((point) => {
+                const key = String(point.id);
+                const hasDetail = isAgresDetail(section.sousSection, point.text, type);
                 const state = itemsState[key] || {
                   cotation: 'S', constatation: '', regularisation: '',
                   completude: 'Oui', etat: 'Bon', validite: '',
                 };
 
                 return (
-                  <View key={pi} style={styles.itemRow}>
-                    <Text style={styles.pointText}>{point}</Text>
+                  <View key={point.id} style={styles.itemRow}>
+                    <View style={styles.itemRowHeader}>
+                      <Text style={[styles.pointText, { flex: 1 }]}>{point.text}</Text>
+                      {canEdit(currentUser?.role) && (
+                        <TouchableOpacity
+                          style={styles.deletePointBtn}
+                          onPress={() => Alert.alert(
+                            'Supprimer la tâche',
+                            `"${point.text.length > 60 ? point.text.substring(0, 57) + '...' : point.text}"`,
+                            [
+                              { text: 'Annuler', style: 'cancel' },
+                              { text: 'Supprimer', style: 'destructive', onPress: () => deletePoint(si, point.id) },
+                            ]
+                          )}
+                        >
+                          <Text style={styles.deletePointBtnText}>✕</Text>
+                        </TouchableOpacity>
+                      )}
+                    </View>
 
                     {/* Cotation S/A/M/I — pour tous */}
                     <View style={styles.cotationRow}>
@@ -1261,6 +1302,16 @@ export default function CheckListScreen({ navigation }) {
                   </View>
                 );
               })}
+
+              {/* Bouton Ajouter une tâche — ADMIN et CGPX uniquement */}
+              {canEdit(currentUser?.role) && (
+                <TouchableOpacity
+                  style={styles.addTaskBtn}
+                  onPress={() => { setAddTaskTarget({ si }); setShowAddTask(true); }}
+                >
+                  <Text style={styles.addTaskBtnText}>+ Ajouter une tâche</Text>
+                </TouchableOpacity>
+              )}
             </View>
           ))}
 
@@ -1328,6 +1379,40 @@ export default function CheckListScreen({ navigation }) {
 
           <View style={{ height: 60 }} />
         </ScrollView>
+
+        {/* Modal Nouvelle Tâche */}
+        <Modal visible={showAddTask} transparent animationType="fade">
+          <View style={styles.taskModalOverlay}>
+            <View style={styles.taskModalBox}>
+              <Text style={styles.taskModalTitle}>Nouvelle tâche</Text>
+              {addTaskTarget != null && customStructure[addTaskTarget.si] && (
+                <Text style={styles.taskModalSubtitle}>
+                  {customStructure[addTaskTarget.si].sousSection}
+                </Text>
+              )}
+              <TextInput
+                style={styles.taskModalInput}
+                placeholder="Texte de la tâche..."
+                placeholderTextColor="#607D8B"
+                value={newTaskText}
+                onChangeText={setNewTaskText}
+                multiline
+                autoFocus
+              />
+              <View style={styles.taskModalBtns}>
+                <TouchableOpacity
+                  style={styles.taskModalCancel}
+                  onPress={() => { setShowAddTask(false); setNewTaskText(''); }}
+                >
+                  <Text style={styles.taskModalCancelText}>Annuler</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.taskModalConfirm} onPress={confirmAddTask}>
+                  <Text style={styles.taskModalConfirmText}>Ajouter</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
       </SafeAreaView>
     );
   }
@@ -1426,6 +1511,42 @@ const styles = StyleSheet.create({
     borderRadius: 6, borderWidth: 1,
     alignItems: 'center', justifyContent: 'center',
   },
+
+  // Item row avec header (texte + bouton supprimer)
+  itemRowHeader: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 8 },
+  deletePointBtn: {
+    paddingHorizontal: 8, paddingVertical: 4, marginLeft: 6,
+    backgroundColor: '#E74C3C20', borderRadius: 6, borderWidth: 1, borderColor: '#E74C3C',
+  },
+  deletePointBtnText: { color: '#E74C3C', fontSize: 12, fontWeight: 'bold' },
+
+  // Bouton Ajouter tâche
+  addTaskBtn: {
+    backgroundColor: '#1E3A5F', borderRadius: 8,
+    padding: 10, marginTop: 6, alignItems: 'center',
+    borderWidth: 1, borderColor: '#4A90D9',
+    borderStyle: 'dashed',
+  },
+  addTaskBtnText: { color: '#4A90D9', fontSize: 12, fontWeight: 'bold' },
+
+  // Modal nouvelle tâche
+  taskModalOverlay: { flex: 1, backgroundColor: '#00000080', justifyContent: 'center', alignItems: 'center' },
+  taskModalBox: {
+    backgroundColor: '#0F2137', borderRadius: 16, padding: 24,
+    width: '88%', borderWidth: 1, borderColor: '#4A90D9',
+  },
+  taskModalTitle: { color: '#FFFFFF', fontSize: 16, fontWeight: 'bold', marginBottom: 4 },
+  taskModalSubtitle: { color: '#607D8B', fontSize: 12, marginBottom: 12 },
+  taskModalInput: {
+    backgroundColor: '#1A2F4A', borderWidth: 1, borderColor: '#2A4060',
+    borderRadius: 8, padding: 12, color: '#FFFFFF', fontSize: 13,
+    marginBottom: 12, minHeight: 70, textAlignVertical: 'top',
+  },
+  taskModalBtns: { flexDirection: 'row', gap: 10 },
+  taskModalCancel: { flex: 1, backgroundColor: '#1A2F4A', borderRadius: 8, padding: 12, alignItems: 'center' },
+  taskModalCancelText: { color: '#607D8B', fontWeight: 'bold' },
+  taskModalConfirm: { flex: 1, backgroundColor: '#4A90D9', borderRadius: 8, padding: 12, alignItems: 'center' },
+  taskModalConfirmText: { color: '#FFFFFF', fontWeight: 'bold' },
 
   // Documentation globale
   docGlobalBox: {
