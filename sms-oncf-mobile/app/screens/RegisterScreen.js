@@ -8,6 +8,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import axios from 'axios';
 import { API_URL } from '../services/authService';
 
+const ENTITES = [
+  'CAMI', 'CT Voie', 'CT CSS', 'CDT 101V',
+  'CDT 102V', 'CDT OA OH OT', 'CDT 101LC', 'CDT 101SST',
+];
+
 const ROLES = [
   { value: 'AGENT', label: 'Agent', icon: '👷', desc: 'Saisie terrain' },
   { value: 'CGPX', label: 'CGPX', icon: '👨‍💼', desc: 'KN1' },
@@ -37,6 +42,8 @@ export default function RegisterScreen({ navigation }) {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [selectedRole, setSelectedRole] = useState('AGENT');
   const [showPassword, setShowPassword] = useState(false);
+
+  const [showEntiteDropdown, setShowEntiteDropdown] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -197,10 +204,30 @@ export default function RegisterScreen({ navigation }) {
             />
 
             <Text style={styles.label}>Entité</Text>
-            <TextInput style={styles.input}
-              placeholder="Ex: DT 102V / UP 1021V" placeholderTextColor="#607D8B"
-              value={entite} onChangeText={setEntite}
-            />
+            <TouchableOpacity
+              style={styles.dropdownTrigger}
+              onPress={() => setShowEntiteDropdown(!showEntiteDropdown)}
+            >
+              <Text style={entite ? styles.dropdownValue : styles.dropdownPlaceholder}>
+                {entite || 'Sélectionner une entité'}
+              </Text>
+              <Text style={styles.dropdownArrow}>{showEntiteDropdown ? '▲' : '▼'}</Text>
+            </TouchableOpacity>
+            {showEntiteDropdown && (
+              <View style={styles.dropdownList}>
+                {ENTITES.map((item) => (
+                  <TouchableOpacity
+                    key={item}
+                    style={[styles.dropdownItem, entite === item && styles.dropdownItemSelected]}
+                    onPress={() => { setEntite(item); setShowEntiteDropdown(false); }}
+                  >
+                    <Text style={[styles.dropdownItemText, entite === item && styles.dropdownItemTextSelected]}>
+                      {item}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
 
             <Text style={styles.label}>Site / UP</Text>
             <TextInput style={styles.input}
@@ -325,6 +352,23 @@ const styles = StyleSheet.create({
     backgroundColor: '#1A2F4A', borderWidth: 1, borderColor: '#2A4060',
     borderRadius: 8, padding: 12, color: '#FFFFFF', fontSize: 14,
   },
+
+  dropdownTrigger: {
+    backgroundColor: '#1A2F4A', borderWidth: 1, borderColor: '#2A4060',
+    borderRadius: 8, padding: 12, flexDirection: 'row',
+    justifyContent: 'space-between', alignItems: 'center',
+  },
+  dropdownPlaceholder: { color: '#607D8B', fontSize: 14 },
+  dropdownValue: { color: '#FFFFFF', fontSize: 14 },
+  dropdownArrow: { color: '#607D8B', fontSize: 12 },
+  dropdownList: {
+    backgroundColor: '#1A2F4A', borderWidth: 1, borderColor: '#2A4060',
+    borderRadius: 8, marginTop: 4, overflow: 'hidden',
+  },
+  dropdownItem: { padding: 12, borderBottomWidth: 1, borderBottomColor: '#2A4060' },
+  dropdownItemSelected: { backgroundColor: '#1E3A2F' },
+  dropdownItemText: { color: '#B0BEC5', fontSize: 14 },
+  dropdownItemTextSelected: { color: '#C9A84C', fontWeight: 'bold' },
 
   passwordContainer: {
     flexDirection: 'row', backgroundColor: '#1A2F4A',
