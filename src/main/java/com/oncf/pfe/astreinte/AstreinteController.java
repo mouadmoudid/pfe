@@ -22,15 +22,19 @@ public class AstreinteController {
 
     @GetMapping("/planning")
     public ResponseEntity<List<AstreinteCollaborateurResponse>> getPlanning(
-            @RequestParam Integer annee) {
-        return ResponseEntity.ok(astreinteService.getPlanningAnnee(annee));
+            @RequestParam Integer annee,
+            Authentication auth) {
+        User user = (User) auth.getPrincipal();
+        return ResponseEntity.ok(astreinteService.getPlanningAnnee(annee, user));
     }
 
     @GetMapping("/semaine")
     public ResponseEntity<List<AstreinteCollaborateurResponse>> getSemaine(
             @RequestParam Integer annee,
-            @RequestParam Integer semaine) {
-        return ResponseEntity.ok(astreinteService.getSemaine(annee, semaine));
+            @RequestParam Integer semaine,
+            Authentication auth) {
+        User user = (User) auth.getPrincipal();
+        return ResponseEntity.ok(astreinteService.getSemaine(annee, semaine, user));
     }
 
     @PostMapping

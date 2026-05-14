@@ -25,7 +25,6 @@ public class CheckListController {
             @RequestBody CheckListRequest request,
             Authentication auth) {
         User user = (User) auth.getPrincipal();
-        // Le type CHANTIER est réservé à ADMIN et CGPX
         if (CheckListType.CHANTIER.equals(request.getType())) {
             String role = user.getRole().name();
             if (!role.equals("ADMIN") && !role.equals("CGPX")) {
@@ -37,8 +36,9 @@ public class CheckListController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN','CGPX','CSPR','CET')")
-    public ResponseEntity<List<CheckListResponse>> getAll() {
-        return ResponseEntity.ok(checkListService.getAllCheckLists());
+    public ResponseEntity<List<CheckListResponse>> getAll(Authentication auth) {
+        User user = (User) auth.getPrincipal();
+        return ResponseEntity.ok(checkListService.getAllCheckLists(user));
     }
 
     @GetMapping("/my")

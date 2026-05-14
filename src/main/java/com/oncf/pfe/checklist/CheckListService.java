@@ -1,6 +1,7 @@
 package com.oncf.pfe.checklist;
 
 import com.oncf.pfe.checklist.dto.*;
+import com.oncf.pfe.user.EntiteVisibilityHelper;
 import com.oncf.pfe.user.Role;
 import com.oncf.pfe.user.User;
 import lombok.RequiredArgsConstructor;
@@ -16,7 +17,7 @@ public class CheckListService {
 
     private final CheckListRepository checkListRepository;
     private final CheckListItemRepository itemRepository;
-    
+    private final EntiteVisibilityHelper entiteVisibilityHelper;
 
     @Transactional
     public CheckListResponse createCheckList(CheckListRequest request, User user) {
@@ -63,26 +64,31 @@ public class CheckListService {
                 .stream().map(this::toResponse).toList();
     }
 
-    public List<CheckListResponse> getAllCheckLists() {
-        return checkListRepository.findAll()
-                .stream().map(this::toResponse).toList();
+    public List<CheckListResponse> getAllCheckLists(User currentUser) {
+        List<String> visible = entiteVisibilityHelper.getVisibleEntites(currentUser);
+        return checkListRepository.findAll().stream()
+                .filter(cl -> visible == null ||
+                        (cl.getCreatedBy() != null && visible.contains(cl.getCreatedBy().getEntite())))
+                .map(this::toResponse).toList();
     }
 
     public List<CheckListResponse> getRaciData(int annee, int mois, User currentUser) {
+        List<String> visible = entiteVisibilityHelper.getVisibleEntites(currentUser);
         return checkListRepository.findAll().stream()
                 .filter(cl -> cl.getDateControle() != null
                         && cl.getDateControle().getYear() == annee
                         && cl.getDateControle().getMonthValue() == mois)
                 .filter(cl -> {
-                    if (currentUser.getRole() != Role.AGENT) return true;
-                    // AGENT : uniquement les checklists où il est le collaborateur contrôlé
-                    String mat = currentUser.getMatricule();
-                    if (mat != null && !mat.isBlank()) {
-                        return mat.equalsIgnoreCase(cl.getCollaborateurMatricule());
+                    if (currentUser.getRole() == Role.AGENT) {
+                        String mat = currentUser.getMatricule();
+                        if (mat != null && !mat.isBlank()) {
+                            return mat.equalsIgnoreCase(cl.getCollaborateurMatricule());
+                        }
+                        return currentUser.getFullName() != null
+                                && currentUser.getFullName().equalsIgnoreCase(cl.getCollaborateurNom());
                     }
-                    // fallback si pas de matricule : comparer par nom
-                    return currentUser.getFullName() != null
-                            && currentUser.getFullName().equalsIgnoreCase(cl.getCollaborateurNom());
+                    return visible == null ||
+                            (cl.getCreatedBy() != null && visible.contains(cl.getCreatedBy().getEntite()));
                 })
                 .map(cl -> {
                     cl.setItems(itemRepository.findByCheckListId(cl.getId()));

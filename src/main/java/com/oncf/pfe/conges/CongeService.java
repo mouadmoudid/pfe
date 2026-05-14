@@ -1,5 +1,6 @@
 package com.oncf.pfe.conges;
 
+import com.oncf.pfe.user.EntiteVisibilityHelper;
 import com.oncf.pfe.user.User;
 import com.oncf.pfe.user.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -14,13 +15,23 @@ public class CongeService {
     private final CongeConfigRepository configRepo;
     private final CongeEntreeRepository entreeRepo;
     private final UserRepository userRepo;
+    private final EntiteVisibilityHelper entiteVisibilityHelper;
 
     public List<Integer> getAnnees() {
         return configRepo.findDistinctAnnees();
     }
 
-    public List<CongeTableauResponse> getTableau(Integer annee) {
+    public List<CongeTableauResponse> getTableau(Integer annee, User currentUser) {
+        List<String> visible = entiteVisibilityHelper.getVisibleEntites(currentUser);
         List<CongeConfig> configs = configRepo.findByAnneeOrderByCollaborateurFullNameAsc(annee);
+
+        if (visible != null) {
+            configs = configs.stream()
+                .filter(c -> c.getCollaborateur() != null &&
+                        visible.contains(c.getCollaborateur().getEntite()))
+                .toList();
+        }
+
         List<CongeTableauResponse> result = new ArrayList<>();
 
         for (CongeConfig config : configs) {
@@ -60,7 +71,6 @@ public class CongeService {
                 .build());
         }
 
-        // Trier par fonctionAssuree puis fullName
         result.sort(Comparator
             .comparing(CongeTableauResponse::getFonctionAssuree)
             .thenComparing(CongeTableauResponse::getFullName));
@@ -99,7 +109,6 @@ public class CongeService {
             if (jours == 0) return;
             User collab = userRepo.findById(req.getCollaborateurId())
                 .orElseThrow(() -> new RuntimeException("Collaborateur non trouvé"));
-            // Initialize both to 0 to satisfy DB NOT NULL constraint on jours_conges
             entree = CongeEntree.builder()
                 .collaborateur(collab)
                 .annee(req.getAnnee())
@@ -117,7 +126,6 @@ public class CongeService {
         }
         entree.setUpdatedBy(currentUser);
 
-        // 0 means "not set" — delete the record only when both fields are 0
         boolean prevuVide = entree.getJoursPrevu() == null || entree.getJoursPrevu() == 0;
         boolean realiseVide = entree.getJoursConges() == null || entree.getJoursConges() == 0;
         if (prevuVide && realiseVide) {

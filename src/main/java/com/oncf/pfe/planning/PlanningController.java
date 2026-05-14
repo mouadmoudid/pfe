@@ -31,9 +31,11 @@ public class PlanningController {
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN','CGPX','CSPR','CET')")
     public ResponseEntity<List<PlanningTaskResponse>> getAllByAnnee(
-            @RequestParam(defaultValue = "0") Integer annee) {
+            @RequestParam(defaultValue = "0") Integer annee,
+            Authentication auth) {
         if (annee == 0) annee = Year.now().getValue();
-        return ResponseEntity.ok(planningService.getAllByAnnee(annee));
+        User user = (User) auth.getPrincipal();
+        return ResponseEntity.ok(planningService.getAllByAnnee(annee, user));
     }
 
     @GetMapping("/my")
@@ -68,7 +70,9 @@ public class PlanningController {
     @GetMapping("/rapport")
     public ResponseEntity<?> getRapportData(
             @RequestParam int annee,
-            @RequestParam int mois) {
-        return ResponseEntity.ok(planningService.getRapportData(annee, mois));
+            @RequestParam int mois,
+            Authentication auth) {
+        User user = (User) auth.getPrincipal();
+        return ResponseEntity.ok(planningService.getRapportData(annee, mois, user));
     }
 }

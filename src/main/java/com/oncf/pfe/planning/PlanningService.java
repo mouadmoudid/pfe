@@ -2,6 +2,7 @@ package com.oncf.pfe.planning;
 
 import com.oncf.pfe.planning.dto.PlanningTaskDto;
 import com.oncf.pfe.planning.dto.PlanningTaskResponse;
+import com.oncf.pfe.user.EntiteVisibilityHelper;
 import com.oncf.pfe.user.User;
 import com.oncf.pfe.user.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -9,7 +10,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.List;
-
 import java.util.Map;
 
 @Service
@@ -18,6 +18,7 @@ public class PlanningService {
 
     private final PlanningTaskRepository planningTaskRepository;
     private final UserRepository userRepository;
+    private final EntiteVisibilityHelper entiteVisibilityHelper;
 
     public PlanningTaskResponse createTask(PlanningTaskDto request, User creator) {
         User assignedTo = null;
@@ -45,9 +46,12 @@ public class PlanningService {
         return toResponse(planningTaskRepository.save(task));
     }
 
-    public List<PlanningTaskResponse> getAllByAnnee(Integer annee) {
-        return planningTaskRepository.findByAnnee(annee)
-                .stream().map(this::toResponse).toList();
+    public List<PlanningTaskResponse> getAllByAnnee(Integer annee, User currentUser) {
+        List<String> visible = entiteVisibilityHelper.getVisibleEntites(currentUser);
+        return planningTaskRepository.findByAnnee(annee).stream()
+                .filter(t -> visible == null ||
+                        (t.getCreatedBy() != null && visible.contains(t.getCreatedBy().getEntite())))
+                .map(this::toResponse).toList();
     }
 
     public List<PlanningTaskResponse> getMyTasks(User user) {
@@ -104,21 +108,23 @@ public class PlanningService {
                 .createdAt(task.getCreatedAt())
                 .build();
     }
-    public Map<String, Object> getRapportData(int annee, int mois) {
-        List<PlanningTask> tasks = planningTaskRepository.findByAnnee(annee);
 
-        // Calculer les semaines du mois
+    public Map<String, Object> getRapportData(int annee, int mois, User currentUser) {
+        List<String> visible = entiteVisibilityHelper.getVisibleEntites(currentUser);
+        List<PlanningTask> tasks = planningTaskRepository.findByAnnee(annee).stream()
+                .filter(t -> visible == null ||
+                        (t.getCreatedBy() != null && visible.contains(t.getCreatedBy().getEntite())))
+                .toList();
+
         int[] semainesMois = getSemainsDuMois(annee, mois);
         int semaineDebut = semainesMois[0];
         int semaineFin = semainesMois[1];
 
-        // Collaborateurs — CONTROLE_COLLABORATEURS
         List<PlanningTask> collabTasks = tasks.stream()
             .filter(t -> t.getCategory() != null &&
                 t.getCategory().name().equals("CONTROLE_COLLABORATEURS"))
             .toList();
 
-        // Chantier — CHANTIER_TRAVAUX_VOIE
         List<PlanningTask> chantierTasks = tasks.stream()
             .filter(t -> t.getCategory() != null &&
                 t.getCategory().name().equals("CHANTIER_TRAVAUX_VOIE"))

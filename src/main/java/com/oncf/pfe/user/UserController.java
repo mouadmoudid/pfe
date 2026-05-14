@@ -3,7 +3,7 @@ package com.oncf.pfe.user;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -14,31 +14,33 @@ import java.util.List;
 public class UserController {
 
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
     private final UserService userService;
+    private final EntiteVisibilityHelper entiteVisibilityHelper;
 
-    // Liste tous les utilisateurs — ADMIN uniquement
     @GetMapping("/users")
     @PreAuthorize("hasAnyRole('ADMIN','CGPX','CSPR','CET')")
-    public ResponseEntity<List<User>> getAllUsers() {
-        return ResponseEntity.ok(userRepository.findAll());
+    public ResponseEntity<List<User>> getAllUsers(Authentication auth) {
+        User currentUser = (User) auth.getPrincipal();
+        List<String> visible = entiteVisibilityHelper.getVisibleEntites(currentUser);
+        if (visible == null) return ResponseEntity.ok(userRepository.findAll());
+        return ResponseEntity.ok(userRepository.findByEntiteIn(visible));
     }
 
-    // Liste tous les agents — accessible aux 4 rôles superviseurs
     @GetMapping("/agents")
     @PreAuthorize("hasAnyRole('ADMIN','CGPX','CSPR','CET')")
-    public ResponseEntity<List<User>> getAgents() {
-        return ResponseEntity.ok(userRepository.findByRole(Role.AGENT));
+    public ResponseEntity<List<User>> getAgents(Authentication auth) {
+        User currentUser = (User) auth.getPrincipal();
+        List<String> visible = entiteVisibilityHelper.getVisibleEntites(currentUser);
+        if (visible == null) return ResponseEntity.ok(userRepository.findByRole(Role.AGENT));
+        return ResponseEntity.ok(userRepository.findByRoleAndEntiteIn(Role.AGENT, visible));
     }
 
-    // Activer / désactiver un compte — ADMIN uniquement
     @PatchMapping("/users/{id}/toggle")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<String> toggleUser(@PathVariable Long id) {
         return ResponseEntity.ok(userService.toggleUser(id));
     }
 
-    // Changer le rôle — ADMIN uniquement
     @PatchMapping("/users/{id}/role")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<String> changeRole(
@@ -47,7 +49,6 @@ public class UserController {
         return ResponseEntity.ok(userService.changeRole(id, role));
     }
 
-    // Supprimer — ADMIN uniquement
     @DeleteMapping("/users/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<String> deleteUser(@PathVariable Long id) {
@@ -55,7 +56,6 @@ public class UserController {
         return ResponseEntity.ok("Utilisateur supprimé");
     }
 
-    // Toggle collaborateur status — ADMIN uniquement
     @PatchMapping("/users/{id}/collaborateur")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<String> toggleCollaborateur(@PathVariable Long id) {
@@ -66,18 +66,17 @@ public class UserController {
         return ResponseEntity.ok(user.isCollaborateur() ? "Marqué collaborateur" : "Retiré collaborateur");
     }
 
-    // Liste des collaborateurs — accessible aux 4 rôles superviseurs
     @GetMapping("/collaborateurs")
     @PreAuthorize("hasAnyRole('ADMIN','CGPX','CSPR','CET')")
-    public ResponseEntity<List<User>> getCollaborateurs() {
+    public ResponseEntity<List<User>> getCollaborateurs(Authentication auth) {
+        User currentUser = (User) auth.getPrincipal();
+        List<String> visible = entiteVisibilityHelper.getVisibleEntites(currentUser);
+        List<User> base = (visible == null) ? userRepository.findAll() : userRepository.findByEntiteIn(visible);
         return ResponseEntity.ok(
-            userRepository.findAll().stream()
-                .filter(u -> u.getRole() == Role.AGENT && u.isCollaborateur())
-                .toList()
+            base.stream().filter(u -> u.getRole() == Role.AGENT && u.isCollaborateur()).toList()
         );
     }
 
-    // Recherche par matricule — accessible aux 4 rôles superviseurs
     @GetMapping("/by-matricule/{matricule}")
     @PreAuthorize("hasAnyRole('ADMIN','CGPX','CSPR','CET')")
     public ResponseEntity<?> getByMatricule(@PathVariable String matricule) {

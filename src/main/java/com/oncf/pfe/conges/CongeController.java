@@ -22,8 +22,10 @@ public class CongeController {
 
     @GetMapping("/tableau")
     public ResponseEntity<List<CongeTableauResponse>> getTableau(
-            @RequestParam Integer annee) {
-        return ResponseEntity.ok(congeService.getTableau(annee));
+            @RequestParam Integer annee,
+            Authentication auth) {
+        User user = (User) auth.getPrincipal();
+        return ResponseEntity.ok(congeService.getTableau(annee, user));
     }
 
     @PostMapping("/config")

@@ -1,5 +1,6 @@
 package com.oncf.pfe.astreinte;
 
+import com.oncf.pfe.user.EntiteVisibilityHelper;
 import com.oncf.pfe.user.User;
 import com.oncf.pfe.user.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -7,7 +8,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -15,15 +15,19 @@ public class AstreinteService {
 
     private final AstreinteRepository astreinteRepo;
     private final UserRepository userRepo;
+    private final EntiteVisibilityHelper entiteVisibilityHelper;
 
     public List<Integer> getAnnees() {
         return astreinteRepo.findDistinctAnnees();
     }
 
-    public List<AstreinteCollaborateurResponse> getPlanningAnnee(Integer annee) {
-        List<Astreinte> all = astreinteRepo.findByAnneeOrderBySemaineAscCollaborateurFullNameAsc(annee);
+    public List<AstreinteCollaborateurResponse> getPlanningAnnee(Integer annee, User currentUser) {
+        List<String> visible = entiteVisibilityHelper.getVisibleEntites(currentUser);
+        List<Astreinte> all = astreinteRepo.findByAnneeOrderBySemaineAscCollaborateurFullNameAsc(annee).stream()
+                .filter(a -> visible == null ||
+                        (a.getCollaborateur() != null && visible.contains(a.getCollaborateur().getEntite())))
+                .toList();
 
-        // Grouper par collaborateur
         Map<Long, AstreinteCollaborateurResponse> map = new LinkedHashMap<>();
         for (Astreinte a : all) {
             User collab = a.getCollaborateur();
@@ -43,14 +47,17 @@ public class AstreinteService {
             }
         }
 
-        // Calculer totaux
         map.values().forEach(r -> r.setTotalAstreintes(r.getSemaines().size()));
-
         return new ArrayList<>(map.values());
     }
 
-    public List<AstreinteCollaborateurResponse> getSemaine(Integer annee, Integer semaine) {
-        List<Astreinte> enAstreinte = astreinteRepo.findByAnneeAndSemaineAndEnAstreinteTrue(annee, semaine);
+    public List<AstreinteCollaborateurResponse> getSemaine(Integer annee, Integer semaine, User currentUser) {
+        List<String> visible = entiteVisibilityHelper.getVisibleEntites(currentUser);
+        List<Astreinte> enAstreinte = astreinteRepo.findByAnneeAndSemaineAndEnAstreinteTrue(annee, semaine).stream()
+                .filter(a -> visible == null ||
+                        (a.getCollaborateur() != null && visible.contains(a.getCollaborateur().getEntite())))
+                .toList();
+
         List<AstreinteCollaborateurResponse> result = new ArrayList<>();
         for (Astreinte a : enAstreinte) {
             User collab = a.getCollaborateur();
@@ -90,7 +97,6 @@ public class AstreinteService {
 
     @Transactional
     public void addCollaborateurToAnnee(Long collaborateurId, Integer annee, User currentUser) {
-        // Ajouter le collaborateur sans astreinte pour l'année (crée juste une entrée S01 vide)
         Optional<Astreinte> existing = astreinteRepo.findByCollaborateurIdAndAnneeAndSemaine(collaborateurId, annee, 1);
         if (existing.isPresent()) return;
 
