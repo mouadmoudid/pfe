@@ -15,6 +15,7 @@ public class UserController {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final UserService userService;
 
     // Liste tous les utilisateurs — ADMIN uniquement
     @GetMapping("/users")
@@ -34,11 +35,7 @@ public class UserController {
     @PatchMapping("/users/{id}/toggle")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<String> toggleUser(@PathVariable Long id) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
-        user.setEnabled(!user.isEnabled());
-        userRepository.save(user);
-        return ResponseEntity.ok(user.isEnabled() ? "Compte activé" : "Compte désactivé");
+        return ResponseEntity.ok(userService.toggleUser(id));
     }
 
     // Changer le rôle — ADMIN uniquement
@@ -47,18 +44,14 @@ public class UserController {
     public ResponseEntity<String> changeRole(
             @PathVariable Long id,
             @RequestParam Role role) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
-        user.setRole(role);
-        userRepository.save(user);
-        return ResponseEntity.ok("Rôle mis à jour : " + role);
+        return ResponseEntity.ok(userService.changeRole(id, role));
     }
 
     // Supprimer — ADMIN uniquement
     @DeleteMapping("/users/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<String> deleteUser(@PathVariable Long id) {
-        userRepository.deleteById(id);
+        userService.deleteUser(id);
         return ResponseEntity.ok("Utilisateur supprimé");
     }
 
