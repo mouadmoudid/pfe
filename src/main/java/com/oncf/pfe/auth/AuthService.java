@@ -38,6 +38,8 @@ public class AuthService {
                 .fullName(user.getFullName())
                 .role(user.getRole().name())
                 .firstLogin(user.isFirstLogin())
+                .entite(user.getEntite())
+                .matricule(user.getMatricule())
                 .build();
     }
 

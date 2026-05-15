@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ONCF — Élément de Solde</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #0A1628;
+      --card:    #0F2137;
+      --deep:    #1A2F4A;
+      --border:  #2A4060;
+      --gold:    #C9A84C;
+      --text:    #FFFFFF;
+      --sub:     #607D8B;
+      --danger:  #E74C3C;
+      --success: #27AE60;
+    }
+
+    body { background: var(--bg); color: var(--text); font-family: Arial, sans-serif; min-height: 100vh; }
+
+    /* ── LOGIN ── */
+    #loginSection {
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh; padding: 20px;
+    }
+    .login-box {
+      background: var(--card); border-radius: 16px; padding: 40px 36px;
+      width: 100%; max-width: 400px; border-top: 4px solid var(--gold);
+    }
+    .login-logo { text-align: center; margin-bottom: 24px; }
+    .login-logo h1 { color: var(--gold); font-size: 22px; letter-spacing: 2px; }
+    .login-logo p  { color: var(--sub); font-size: 13px; margin-top: 4px; }
+
+    /* ── APP ── */
+    #appSection { display: none; }
+
+    header {
+      background: var(--card); padding: 14px 24px;
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 3px solid var(--gold);
+    }
+    .header-left h2 { color: var(--gold); font-size: 18px; }
+    .header-left p  { color: var(--sub);  font-size: 12px; margin-top: 2px; }
+    .header-right   { display: flex; gap: 10px; align-items: center; }
+    .user-badge {
+      background: var(--deep); border-radius: 8px;
+      padding: 6px 12px; color: var(--text); font-size: 12px;
+    }
+
+    main { max-width: 1200px; margin: 0 auto; padding: 24px 16px; }
+
+    /* ── STEP 0 : PÉRIODE ── */
+    #stepPeriode { }
+    .section-label { color: var(--gold); font-weight: bold; font-size: 13px; margin-bottom: 10px; margin-top: 4px; }
+
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+    .chip {
+      padding: 8px 18px; border-radius: 20px; cursor: pointer; font-weight: bold;
+      background: var(--card); border: 1px solid var(--border); color: var(--sub);
+      transition: .15s;
+    }
+    .chip.active { background: var(--gold); border-color: var(--gold); color: var(--bg); }
+    .chip:hover:not(.active) { border-color: var(--gold); color: var(--gold); }
+
+    .mois-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; margin-bottom: 20px; }
+    .mois-chip {
+      padding: 10px; border-radius: 8px; text-align: center; cursor: pointer;
+      background: var(--card); border: 1px solid var(--border); color: var(--sub);
+      font-size: 13px; transition: .15s;
+    }
+    .mois-chip.active { background: var(--deep); border-color: var(--gold); color: var(--gold); font-weight: bold; }
+    .mois-chip:hover:not(.active) { border-color: var(--gold); color: var(--gold); }
+
+    .entite-box {
+      background: var(--card); border-radius: 10px; padding: 14px 16px;
+      margin-bottom: 20px; border-left: 4px solid var(--gold);
+    }
+    .entite-box small { color: var(--sub); font-size: 11px; }
+    .entite-box span  { display: block; color: var(--text); font-size: 15px; font-weight: bold; margin-top: 2px; }
+
+    /* ── STEP 1 : TABLE ── */
+    #stepTable { display: none; }
+
+    .toolbar {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 16px; flex-wrap: wrap; gap: 10px;
+    }
+    .toolbar-info h3 { color: var(--text); font-size: 16px; }
+    .toolbar-info p  { color: var(--sub);  font-size: 12px; }
+    .toolbar-btns { display: flex; gap: 8px; }
+
+    table {
+      width: 100%; border-collapse: collapse; background: var(--card);
+      border-radius: 12px; overflow: hidden; font-size: 13px;
+    }
+    thead th {
+      background: var(--deep); color: var(--gold); padding: 12px 10px;
+      text-align: left; border-bottom: 1px solid var(--border); white-space: nowrap;
+    }
+    tbody tr { border-bottom: 1px solid var(--border); }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: #0f1f35; }
+    tbody td { padding: 10px; color: var(--text); vertical-align: middle; }
+    .td-sub  { color: var(--sub); font-size: 11px; }
+    .td-gold { color: var(--gold); font-size: 11px; }
+    .num-cell { text-align: center; font-weight: bold; }
+    .null-cell { color: var(--border); text-align: center; }
+
+    .action-btns { display: flex; gap: 6px; }
+
+    /* ── FORMS ── */
+    label { color: #B0BEC5; font-size: 12px; display: block; margin-bottom: 4px; margin-top: 12px; }
+    input[type=text], input[type=email], input[type=password], input[type=number], textarea, select {
+      width: 100%; background: var(--deep); border: 1px solid var(--border);
+      border-radius: 8px; padding: 10px; color: var(--text); font-size: 13px;
+      outline: none; transition: border-color .15s;
+    }
+    input:focus, textarea:focus, select:focus { border-color: var(--gold); }
+    textarea { resize: vertical; min-height: 60px; }
+
+    .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+
+    .section-title {
+      color: var(--gold); font-size: 12px; font-weight: bold;
+      margin-top: 20px; margin-bottom: 6px;
+      border-bottom: 1px solid var(--border); padding-bottom: 4px;
+    }
+
+    /* ── COLLAB PICKER BTN ── */
+    .collab-picker-btn {
+      display: flex; align-items: center; justify-content: space-between;
+      background: var(--deep); border: 1px solid var(--border);
+      border-radius: 8px; padding: 12px; cursor: pointer;
+      transition: border-color .15s;
+    }
+    .collab-picker-btn:hover, .collab-picker-btn.filled { border-color: var(--gold); }
+    .collab-picker-btn .placeholder { color: var(--sub); font-size: 13px; }
+    .collab-picker-btn .name  { color: var(--text); font-weight: bold; font-size: 14px; }
+    .collab-picker-btn .msub  { color: var(--sub); font-size: 11px; margin-top: 2px; }
+    .collab-picker-btn .arrow { color: var(--gold); font-size: 20px; margin-left: 10px; }
+
+    .collab-readonly {
+      background: var(--deep); border-left: 3px solid var(--gold);
+      border-radius: 8px; padding: 12px;
+    }
+    .collab-readonly .name { color: var(--text); font-weight: bold; }
+    .collab-readonly .msub { color: var(--sub); font-size: 11px; margin-top: 2px; }
+
+    /* ── TYPE ASTREINTE ── */
+    .type-row { display: flex; gap: 8px; margin-top: 4px; }
+    .type-btn {
+      flex: 1; padding: 8px; border-radius: 8px; text-align: center;
+      background: var(--deep); border: 1px solid var(--border); cursor: pointer;
+      color: var(--sub); font-size: 11px; transition: .15s;
+    }
+    .type-btn.active { background: var(--card); border-color: var(--gold); color: var(--gold); font-weight: bold; }
+
+    /* ── MODAL ── */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.6);
+      display: flex; align-items: flex-end; justify-content: center;
+      z-index: 1000; opacity: 0; pointer-events: none; transition: opacity .2s;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: auto; }
+    .modal-box {
+      background: var(--card); border-radius: 20px 20px 0 0;
+      padding: 24px; width: 100%; max-width: 700px; max-height: 90vh;
+      overflow-y: auto; transform: translateY(40px); transition: transform .2s;
+    }
+    .modal-overlay.open .modal-box { transform: translateY(0); }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .modal-header h3 { color: var(--text); font-size: 16px; }
+
+    /* Collab picker modal — same style, smaller content */
+    .search-input { margin-bottom: 12px; }
+    .collab-list { }
+    .collab-item {
+      display: flex; align-items: center; justify-content: space-between;
+      background: var(--deep); border-radius: 8px; padding: 12px;
+      margin-bottom: 6px; cursor: pointer; transition: border-color .15s;
+      border: 1px solid transparent;
+    }
+    .collab-item:hover { border-color: var(--gold); }
+    .collab-item .name { color: var(--text); font-weight: bold; font-size: 13px; }
+    .collab-item .msub { color: var(--sub); font-size: 11px; margin-top: 2px; }
+
+    /* ── BUTTONS ── */
+    .btn {
+      border: none; border-radius: 8px; padding: 10px 18px;
+      font-weight: bold; cursor: pointer; font-size: 13px; transition: opacity .15s;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .btn:hover { opacity: .85; }
+    .btn-gold     { background: var(--gold);    color: var(--bg); }
+    .btn-outline  { background: var(--deep);    color: var(--gold); border: 1px solid var(--gold); }
+    .btn-danger   { background: var(--danger);  color: #fff; }
+    .btn-ghost    { background: transparent;    color: var(--sub); }
+    .btn-sm       { padding: 6px 12px; font-size: 12px; border-radius: 6px; }
+    .btn-block    { width: 100%; justify-content: center; padding: 14px; border-radius: 10px; }
+    .btn:disabled { opacity: .5; cursor: not-allowed; }
+
+    .modal-footer { display: flex; gap: 10px; margin-top: 20px; }
+    .modal-footer .btn-ghost { flex: 1; }
+    .modal-footer .btn-gold  { flex: 2; }
+
+    /* ── TOAST ── */
+    #toast {
+      position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+      background: #1E3A5F; color: var(--text); padding: 12px 24px; border-radius: 12px;
+      font-size: 13px; border: 1px solid var(--gold); display: none; z-index: 9999;
+    }
+
+    /* ── SPINNER ── */
+    .spinner {
+      display: inline-block; width: 18px; height: 18px;
+      border: 2px solid var(--border); border-top-color: var(--gold);
+      border-radius: 50%; animation: spin .6s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--sub); }
+    .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+
+    /* ── PRINT ── */
+    @media print {
+      body { background: white; color: black; }
+      #loginSection, header, #stepPeriode, .toolbar-btns,
+      .modal-overlay, #toast, .action-btns { display: none !important; }
+      #appSection, #stepTable { display: block !important; }
+      main { padding: 0; max-width: 100%; }
+      table { font-size: 9px; border: 1px solid #ccc; }
+      thead th { background: #0A1628; color: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .print-header { display: block !important; margin-bottom: 12px; }
+    }
+    .print-header { display: none; }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════ LOGIN ═══════════════════ -->
+<section id="loginSection">
+  <div class="login-box">
+    <div class="login-logo">
+      <h1>ONCF — DRIC</h1>
+      <p>Élément de Solde · Accès web</p>
+    </div>
+    <label for="loginEmail">Adresse e-mail</label>
+    <input id="loginEmail" type="email" placeholder="prenom.nom@oncf.ma" autocomplete="username" />
+    <label for="loginPassword">Mot de passe</label>
+    <input id="loginPassword" type="password" placeholder="••••••••" autocomplete="current-password" />
+    <div style="margin-top: 20px;">
+      <button class="btn btn-gold btn-block" onclick="login()">
+        <span id="loginSpinner" class="spinner" style="display:none"></span>
+        Se connecter
+      </button>
+    </div>
+    <p id="loginError" style="color:var(--danger);font-size:12px;margin-top:10px;text-align:center;display:none"></p>
+  </div>
+</section>
+
+<!-- ═══════════════════ APP ═══════════════════ -->
+<section id="appSection">
+  <header>
+    <div class="header-left">
+      <h2>💰 Élément de Solde</h2>
+      <p>ONCF — DRIC · Feuille d'attachement mensuelle</p>
+    </div>
+    <div class="header-right">
+      <span class="user-badge" id="userBadge"></span>
+      <button class="btn btn-ghost btn-sm" onclick="logout()">Déconnexion</button>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- ── ÉTAPE 0 : PÉRIODE ── -->
+    <div id="stepPeriode">
+      <p class="section-label" style="margin-top:16px">Année</p>
+      <div class="chips" id="anneesChips"></div>
+
+      <p class="section-label">Mois</p>
+      <div class="mois-grid" id="moisGrid"></div>
+
+      <div class="entite-box" id="entiteBox" style="display:none">
+        <small>Votre entité</small>
+        <span id="entiteLabel"></span>
+      </div>
+
+      <button class="btn btn-gold" onclick="loadData()">
+        Consulter &nbsp;→
+      </button>
+    </div>
+
+    <!-- ── ÉTAPE 1 : TABLEAU ── -->
+    <div id="stepTable">
+      <div class="print-header" id="printHeader"></div>
+
+      <div class="toolbar">
+        <div class="toolbar-info">
+          <h3 id="tableTitle"></h3>
+          <p id="tableSubtitle"></p>
+        </div>
+        <div class="toolbar-btns">
+          <button class="btn btn-ghost btn-sm" onclick="backToPeriode()">← Retour</button>
+          <button class="btn btn-gold btn-sm" id="btnAdd" onclick="openAdd()" style="display:none">+ Ajouter</button>
+          <button class="btn btn-outline btn-sm" onclick="printTable()">🖨 PDF</button>
+        </div>
+      </div>
+
+      <div id="tableWrapper">
+        <div class="empty-state" id="emptyState" style="display:none">
+          <div class="icon">💰</div>
+          <p>Aucune donnée pour cette période</p>
+          <p style="font-size:12px;margin-top:6px" id="emptyHint"></p>
+        </div>
+        <div style="overflow-x:auto">
+          <table id="dataTable" style="display:none">
+            <thead>
+              <tr>
+                <th>MLE</th><th>Collaborateur</th><th>Fonction</th>
+                <th id="colEntite" style="display:none">Entité</th>
+                <th>Ast.</th><th>Alloc.N</th><th>Rp.N</th><th>Déc.N</th>
+                <th>IJ CUP</th><th>Congé</th><th>Pér. Congé</th>
+                <th>RC</th><th>Pér. RC</th><th>HS</th>
+                <th id="colActions" style="display:none">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</section>
+
+<!-- ═══════════════════ MODAL FORMULAIRE ═══════════════════ -->
+<div class="modal-overlay" id="formModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 id="modalTitle">➕ Nouveau collaborateur</h3>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('formModal')">✕</button>
+    </div>
+
+    <!-- IDENTIFICATION -->
+    <div class="section-title">Identification</div>
+
+    <!-- Mode ajout : sélecteur -->
+    <div id="collabSelector">
+      <label>Collaborateur *</label>
+      <div class="collab-picker-btn" id="collabPickerBtn" onclick="openCollabPicker()">
+        <div id="collabPickerContent">
+          <span class="placeholder">Appuyer pour choisir un collaborateur…</span>
+        </div>
+        <span class="arrow">›</span>
+      </div>
+    </div>
+
+    <!-- Mode édition : lecture seule -->
+    <div id="collabReadonly" style="display:none">
+      <label>Collaborateur</label>
+      <div class="collab-readonly">
+        <div class="name" id="roName"></div>
+        <div class="msub" id="roSub"></div>
+      </div>
+    </div>
+
+    <!-- ASTREINTE -->
+    <div class="section-title">Astreinte</div>
+    <div class="row2">
+      <div>
+        <label>Nombre de jours</label>
+        <input type="number" id="fNbJoursAstreinte" placeholder="0" min="0" />
+      </div>
+      <div>
+        <label>Type</label>
+        <div class="type-row">
+          <div class="type-btn active" data-val="A domicile" onclick="setTypeAstreinte(this)">A domicile</div>
+          <div class="type-btn" data-val="A la chambre" onclick="setTypeAstreinte(this)">A la chambre</div>
+        </div>
+        <input type="hidden" id="fTypeAstreinte" value="A domicile" />
+      </div>
+    </div>
+    <label>Période astreinte</label>
+    <input type="text" id="fPeriodeAstreinte" placeholder="Du 01 au 14/12/25" />
+
+    <!-- INDEMNITÉS -->
+    <div class="section-title">Indemnités</div>
+    <div class="row3">
+      <div><label>Allocation de nuit</label><input type="number" id="fAllocationNuit" placeholder="-" min="0" /></div>
+      <div><label>Repas Normal</label><input type="number" id="fRepasNormal" placeholder="-" min="0" /></div>
+      <div><label>Déc. Normal</label><input type="number" id="fDecNormal" placeholder="-" min="0" /></div>
+      <div><label>Repas Réduit</label><input type="number" id="fRepasReduit" placeholder="-" min="0" /></div>
+      <div><label>Déc. Réduit</label><input type="number" id="fDecReduit" placeholder="-" min="0" /></div>
+      <div><label>Alloc. Parcours</label><input type="number" id="fAllocationParcours" placeholder="-" min="0" /></div>
+    </div>
+    <label>Indemnité Journalière CUP (nb jours)</label>
+    <input type="number" id="fIndemniteCup" placeholder="0" min="0" />
+
+    <!-- CONGÉS -->
+    <div class="section-title">Congés</div>
+    <div class="row2">
+      <div><label>Nombre de jours</label><input type="number" id="fNbJoursConge" placeholder="0" min="0" /></div>
+      <div><label>Période</label><input type="text" id="fPeriodeConge" placeholder="du 08 au 15/12/25" /></div>
+    </div>
+
+    <!-- REPOS COMPENSATEURS -->
+    <div class="section-title">Repos Compensateurs (RC)</div>
+    <div class="row2">
+      <div><label>Nombre de jours</label><input type="number" id="fNbJoursRC" placeholder="0" min="0" /></div>
+      <div><label>Période</label><input type="text" id="fPeriodeRC" placeholder="Le 22 et 23/12/25" /></div>
+    </div>
+    <label>Motif RC</label>
+    <textarea id="fMotifRC" placeholder="RCA du 06 et 09/11/25…"></textarea>
+
+    <!-- HEURES SUPPLÉMENTAIRES -->
+    <div class="section-title">Heures Supplémentaires</div>
+    <div class="row2">
+      <div><label>Nombre d'heures</label><input type="number" id="fNbHeuresSupp" placeholder="0" min="0" /></div>
+      <div><label>Justification</label><input type="text" id="fJustificationHS" placeholder="-" /></div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('formModal')">Annuler</button>
+      <button class="btn btn-gold" id="btnSave" onclick="handleSave()">✅ Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ MODAL COLLAB PICKER ═══════════════════ -->
+<div class="modal-overlay" id="collabModal">
+  <div class="modal-box" style="max-height:80vh">
+    <div class="modal-header">
+      <h3>👥 Choisir un collaborateur</h3>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('collabModal')">✕</button>
+    </div>
+    <input type="text" class="search-input" id="collabSearch"
+           placeholder="Rechercher par nom, prénom ou matricule…"
+           oninput="filterCollabs()" />
+    <div class="collab-list" id="collabList"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════ TOAST ═══════════════════ -->
+<div id="toast"></div>
+
+<script>
+// ════════════════════════════════════════════════════
+//  CONSTANTS
+// ════════════════════════════════════════════════════
+const API      = '/api/solde';
+const API_AUTH = '/api/auth';
+const API_ADM  = '/api/admin';   // collaborateurs, users
+
+const MOIS = ['','Janvier','Février','Mars','Avril','Mai','Juin',
+              'Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+
+// ════════════════════════════════════════════════════
+//  STATE
+// ════════════════════════════════════════════════════
+let token         = localStorage.getItem('solde_token') || '';
+let currentUser   = JSON.parse(localStorage.getItem('solde_user') || 'null');
+let selectedAnnee = new Date().getFullYear();
+let selectedMois  = new Date().getMonth() + 1;
+let anneesList    = [];
+let tableData     = [];
+let collaborateurs = [];
+let selectedCollab = null;
+let editingId      = null;
+
+// ════════════════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', () => {
+  if (token && currentUser) {
+    showApp();
+  }
+});
+
+// ════════════════════════════════════════════════════
+//  AUTH
+// ════════════════════════════════════════════════════
+async function login() {
+  const email    = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const errEl    = document.getElementById('loginError');
+  const spinner  = document.getElementById('loginSpinner');
+  errEl.style.display = 'none';
+  spinner.style.display = 'inline-block';
+  try {
+    const res = await fetch(`${API_AUTH}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+    if (!res.ok) throw new Error('Identifiants incorrects');
+    const data = await res.json();
+    token = data.token;
+    currentUser = {
+      fullName:  data.fullName,
+      role:      data.role,
+      email:     data.email,
+      entite:    data.entite    || '',
+      matricule: data.matricule || '',
+    };
+    localStorage.setItem('solde_token', token);
+    localStorage.setItem('solde_user', JSON.stringify(currentUser));
+    showApp();
+  } catch(e) {
+    errEl.textContent = e.message;
+    errEl.style.display = 'block';
+  } finally {
+    spinner.style.display = 'none';
+  }
+}
+
+function logout() {
+  token = '';
+  currentUser = null;
+  localStorage.removeItem('solde_token');
+  localStorage.removeItem('solde_user');
+  document.getElementById('loginSection').style.display = 'flex';
+  document.getElementById('appSection').style.display  = 'none';
+  backToPeriode();
+}
+
+function authHeader() {
+  return { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
+}
+
+// ════════════════════════════════════════════════════
+//  SHOW APP
+// ════════════════════════════════════════════════════
+async function showApp() {
+  document.getElementById('loginSection').style.display = 'none';
+  document.getElementById('appSection').style.display  = 'block';
+  document.getElementById('userBadge').textContent =
+    `${currentUser.fullName} · ${currentUser.role}`;
+  if (currentUser.entite) {
+    document.getElementById('entiteLabel').textContent = currentUser.entite;
+    document.getElementById('entiteBox').style.display = 'block';
+  }
+  buildMoisGrid();
+  await Promise.all([loadAnnees(), loadCollaborateurs()]);
+}
+
+// ════════════════════════════════════════════════════
+//  PERIOD PICKER
+// ════════════════════════════════════════════════════
+function buildMoisGrid() {
+  const grid = document.getElementById('moisGrid');
+  grid.innerHTML = '';
+  MOIS.slice(1).forEach((m, i) => {
+    const el = document.createElement('div');
+    el.className = 'mois-chip' + (i + 1 === selectedMois ? ' active' : '');
+    el.textContent = m;
+    el.onclick = () => {
+      document.querySelectorAll('.mois-chip').forEach(c => c.classList.remove('active'));
+      el.classList.add('active');
+      selectedMois = i + 1;
+    };
+    grid.appendChild(el);
+  });
+}
+
+async function loadAnnees() {
+  try {
+    const res = await fetch(`${API}/annees`, { headers: authHeader() });
+    anneesList = res.ok ? await res.json() : [];
+  } catch { anneesList = []; }
+  if (!anneesList.length) anneesList = [new Date().getFullYear()];
+  buildAnneesChips();
+}
+
+function buildAnneesChips() {
+  const container = document.getElementById('anneesChips');
+  container.innerHTML = '';
+  anneesList.forEach(a => {
+    const el = document.createElement('div');
+    el.className = 'chip' + (a === selectedAnnee ? ' active' : '');
+    el.textContent = a;
+    el.onclick = () => {
+      document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+      el.classList.add('active');
+      selectedAnnee = a;
+    };
+    container.appendChild(el);
+  });
+  if (['ADMIN','CGPX'].includes(currentUser.role)) {
+    const add = document.createElement('div');
+    add.className = 'chip';
+    add.style.borderColor = 'var(--gold)';
+    add.style.color = 'var(--gold)';
+    const next = Math.max(...anneesList) + 1;
+    add.textContent = `+ ${next}`;
+    add.onclick = () => {
+      anneesList.unshift(next);
+      selectedAnnee = next;
+      buildAnneesChips();
+    };
+    container.appendChild(add);
+  }
+}
+
+async function loadCollaborateurs() {
+  if (!['ADMIN','CGPX','CSPR','CET'].includes(currentUser.role)) return;
+  try {
+    const res = await fetch(`${API_ADM}/collaborateurs`, { headers: authHeader() });
+    if (res.ok) collaborateurs = await res.json();
+  } catch { collaborateurs = []; }
+}
+
+// ════════════════════════════════════════════════════
+//  DATA
+// ════════════════════════════════════════════════════
+async function loadData() {
+  showSpinner(true);
+  try {
+    const res = await fetch(`${API}?mois=${selectedMois}&annee=${selectedAnnee}`,
+      { headers: authHeader() });
+    if (!res.ok) throw new Error();
+    tableData = await res.json();
+    showStep1();
+    renderTable();
+  } catch {
+    showToast('Impossible de charger les données');
+  } finally {
+    showSpinner(false);
+  }
+}
+
+function showStep1() {
+  document.getElementById('stepPeriode').style.display = 'none';
+  document.getElementById('stepTable').style.display   = 'block';
+  const canEdit = ['ADMIN','CGPX'].includes(currentUser.role);
+  document.getElementById('tableTitle').textContent =
+    `${MOIS[selectedMois]} ${selectedAnnee}`;
+  document.getElementById('tableSubtitle').textContent =
+    `${tableData.length} collaborateur(s)${currentUser.entite ? ' — ' + currentUser.entite : ''}`;
+  document.getElementById('btnAdd').style.display = canEdit ? '' : 'none';
+  document.getElementById('printHeader').innerHTML =
+    `<h2 style="color:#0A1628;font-size:14px">ONCF — DRIC · Élément de Solde</h2>
+     <p style="font-size:11px;color:#607D8B">
+       ${currentUser.entite || 'CAMI'} | ${MOIS[selectedMois]} ${selectedAnnee} | ${tableData.length} collaborateur(s)
+     </p>`;
+}
+
+function renderTable() {
+  const tbody   = document.getElementById('tableBody');
+  const table   = document.getElementById('dataTable');
+  const empty   = document.getElementById('emptyState');
+  const canEdit = ['ADMIN','CGPX'].includes(currentUser.role);
+  const showEnt = ['ADMIN','CET','CSPR'].includes(currentUser.role);
+
+  document.getElementById('colEntite').style.display  = showEnt ? '' : 'none';
+  document.getElementById('colActions').style.display = canEdit ? '' : 'none';
+
+  if (tableData.length === 0) {
+    table.style.display = 'none';
+    empty.style.display = 'block';
+    document.getElementById('emptyHint').textContent =
+      canEdit ? 'Cliquez sur "+ Ajouter" pour saisir les données.' : '';
+    return;
+  }
+  empty.style.display = 'none';
+  table.style.display = '';
+  tbody.innerHTML = '';
+
+  tableData.forEach(d => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${d.matricule || '-'}</td>
+      <td>
+        <div>${d.nom} ${d.prenom}</div>
+        <div class="td-sub">${d.matricule || ''}</div>
+      </td>
+      <td>${d.fonction || '-'}</td>
+      <td class="td-gold" style="${showEnt ? '' : 'display:none'}">${d.entite || '-'}</td>
+      <td class="num-cell">${d.nbJoursAstreinte ?? '<span class="null-cell">-</span>'}</td>
+      <td class="num-cell">${d.allocationNuit    ?? '<span class="null-cell">-</span>'}</td>
+      <td class="num-cell">${d.repasNormal       ?? '<span class="null-cell">-</span>'}</td>
+      <td class="num-cell">${d.decNormal         ?? '<span class="null-cell">-</span>'}</td>
+      <td class="num-cell">${d.indemniteCup      ?? '<span class="null-cell">-</span>'}</td>
+      <td class="num-cell">${d.nbJoursConge      ?? '<span class="null-cell">-</span>'}</td>
+      <td>${d.periodeConge || '-'}</td>
+      <td class="num-cell">${d.nbJoursRC         ?? '<span class="null-cell">-</span>'}</td>
+      <td>${d.periodeRC || '-'}</td>
+      <td class="num-cell">${d.nbHeuresSupp      ?? '<span class="null-cell">-</span>'}</td>
+      <td style="${canEdit ? '' : 'display:none'}">
+        <div class="action-btns">
+          <button class="btn btn-outline btn-sm" onclick="openEdit(${d.id})">✏️</button>
+          ${currentUser.role === 'ADMIN'
+            ? `<button class="btn btn-danger btn-sm" onclick="handleDelete(${d.id})">🗑</button>`
+            : ''}
+        </div>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function backToPeriode() {
+  document.getElementById('stepPeriode').style.display = 'block';
+  document.getElementById('stepTable').style.display   = 'none';
+  tableData = [];
+}
+
+// ════════════════════════════════════════════════════
+//  OPEN ADD / EDIT
+// ════════════════════════════════════════════════════
+function openAdd() {
+  editingId = null;
+  selectedCollab = null;
+  resetForm();
+  document.getElementById('modalTitle').textContent  = '➕ Nouveau collaborateur';
+  document.getElementById('collabSelector').style.display  = 'block';
+  document.getElementById('collabReadonly').style.display  = 'none';
+  document.getElementById('btnSave').textContent = '✅ Enregistrer';
+  openModal('formModal');
+}
+
+function openEdit(id) {
+  const d = tableData.find(x => x.id === id);
+  if (!d) return;
+  editingId = id;
+  selectedCollab = null;
+  resetForm();
+  document.getElementById('modalTitle').textContent  = '✏️ Modifier';
+  document.getElementById('collabSelector').style.display  = 'none';
+  document.getElementById('collabReadonly').style.display  = 'block';
+  document.getElementById('roName').textContent = `${d.nom} ${d.prenom}`;
+  document.getElementById('roSub').textContent  = `${d.matricule || ''}${d.fonction ? ' — ' + d.fonction : ''}`;
+  document.getElementById('btnSave').textContent = '✅ Mettre à jour';
+
+  setField('fNbJoursAstreinte', d.nbJoursAstreinte);
+  setField('fTypeAstreinte',    d.typeAstreinte || 'A domicile');
+  setField('fPeriodeAstreinte', d.periodeAstreinte);
+  setField('fAllocationNuit',   d.allocationNuit);
+  setField('fRepasNormal',      d.repasNormal);
+  setField('fDecNormal',        d.decNormal);
+  setField('fRepasReduit',      d.repasReduit);
+  setField('fDecReduit',        d.decReduit);
+  setField('fAllocationParcours', d.allocationParcours);
+  setField('fIndemniteCup',     d.indemniteCup);
+  setField('fNbJoursConge',     d.nbJoursConge);
+  setField('fPeriodeConge',     d.periodeConge);
+  setField('fNbJoursRC',        d.nbJoursRC);
+  setField('fPeriodeRC',        d.periodeRC);
+  setField('fMotifRC',          d.motifRC);
+  setField('fNbHeuresSupp',     d.nbHeuresSupp);
+  setField('fJustificationHS',  d.justificationHS);
+
+  // Sync type-astreinte buttons
+  document.querySelectorAll('.type-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.val === (d.typeAstreinte || 'A domicile'));
+  });
+  openModal('formModal');
+}
+
+function setField(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.value = val != null ? val : '';
+}
+
+function resetForm() {
+  ['fNbJoursAstreinte','fPeriodeAstreinte','fAllocationNuit','fRepasNormal',
+   'fDecNormal','fRepasReduit','fDecReduit','fAllocationParcours','fIndemniteCup',
+   'fNbJoursConge','fPeriodeConge','fNbJoursRC','fPeriodeRC','fMotifRC',
+   'fNbHeuresSupp','fJustificationHS'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.getElementById('fTypeAstreinte').value = 'A domicile';
+  document.querySelectorAll('.type-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.val === 'A domicile');
+  });
+  // Reset collab picker display
+  document.getElementById('collabPickerContent').innerHTML =
+    '<span class="placeholder">Appuyer pour choisir un collaborateur…</span>';
+  document.getElementById('collabPickerBtn').classList.remove('filled');
+}
+
+// ════════════════════════════════════════════════════
+//  SAVE / DELETE
+// ════════════════════════════════════════════════════
+async function handleSave() {
+  if (!editingId && !selectedCollab) {
+    showToast('Veuillez choisir un collaborateur');
+    return;
+  }
+  const nom = editingId
+    ? tableData.find(x => x.id === editingId)?.nom || ''
+    : selectedCollab?.fullName || '';
+  if (!nom) {
+    showToast('Le nom est obligatoire');
+    return;
+  }
+
+  const intVal = id => {
+    const v = document.getElementById(id).value;
+    return v !== '' ? parseInt(v) : null;
+  };
+  const strVal = id => document.getElementById(id).value.trim() || null;
+
+  const payload = {
+    mois:    selectedMois,
+    annee:   selectedAnnee,
+    nom:     editingId ? tableData.find(x => x.id === editingId)?.nom     : selectedCollab.fullName,
+    prenom:  editingId ? tableData.find(x => x.id === editingId)?.prenom  : selectedCollab.prenom || '',
+    matricule: editingId ? tableData.find(x => x.id === editingId)?.matricule : selectedCollab.matricule || '',
+    fonction: editingId ? tableData.find(x => x.id === editingId)?.fonction  : selectedCollab.fonctionAssuree || '',
+    entite:  editingId ? tableData.find(x => x.id === editingId)?.entite    : selectedCollab.entite || currentUser.entite || '',
+    typeAstreinte:    document.getElementById('fTypeAstreinte').value,
+    nbJoursAstreinte: intVal('fNbJoursAstreinte'),
+    periodeAstreinte: strVal('fPeriodeAstreinte'),
+    allocationNuit:   intVal('fAllocationNuit'),
+    repasNormal:      intVal('fRepasNormal'),
+    decNormal:        intVal('fDecNormal'),
+    repasReduit:      intVal('fRepasReduit'),
+    decReduit:        intVal('fDecReduit'),
+    allocationParcours: intVal('fAllocationParcours'),
+    indemniteCup:     intVal('fIndemniteCup'),
+    nbJoursConge:     intVal('fNbJoursConge'),
+    periodeConge:     strVal('fPeriodeConge'),
+    nbJoursRC:        intVal('fNbJoursRC'),
+    periodeRC:        strVal('fPeriodeRC'),
+    motifRC:          strVal('fMotifRC'),
+    nbHeuresSupp:     intVal('fNbHeuresSupp'),
+    justificationHS:  strVal('fJustificationHS'),
+  };
+
+  const btn = document.getElementById('btnSave');
+  btn.disabled = true;
+  try {
+    const url    = editingId ? `${API}/${editingId}` : API;
+    const method = editingId ? 'PUT' : 'POST';
+    const res = await fetch(url, { method, headers: authHeader(), body: JSON.stringify(payload) });
+    if (res.status === 400) throw new Error('Cette ligne existe déjà pour ce collaborateur ce mois-ci.');
+    if (!res.ok) throw new Error('Impossible de sauvegarder.');
+    closeModal('formModal');
+    await loadData();
+    showToast(editingId ? 'Ligne mise à jour' : 'Ligne ajoutée');
+  } catch(e) {
+    showToast(e.message);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function handleDelete(id) {
+  if (!confirm('Supprimer cette ligne ?')) return;
+  try {
+    const res = await fetch(`${API}/${id}`, { method: 'DELETE', headers: authHeader() });
+    if (!res.ok) throw new Error();
+    await loadData();
+    showToast('Ligne supprimée');
+  } catch {
+    showToast('Impossible de supprimer');
+  }
+}
+
+// ════════════════════════════════════════════════════
+//  COLLABORATEUR PICKER
+// ════════════════════════════════════════════════════
+function openCollabPicker() {
+  document.getElementById('collabSearch').value = '';
+  renderCollabList(collaborateurs);
+  openModal('collabModal');
+}
+
+function filterCollabs() {
+  const q = document.getElementById('collabSearch').value.toLowerCase();
+  const filtered = q
+    ? collaborateurs.filter(c =>
+        (c.fullName  || '').toLowerCase().includes(q) ||
+        (c.prenom    || '').toLowerCase().includes(q) ||
+        (c.matricule || '').toLowerCase().includes(q))
+    : collaborateurs;
+  renderCollabList(filtered);
+}
+
+function renderCollabList(list) {
+  const container = document.getElementById('collabList');
+  if (list.length === 0) {
+    container.innerHTML = '<p style="color:var(--sub);text-align:center;padding:20px">Aucun résultat</p>';
+    return;
+  }
+  container.innerHTML = '';
+  list.forEach(c => {
+    const el = document.createElement('div');
+    el.className = 'collab-item';
+    el.innerHTML = `
+      <div>
+        <div class="name">${c.fullName || ''} ${c.prenom || ''}</div>
+        <div class="msub">${c.matricule || ''}${c.fonctionAssuree ? ' — ' + c.fonctionAssuree : ''}</div>
+      </div>
+      <span style="color:var(--gold);font-size:20px">›</span>`;
+    el.onclick = () => selectCollab(c);
+    container.appendChild(el);
+  });
+}
+
+function selectCollab(c) {
+  selectedCollab = c;
+  const btn = document.getElementById('collabPickerBtn');
+  btn.classList.add('filled');
+  document.getElementById('collabPickerContent').innerHTML = `
+    <div>
+      <div class="name">${c.fullName || ''} ${c.prenom || ''}</div>
+      <div class="msub">${c.matricule || ''}${c.fonctionAssuree ? ' — ' + c.fonctionAssuree : ''}</div>
+    </div>`;
+  closeModal('collabModal');
+}
+
+// ════════════════════════════════════════════════════
+//  TYPE ASTREINTE
+// ════════════════════════════════════════════════════
+function setTypeAstreinte(el) {
+  document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('fTypeAstreinte').value = el.dataset.val;
+}
+
+// ════════════════════════════════════════════════════
+//  PDF / PRINT
+// ════════════════════════════════════════════════════
+function printTable() {
+  window.print();
+}
+
+// ════════════════════════════════════════════════════
+//  MODAL HELPERS
+// ════════════════════════════════════════════════════
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+// ════════════════════════════════════════════════════
+//  MISC
+// ════════════════════════════════════════════════════
+function showSpinner(on) {
+  // Simple: disable consulter button while loading
+}
+
+let toastTimer;
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.style.display = 'block';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { el.style.display = 'none'; }, 3000);
+}
+
+// Close modals on overlay click
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay) overlay.classList.remove('open');
+  });
+});
+
+// Enter key on login
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.getElementById('loginSection').style.display !== 'none') {
+    login();
+  }
+});
+</script>
+</body>
+</html>

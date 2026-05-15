@@ -200,7 +200,7 @@ const FOLDERS = {
         title: 'Élément de Solde',
         subtitle: 'Éléments de paie et de solde',
         icon: '💰',
-        screen: null,
+        screen: 'ElementSolde',
       },
       {
         id: 'ACCIDENT_TRAVAIL',

@@ -37,6 +37,7 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/*.html", "/css/**", "/js/**", "/images/**").permitAll()
 
                 // Lecture liste utilisateurs — superviseurs autorisés
                 .requestMatchers(HttpMethod.GET, "/api/admin/users").hasAnyRole("ADMIN","CGPX","CSPR","CET")
@@ -123,7 +124,13 @@ public class SecurityConfig {
 
                 // Fiche Suivi — AGENT exclu
                 .requestMatchers("/api/fiche-suivi/**").hasAnyRole("ADMIN","CGPX","CSPR","CET")
-
+                
+                
+                .requestMatchers(HttpMethod.GET,    "/api/solde/**").authenticated()
+                .requestMatchers(HttpMethod.POST,   "/api/solde/**").hasAnyRole("ADMIN","CGPX")
+                .requestMatchers(HttpMethod.PUT,    "/api/solde/**").hasAnyRole("ADMIN","CGPX")
+                .requestMatchers(HttpMethod.DELETE, "/api/solde/**").hasRole("ADMIN")
+                
                 // Divers — tous authentifiés
                 .requestMatchers("/api/tasks/**").authenticated()
                 .requestMatchers("/api/collaborateurs/**").authenticated()

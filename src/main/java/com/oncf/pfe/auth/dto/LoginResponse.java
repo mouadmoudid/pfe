@@ -15,4 +15,6 @@ public class LoginResponse {
     private String fullName;
     private String role;
     private boolean firstLogin;
+    private String entite;
+    private String matricule;
 }
