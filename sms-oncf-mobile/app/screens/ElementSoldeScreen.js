@@ -23,6 +23,12 @@ const TYPE_ASTREINTE = ['A domicile', 'A la chambre'];
 
 const canEdit = (role) => role === 'ADMIN' || role === 'CGPX';
 
+// Entités CGPX rattachées à chaque CSPR
+const CSPR_CHILDREN = {
+  'CT Voie': ['CDT 101V', 'CDT 102V', 'CDT OA OH OT'],
+  'CT CSS':  ['CDT 101LC', 'CDT 101SST'],
+};
+
 const EMPTY_FORM = {
   matricule: '', nom: '', prenom: '', fonction: '', entite: '',
   mois: new Date().getMonth() + 1,
@@ -414,7 +420,7 @@ td:first-child { font-weight:bold; color:#0A1628; width:45%; }
   const generatePDF = async () => {
     setGenerating(true);
     try {
-      const rows = data.map((d, i) => `
+      const rows = visibleData.map((d, i) => `
         <tr style="background:${i%2===0?'#fff':'#f8f9fa'}">
           <td>${d.matricule}</td><td>${d.nom}</td><td>${d.prenom}</td>
           <td>${d.fonction || ''}</td><td>${d.entite || ''}</td>
@@ -443,7 +449,7 @@ td { font-size:7px; padding:3px; border:1px solid #ddd; }
 <h2>ONCF — DRIC — Élément de Solde</h2>
 <p>Établissement : ${userEntite || 'CAMI'} &nbsp;|&nbsp;
    Mois : ${MOIS_LABELS[selectedMois]} ${selectedAnnee} &nbsp;|&nbsp;
-   ${data.length} collaborateur(s)</p>
+   ${visibleData.length} collaborateur(s)</p>
 <table><thead><tr>
   <th>MLE</th><th>Nom</th><th>Prénom</th><th>Fonction</th><th>Entité</th>
   <th>Ast.</th><th>Alloc. Nuit</th><th>Repas N.</th><th>Déc N.</th>
@@ -461,6 +467,15 @@ td { font-size:7px; padding:3px; border:1px solid #ddd; }
       setGenerating(false);
     }
   };
+
+  // Filtre selon hiérarchie : CET/ADMIN voient tout, CSPR voit ses CGPXs, CGPX voit le sien
+  const allowedEntites =
+    (userRole === 'ADMIN' || userRole === 'CET') ? null
+    : userRole === 'CSPR' ? [userEntite, ...(CSPR_CHILDREN[userEntite] || [])]
+    : [userEntite];
+  const visibleData = allowedEntites === null
+    ? data
+    : data.filter(d => allowedEntites.includes(d.entite));
 
   // ================================================================
   // ÉTAPE 0 — Sélection période
@@ -546,7 +561,7 @@ td { font-size:7px; padding:3px; border:1px solid #ddd; }
           <View>
             <Text style={styles.headerTitle}>{MOIS_LABELS[selectedMois]} {selectedAnnee}</Text>
             <Text style={styles.headerSub}>
-              {data.length} collaborateur(s){userEntite ? ` — ${userEntite}` : ''}
+              {visibleData.length} collaborateur(s){userEntite ? ` — ${userEntite}` : ''}
             </Text>
           </View>
           <View style={{ flexDirection: 'row', gap: 8 }}>
@@ -570,7 +585,7 @@ td { font-size:7px; padding:3px; border:1px solid #ddd; }
         ? <ActivityIndicator color="#C9A84C" style={{ marginTop: 40 }} />
         : (
         <ScrollView style={styles.list}>
-          {data.length === 0 ? (
+          {visibleData.length === 0 ? (
             <View style={styles.emptyBox}>
               <Text style={styles.emptyIcon}>💰</Text>
               <Text style={styles.emptyText}>Aucune donnée pour cette période</Text>
@@ -579,7 +594,7 @@ td { font-size:7px; padding:3px; border:1px solid #ddd; }
               )}
             </View>
           ) : (
-            data.map(item => (
+            visibleData.map(item => (
               <View key={item.id} style={styles.card}>
                 <View style={styles.cardHeader}>
                   <View>
@@ -589,16 +604,14 @@ td { font-size:7px; padding:3px; border:1px solid #ddd; }
                       <Text style={styles.cardEntite}>{item.entite}</Text>
                     )}
                   </View>
-                  {canEdit(userRole) && (
+                  {(userRole === 'ADMIN' || (userRole === 'CGPX' && item.entite === userEntite)) && (
                     <View style={{ gap: 6 }}>
                       <TouchableOpacity style={styles.editBtn} onPress={() => openEdit(item)}>
                         <Text style={styles.editBtnText}>✏️</Text>
                       </TouchableOpacity>
-                      {userRole === 'ADMIN' && (
-                        <TouchableOpacity style={styles.deleteBtn} onPress={() => handleDelete(item)}>
-                          <Text style={styles.deleteBtnText}>🗑</Text>
-                        </TouchableOpacity>
-                      )}
+                      <TouchableOpacity style={styles.deleteBtn} onPress={() => handleDelete(item)}>
+                        <Text style={styles.deleteBtnText}>🗑</Text>
+                      </TouchableOpacity>
                     </View>
                   )}
                 </View>
