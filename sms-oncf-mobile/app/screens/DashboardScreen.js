@@ -14,6 +14,7 @@ const DOSSIERS = [
   { id: 'CULTURE_POSITIF', title: '5 - Culture Positif', icon: '🌟', color: '#27AE60' },
   { id: 'REFERENCIELS', title: '6 - Référenciels', icon: '📚', color: '#C9A84C' },
   { id: 'CAPITAL_HUMAIN', title: '7 - C.H - Capital Humain', icon: '👨‍👩‍👧‍👦', color: '#16A085' },
+  { id: 'DOSSIER_CSPR', title: 'Dossier CSPr / CT N2', icon: '🗂️', color: '#9B59B6', allowedRoles: ['CSPR', 'CET', 'ADMIN'] },
 ];
 
 const isChef = (role) => role === 'CGPX' || role === 'CSPR' || role === 'CET';
@@ -86,7 +87,11 @@ export default function DashboardScreen({ navigation }) {
 
         <Text style={styles.sectionTitle}>Dossiers SMS</Text>
           <View style={styles.grid}>
-            {DOSSIERS.filter(d => !(d.agentHidden && user?.role === 'AGENT')).map((d) => (
+            {DOSSIERS.filter(d => {
+              if (d.agentHidden && user?.role === 'AGENT') return false;
+              if (d.allowedRoles && !d.allowedRoles.includes(user?.role)) return false;
+              return true;
+            }).map((d) => (
               <TouchableOpacity
                 key={d.id}
                 style={[styles.card, { borderLeftColor: d.color }]}

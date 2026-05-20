@@ -130,6 +130,8 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST,   "/api/solde/**").hasAnyRole("ADMIN","CGPX")
                 .requestMatchers(HttpMethod.PUT,    "/api/solde/**").hasAnyRole("ADMIN","CGPX")
                 .requestMatchers(HttpMethod.DELETE, "/api/solde/**").hasRole("ADMIN")
+
+                .requestMatchers("/api/pdvs/**").hasAnyRole("ADMIN","CSPR","CET","CGPX")
                 
                 // Divers — tous authentifiés
                 .requestMatchers("/api/tasks/**").authenticated()

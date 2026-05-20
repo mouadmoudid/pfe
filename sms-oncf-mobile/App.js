@@ -31,6 +31,7 @@ import RemonteeInfoScreen from './app/screens/RemonteeInfoScreen';
 import CartographieRisquesScreen from './app/screens/CartographieRisquesScreen';
 import RegistreDangersScreen from './app/screens/RegistreDangersScreen';
 import ElementSoldeScreen from './app/screens/ElementSoldeScreen';
+import PdvsCollabScreen from './app/screens/PdvsCollabScreen';
 
 
 
@@ -69,6 +70,7 @@ export default function App() {
           <Stack.Screen name="CartographieRisques" component={CartographieRisquesScreen} />
           <Stack.Screen name="RegistreDangers" component={RegistreDangersScreen} />
           <Stack.Screen name="ElementSolde" component={ElementSoldeScreen} />
+          <Stack.Screen name="PdvsCollab" component={PdvsCollabScreen} />
 
         </Stack.Navigator>
       </NavigationContainer>
