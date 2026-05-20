@@ -12,7 +12,7 @@ import * as Sharing from 'expo-sharing';
 import { API_URL } from '../services/authService';
 
 const API       = API_URL.replace('/auth', '/pdvs/collab');
-const API_USERS = API_URL.replace('/auth', '/users');
+const API_ADMIN = API_URL.replace('/auth', '/admin');
 
 // ================================================================
 // CONSTANTES
@@ -148,7 +148,7 @@ export default function PdvsCollabScreen({ navigation }) {
       const token = await getToken();
       const [annRes, collabRes] = await Promise.allSettled([
         axios.get(`${API}/annees`, { headers: { Authorization: `Bearer ${token}` } }),
-        axios.get(`${API_USERS}/by-entite`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${API_ADMIN}/collaborateurs`, { headers: { Authorization: `Bearer ${token}` } }),
       ]);
       if (annRes.status === 'fulfilled' && annRes.value.data.length > 0)
         setAnnees(annRes.value.data);
