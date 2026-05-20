@@ -379,19 +379,27 @@ td:first-child { font-weight:bold; color:#0A1628; width:45%; }
   };
 
   const handleDelete = (item) => {
-    Alert.alert('Confirmation',
-      `Supprimer la ligne de ${item.nom} ${item.prenom} ?`,
-      [
-        { text: 'Annuler', style: 'cancel' },
-        { text: 'Supprimer', style: 'destructive', onPress: async () => {
-          try {
-            const token = await getToken();
-            await axios.delete(`${API}/${item.id}`,
-              { headers: { Authorization: `Bearer ${token}` } });
-            loadData();
-          } catch { Alert.alert('Erreur', 'Impossible de supprimer'); }
-        }},
-      ]);
+    const doDelete = async () => {
+      try {
+        const token = await getToken();
+        await axios.delete(`${API}/${item.id}`,
+          { headers: { Authorization: `Bearer ${token}` } });
+        loadData();
+      } catch { Alert.alert('Erreur', 'Impossible de supprimer'); }
+    };
+
+    if (Platform.OS === 'web') {
+      if (window.confirm(`Supprimer la ligne de ${item.nom} ${item.prenom} ?`)) {
+        doDelete();
+      }
+    } else {
+      Alert.alert('Confirmation',
+        `Supprimer la ligne de ${item.nom} ${item.prenom} ?`,
+        [
+          { text: 'Annuler', style: 'cancel' },
+          { text: 'Supprimer', style: 'destructive', onPress: doDelete },
+        ]);
+    }
   };
 
   const printHTML = async (html, filename) => {
