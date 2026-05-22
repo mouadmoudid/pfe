@@ -293,9 +293,9 @@ const FOLDERS = {
       {
         id: 'IFH_SURVEILLANCE',
         title: 'IFH Surveillance',
-        subtitle: '22 indicateurs de fiabilité humaine · Fragilités',
+        subtitle: '22 indicateurs FOH · Prof./Socio./Psycho./Physio.',
         icon: '🔬',
-        screen: null, // à développer
+        screen: 'IfohSurveillance', // ✅ développé
       },
       {
         id: 'REGISTRE_DANGERS_N2',

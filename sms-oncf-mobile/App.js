@@ -37,6 +37,7 @@ import PdvsManagementScreen from './app/screens/PdvsManagementScreen';
 import PlanningKN2Screen from './app/screens/PlanningKN2Screen';
 import ControleMgmtScreen from './app/screens/ControleMgmtScreen';
 import JournalCSSPrScreen from './app/screens/JournalCSSPrScreen';
+import IfohSurveillanceScreen from './app/screens/IfohSurveillanceScreen';
 
 const Stack = createStackNavigator();
 
@@ -79,6 +80,7 @@ export default function App() {
           <Stack.Screen name="PlanningKN2" component={PlanningKN2Screen} />
           <Stack.Screen name="ControleMgmt" component={ControleMgmtScreen} />
           <Stack.Screen name="JournalCSSPr" component={JournalCSSPrScreen} />
+          <Stack.Screen name="IfohSurveillance" component={IfohSurveillanceScreen} />
 
         </Stack.Navigator>
       </NavigationContainer>
