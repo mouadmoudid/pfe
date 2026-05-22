@@ -253,12 +253,12 @@ const FOLDERS = {
         title: 'PDVS N2 — Management',
         subtitle: '10 thèmes de management · Évaluation CDTs · Pr03/Pr08 RMS',
         icon: '🏛️',
-        screen: 'PdvsManagement',
+        screen: 'PdvsManagement', 
       },
       {
         id: 'PLANNING_KN2',
         title: 'Planning KN2',
-        subtitle: 'Planning mensuel M1→M12 · CDT / KN1 / MGMT / TECH',
+        subtitle: 'Planning annuel M1→M12 · CDT / KN1 / MGMT / TECH',
         icon: '📅',
         screen: 'PlanningKN2', 
       },
@@ -272,9 +272,9 @@ const FOLDERS = {
       {
         id: 'CONTROLE_MANAGEMENT',
         title: 'Contrôle Management',
-        subtitle: 'Grille annexe 2 IMS · IFH CDTs · Par district',
+        subtitle: 'Annexe 2 IMS · 10 thèmes · C1 et C2 par CDT',
         icon: '📋',
-        screen: null, // à développer
+        screen: 'ControleMgmt', 
       },
       {
         id: 'SYNTHESE_KN2',

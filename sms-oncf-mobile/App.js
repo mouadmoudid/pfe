@@ -35,6 +35,7 @@ import PdvsCollabScreen from './app/screens/PdvsCollabScreen';
 import PdvsSiteScreen from './app/screens/PdvsSiteScreen';
 import PdvsManagementScreen from './app/screens/PdvsManagementScreen';
 import PlanningKN2Screen from './app/screens/PlanningKN2Screen';
+import ControleMgmtScreen from './app/screens/ControleMgmtScreen';
 
 const Stack = createStackNavigator();
 
@@ -75,7 +76,7 @@ export default function App() {
           <Stack.Screen name="PdvsSite" component={PdvsSiteScreen} />
           <Stack.Screen name="PdvsManagement" component={PdvsManagementScreen} />
           <Stack.Screen name="PlanningKN2" component={PlanningKN2Screen} />
-
+          <Stack.Screen name="ControleMgmt" component={ControleMgmtScreen} />
 
         </Stack.Navigator>
       </NavigationContainer>
