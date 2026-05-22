@@ -246,21 +246,21 @@ const FOLDERS = {
         title: 'PDVS N2 — Site',
         subtitle: 'Sites à risques · Lien risque majeur · Cotation annuelle',
         icon: '📍',
-        screen: null, // à développer
+        screen: 'PdvsSite', 
       },
       {
         id: 'PDVS_MANAGEMENT',
         title: 'PDVS N2 — Management',
         subtitle: '10 thèmes de management · Évaluation CDTs · Pr03/Pr08 RMS',
         icon: '🏛️',
-        screen: null, // à développer
+        screen: 'PdvsManagement',
       },
       {
         id: 'PLANNING_KN2',
         title: 'Planning KN2',
         subtitle: 'Planning mensuel M1→M12 · CDT / KN1 / MGMT / TECH',
         icon: '📅',
-        screen: null, // à développer
+        screen: 'PlanningKN2', 
       },
       {
         id: 'RAPPORT_KN2',

@@ -32,8 +32,9 @@ import CartographieRisquesScreen from './app/screens/CartographieRisquesScreen';
 import RegistreDangersScreen from './app/screens/RegistreDangersScreen';
 import ElementSoldeScreen from './app/screens/ElementSoldeScreen';
 import PdvsCollabScreen from './app/screens/PdvsCollabScreen';
-
-
+import PdvsSiteScreen from './app/screens/PdvsSiteScreen';
+import PdvsManagementScreen from './app/screens/PdvsManagementScreen';
+import PlanningKN2Screen from './app/screens/PlanningKN2Screen';
 
 const Stack = createStackNavigator();
 
@@ -71,6 +72,10 @@ export default function App() {
           <Stack.Screen name="RegistreDangers" component={RegistreDangersScreen} />
           <Stack.Screen name="ElementSolde" component={ElementSoldeScreen} />
           <Stack.Screen name="PdvsCollab" component={PdvsCollabScreen} />
+          <Stack.Screen name="PdvsSite" component={PdvsSiteScreen} />
+          <Stack.Screen name="PdvsManagement" component={PdvsManagementScreen} />
+          <Stack.Screen name="PlanningKN2" component={PlanningKN2Screen} />
+
 
         </Stack.Navigator>
       </NavigationContainer>

@@ -559,7 +559,7 @@ td { font-size:7px;padding:2px;border:1px solid #ddd;vertical-align:top; }
                           onPress={() => openEdit(item)}>
                           <Text style={s.editBtnText}>✏️</Text>
                         </TouchableOpacity>
-                        {userRole === 'ADMIN' && (
+                        {(userRole === 'ADMIN' || userRole === 'CSPR') && (
                           <TouchableOpacity style={s.deleteBtn}
                             onPress={() => handleDelete(item)}>
                             <Text style={s.deleteBtnText}>🗑</Text>
