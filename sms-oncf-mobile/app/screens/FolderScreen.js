@@ -246,21 +246,21 @@ const FOLDERS = {
         title: 'PDVS N2 — Site',
         subtitle: 'Sites à risques · Lien risque majeur · Cotation annuelle',
         icon: '📍',
-        screen: 'PdvsSite', 
+        screen: 'PdvsSite', // ✅ développé
       },
       {
         id: 'PDVS_MANAGEMENT',
         title: 'PDVS N2 — Management',
         subtitle: '10 thèmes de management · Évaluation CDTs · Pr03/Pr08 RMS',
         icon: '🏛️',
-        screen: 'PdvsManagement', 
+        screen: 'PdvsManagement', // ✅ développé
       },
       {
         id: 'PLANNING_KN2',
         title: 'Planning KN2',
         subtitle: 'Planning annuel M1→M12 · CDT / KN1 / MGMT / TECH',
         icon: '📅',
-        screen: 'PlanningKN2', 
+        screen: 'PlanningKN2', // ✅ développé
       },
       {
         id: 'RAPPORT_KN2',
@@ -274,7 +274,7 @@ const FOLDERS = {
         title: 'Contrôle Management',
         subtitle: 'Annexe 2 IMS · 10 thèmes · C1 et C2 par CDT',
         icon: '📋',
-        screen: 'ControleMgmt', 
+        screen: 'ControleMgmt', // ✅ développé
       },
       {
         id: 'SYNTHESE_KN2',
@@ -286,9 +286,9 @@ const FOLDERS = {
       {
         id: 'JOURNAL_CSSPR',
         title: 'Journal CSSPr',
-        subtitle: 'Décisions CSSPr mensuelle · Statut · Responsable',
+        subtitle: 'Décisions CSSPr mensuelle · 4 statuts · Responsable',
         icon: '📒',
-        screen: null, // à développer
+        screen: 'JournalCSSPr', // ✅ développé
       },
       {
         id: 'IFH_SURVEILLANCE',

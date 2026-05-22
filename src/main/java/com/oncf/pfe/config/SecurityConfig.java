@@ -135,6 +135,9 @@ public class SecurityConfig {
 
                 .requestMatchers("/api/pdvs/site/**").hasAnyRole("ADMIN","CSPR","CET","CGPX")
 
+                .requestMatchers("/api/pdvs/journal-csspr/**")
+                  .hasAnyRole("ADMIN","CSPR","CET","CGPX")
+
                 .requestMatchers("/api/pdvs/controle-mgmt/**")
                  .hasAnyRole("ADMIN","CSPR","CET","CGPX")
                 
