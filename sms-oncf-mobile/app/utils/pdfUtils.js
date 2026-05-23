@@ -1,16 +1,20 @@
-import { Platform } from 'react-native';
+import { Platform, Alert } from 'react-native';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 
-/**
- * Génère un PDF à partir d'un HTML et le partage.
- * - Mobile : crée un fichier PDF réel et ouvre le menu de partage natif.
- * - Web    : ouvre la boîte de dialogue impression du navigateur
- *            (l'utilisateur peut enregistrer en PDF via "Enregistrer au format PDF").
- */
 export async function generateAndSharePDF(html, { dialogTitle = 'Document PDF', mimeType = 'application/pdf' } = {}) {
   if (Platform.OS === 'web') {
-    await Print.printAsync({ html });
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const win = window.open(url, '_blank');
+    if (win) {
+      win.addEventListener('load', () => {
+        setTimeout(() => { win.print(); URL.revokeObjectURL(url); }, 300);
+      });
+    } else {
+      URL.revokeObjectURL(url);
+      Alert.alert('Info', 'Autorisez les popups pour exporter le PDF.');
+    }
     return;
   }
 

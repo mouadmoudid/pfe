@@ -218,19 +218,22 @@ export default function PdvsManagementScreen({ navigation }) {
   };
 
   const handleDelete = (item) => {
-    Alert.alert('Supprimer',
-      `Supprimer le thème "${item.theme}" ?`,
-      [
+    const doDelete = async () => {
+      try {
+        const token = await getToken();
+        await axios.delete(`${API}/${item.id}`,
+          { headers: { Authorization: `Bearer ${token}` } });
+        loadData();
+      } catch { Alert.alert('Erreur', 'Impossible de supprimer'); }
+    };
+    if (Platform.OS === 'web') {
+      if (window.confirm(`Supprimer le thème "${item.theme}" ?`)) doDelete();
+    } else {
+      Alert.alert('Supprimer', `Supprimer le thème "${item.theme}" ?`, [
         { text: 'Annuler', style: 'cancel' },
-        { text: 'Supprimer', style: 'destructive', onPress: async () => {
-          try {
-            const token = await getToken();
-            await axios.delete(`${API}/${item.id}`,
-              { headers: { Authorization: `Bearer ${token}` } });
-            loadData();
-          } catch { Alert.alert('Erreur', 'Impossible de supprimer'); }
-        }},
+        { text: 'Supprimer', style: 'destructive', onPress: doDelete },
       ]);
+    }
   };
 
   // Cotation globale d'une ligne (pire des valeurs)
@@ -242,6 +245,29 @@ export default function PdvsManagementScreen({ navigation }) {
     if (vals.includes('A')) return 'A';
     if (vals.includes('S')) return 'S';
     return '';
+  };
+
+  const printHTML = async (html, filename) => {
+    if (Platform.OS === 'web') {
+      const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const win = window.open(url, '_blank');
+      if (win) {
+        win.addEventListener('load', () => {
+          setTimeout(() => { win.print(); URL.revokeObjectURL(url); }, 300);
+        });
+      } else {
+        URL.revokeObjectURL(url);
+        Alert.alert('Info', 'Autorisez les popups pour exporter le PDF.');
+      }
+    } else {
+      const { uri } = await Print.printToFileAsync({ html, base64: false });
+      await Sharing.shareAsync(uri, {
+        mimeType: 'application/pdf',
+        dialogTitle: filename,
+        UTI: 'com.adobe.pdf',
+      });
+    }
   };
 
   const generatePDF = async () => {
@@ -295,14 +321,7 @@ td { font-size:7px;padding:2px;border:1px solid #ddd;vertical-align:top; }
 </tr></thead><tbody>${rows}</tbody></table>
 </body></html>`;
 
-      const { uri } = await Print.printToFileAsync({
-        html, base64: false, width: 842, height: 595
-      });
-      await Sharing.shareAsync(uri, {
-        mimeType: 'application/pdf',
-        dialogTitle: `PDVS N2 Management — ${selectedSemestre} ${selectedAnnee}`,
-        UTI: 'com.adobe.pdf',
-      });
+      await printHTML(html, `PDVS N2 Management — ${selectedSemestre} ${selectedAnnee}`);
     } catch {
       Alert.alert('Erreur', 'Impossible de générer le PDF');
     } finally { setGenerating(false); }
