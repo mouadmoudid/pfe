@@ -298,13 +298,6 @@ const FOLDERS = {
         screen: 'IfohSurveillance', // ✅ développé
       },
       {
-        id: 'REGISTRE_DANGERS_N2',
-        title: 'Registre Dangers N2',
-        subtitle: 'Taxonomie risques · Nœud-papillon · Installations + FH',
-        icon: '⚠️',
-        screen: null, // à développer
-      },
-      {
         id: 'PASF_N2',
         title: 'Contribution PASF N2',
         subtitle: 'Plan d\'actions sécurité · 8 processus · Actions FOH',

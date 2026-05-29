@@ -10,6 +10,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import { API_URL } from '../services/authService';
+import DatePickerInput from '../components/DatePickerInput';
 
 const API       = API_URL.replace('/auth', '/pdvs/journal-csspr');
 const API_USERS = API_URL.replace('/auth', '/admin');
@@ -615,19 +616,19 @@ td { font-size:7px;padding:3px;border:1px solid #ddd;vertical-align:top; }
                   <View style={{ flexDirection: 'row', gap: 10 }}>
                     <View style={{ flex: 1 }}>
                       <Text style={s.fieldLabel}>Date *</Text>
-                      <TextInput style={s.input}
+                      <DatePickerInput
                         value={form.dateDecision}
-                        onChangeText={v => setF('dateDecision', v)}
-                        placeholder="AAAA-MM-JJ"
-                        placeholderTextColor="#607D8B" />
+                        onChange={v => setF('dateDecision', v)}
+                        placeholder="Sélectionner une date"
+                        inputStyle={s.input} />
                     </View>
                     <View style={{ flex: 1 }}>
                       <Text style={s.fieldLabel}>Échéance</Text>
-                      <TextInput style={s.input}
+                      <DatePickerInput
                         value={form.echeance}
-                        onChangeText={v => setF('echeance', v)}
-                        placeholder="AAAA-MM-JJ"
-                        placeholderTextColor="#607D8B" />
+                        onChange={v => setF('echeance', v)}
+                        placeholder="Sélectionner une date"
+                        inputStyle={s.input} />
                     </View>
                   </View>
 

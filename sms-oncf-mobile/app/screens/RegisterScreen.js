@@ -7,6 +7,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import axios from 'axios';
 import { API_URL } from '../services/authService';
+import DatePickerInput from '../components/DatePickerInput';
 
 const ENTITES = [
   'CAMI', 'CT Voie', 'CT CSS', 'CDT 101V',
@@ -148,10 +149,12 @@ export default function RegisterScreen({ navigation }) {
             </View>
 
             <Text style={styles.label}>Date de naissance</Text>
-            <TextInput style={styles.input}
-              placeholder="JJ/MM/AAAA" placeholderTextColor="#607D8B"
-              value={dateNaissance} onChangeText={setDateNaissance}
-            />
+            <DatePickerInput
+              value={dateNaissance}
+              onChange={setDateNaissance}
+              minDate={null}
+              placeholder="Sélectionner une date"
+              inputStyle={styles.input} />
 
             <Text style={styles.label}>Matricule</Text>
             <TextInput style={styles.input}
@@ -198,10 +201,12 @@ export default function RegisterScreen({ navigation }) {
             />
 
             <Text style={styles.label}>Date de prise de fonction</Text>
-            <TextInput style={styles.input}
-              placeholder="JJ/MM/AAAA" placeholderTextColor="#607D8B"
-              value={dateFonction} onChangeText={setDateFonction}
-            />
+            <DatePickerInput
+              value={dateFonction}
+              onChange={setDateFonction}
+              minDate={null}
+              placeholder="Sélectionner une date"
+              inputStyle={styles.input} />
 
             <Text style={styles.label}>Entité</Text>
             <TouchableOpacity

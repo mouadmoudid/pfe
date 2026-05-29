@@ -9,6 +9,7 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { generateAndSharePDF } from '../utils/pdfUtils';
 import { API_URL } from '../services/authService';
+import DatePickerInput from '../components/DatePickerInput';
 
 const CHECKLIST_API = API_URL.replace('/auth', '/checklists');
 const COLLAB_API2 = API_URL.replace('/auth', '/admin/collaborateurs');
@@ -1056,9 +1057,11 @@ export default function CheckListScreen({ navigation }) {
             onChangeText={v => setInfos({ ...infos, siteUp: v })} />
 
           <Text style={styles.inputLabel}>Date de contrôle *</Text>
-          <TextInput style={styles.input} placeholder="YYYY-MM-DD"
-            placeholderTextColor="#607D8B" value={infos.dateControle}
-            onChangeText={v => setInfos({ ...infos, dateControle: v })} />
+          <DatePickerInput
+            value={infos.dateControle}
+            onChange={v => setInfos({ ...infos, dateControle: v })}
+            placeholder="Sélectionner une date"
+            inputStyle={styles.input} />
 
           <Text style={styles.inputLabel}>Référence</Text>
           <TextInput style={styles.input} value={infos.reference}

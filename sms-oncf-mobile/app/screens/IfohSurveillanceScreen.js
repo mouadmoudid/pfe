@@ -10,6 +10,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import { API_URL } from '../services/authService';
+import DatePickerInput from '../components/DatePickerInput';
 
 const API       = API_URL.replace('/auth', '/pdvs/ifoh-surveillance');
 const API_USERS = API_URL.replace('/auth', '/admin');
@@ -705,9 +706,11 @@ td{font-size:7px;padding:2px;border:1px solid #ddd;vertical-align:top}</style></
                     </View>
                     <View style={WEB?{flex:1}:{marginTop:8}}>
                       <Text style={s.fieldLabel}>Date de détection</Text>
-                      <TextInput style={s.input} value={form.dateDetection}
-                        onChangeText={v=>setF('dateDetection',v)}
-                        placeholder="AAAA-MM-JJ" placeholderTextColor="#607D8B"/>
+                      <DatePickerInput
+                        value={form.dateDetection}
+                        onChange={v=>setF('dateDetection',v)}
+                        placeholder="Sélectionner une date"
+                        inputStyle={s.input} />
                     </View>
                   </View>
 

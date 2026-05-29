@@ -22,13 +22,12 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       }
     },
-    
     "web": {
       "favicon": "./assets/favicon.png"
     },
-
     "plugins": [
-      "expo-sharing"
+      "expo-sharing",
+      "@react-native-community/datetimepicker"
     ]
   }
 }

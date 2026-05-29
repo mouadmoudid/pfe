@@ -8,6 +8,7 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { generateAndSharePDF } from '../utils/pdfUtils';
 import { API_URL } from '../services/authService';
+import DatePickerInput from '../components/DatePickerInput';
 
 const PLANNING_API = API_URL.replace('/auth', '/planning');
 
@@ -500,11 +501,11 @@ export default function RapportPeriodiqueScreen({ navigation }) {
             {nonConformites.map((nc, idx) => (
               <View key={idx} style={styles.ncRow}>
                 <Text style={styles.ncLabel}>Entrée {idx + 1}</Text>
-                <TextInput style={styles.input}
-                  placeholder="Date (ex: 10/09/2024)"
-                  placeholderTextColor="#607D8B"
+                <DatePickerInput
                   value={nc.date}
-                  onChangeText={v => updateNonConformite(idx, 'date', v)} />
+                  onChange={v => updateNonConformite(idx, 'date', v)}
+                  placeholder="Sélectionner une date"
+                  inputStyle={styles.input} />
                 <TextInput style={[styles.input, { marginTop: 6 }]}
                   placeholder="Non-conformité relevée..."
                   placeholderTextColor="#607D8B"
