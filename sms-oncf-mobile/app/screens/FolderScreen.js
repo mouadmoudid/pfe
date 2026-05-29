@@ -311,7 +311,7 @@ const FOLDERS = {
         title: 'Contribution PASF N2',
         subtitle: 'Plan d\'actions sécurité · 8 processus · Actions FOH',
         icon: '🎯',
-        screen: null, // à développer
+        screen: 'PasfN2', // à développer
       },
       {
         id: 'PDVS_ETE_RAMADAN',
