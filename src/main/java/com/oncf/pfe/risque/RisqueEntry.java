@@ -26,6 +26,21 @@ public class RisqueEntry {
     @Column(columnDefinition = "TEXT")
     private String propositions;
 
+    // Champs N2 (remplis depuis le sous-dossier Registre Dangers N2)
+    private String codeTaxo;
+
+    @Column(columnDefinition = "TEXT")
+    private String barrieresPrevention;
+
+    @Column(columnDefinition = "TEXT")
+    private String barrieresProtection;
+
+    @Column(columnDefinition = "TEXT")
+    private String planAction;
+
+    private String responsableNom;
+    private Long   responsableId;
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 

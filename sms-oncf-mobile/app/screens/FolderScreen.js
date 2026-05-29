@@ -300,6 +300,13 @@ const FOLDERS = {
       
       
       {
+        id: 'REGISTRE_DANGERS_N2',
+        title: 'Registre des Dangers N2',
+        subtitle: 'Risques N2 · Code Taxo · Barrières · Plan d\'action',
+        icon: '⚠️',
+        screen: 'RegistreDangersN2',
+      },
+      {
         id: 'PASF_N2',
         title: 'Contribution PASF N2',
         subtitle: 'Plan d\'actions sécurité · 8 processus · Actions FOH',

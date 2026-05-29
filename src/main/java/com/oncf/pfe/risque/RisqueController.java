@@ -117,6 +117,28 @@ public class RisqueController {
         }).orElse(ResponseEntity.notFound().build());
     }
 
+    // PATCH pour les champs N2 uniquement (depuis RegistreDangersN2Screen)
+    @PatchMapping("/{id}/n2")
+    @PreAuthorize("hasAnyRole('ADMIN','CGPX','CSPR','CET')")
+    public ResponseEntity<RisqueEntry> updateN2Fields(
+            @PathVariable Long id,
+            @RequestBody RisqueEntry body,
+            Authentication auth) {
+        String role   = getRole(auth);
+        List<String> vis = visibleEntites(auth);
+        return repo.findById(id).map(existing -> {
+            if (vis != null && !vis.contains(existing.getEntite()))
+                return ResponseEntity.status(403).<RisqueEntry>build();
+            existing.setCodeTaxo(body.getCodeTaxo());
+            existing.setBarrieresPrevention(body.getBarrieresPrevention());
+            existing.setBarrieresProtection(body.getBarrieresProtection());
+            existing.setPlanAction(body.getPlanAction());
+            existing.setResponsableNom(body.getResponsableNom());
+            existing.setResponsableId(body.getResponsableId());
+            return ResponseEntity.ok(repo.save(existing));
+        }).orElse(ResponseEntity.notFound().build());
+    }
+
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN','CGPX','CSPR','CET')")
     public ResponseEntity<Void> delete(@PathVariable Long id, Authentication auth) {
