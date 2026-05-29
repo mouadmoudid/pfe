@@ -61,6 +61,7 @@ export default function RegistreDangersScreen({ navigation }) {
   const [saving, setSaving]       = useState(false);
   const [generating, setGenerating] = useState(false);
   const [userRole, setUserRole]   = useState('');
+  const [userEntite, setUserEntite] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing]     = useState(null);
   const [form, setForm]           = useState(EMPTY_FORM(new Date().getFullYear()));
@@ -75,7 +76,9 @@ export default function RegistreDangersScreen({ navigation }) {
     setLoading(true);
     try {
       const userData = await AsyncStorage.getItem('user');
-      setUserRole(userData ? JSON.parse(userData).role : '');
+      const user = userData ? JSON.parse(userData) : {};
+      setUserRole(user.role || '');
+      setUserEntite(user.entite || '');
       const token = await getToken();
       const res = await axios.get(`${API}/annees`, { headers: { Authorization: `Bearer ${token}` } });
       setAnnees(res.data);
@@ -289,7 +292,9 @@ ${rows||'<tr><td colspan="15" style="text-align:center;padding:20px;color:#999;"
           <View style={styles.headerRow}>
             <View>
               <Text style={styles.headerTitle}>📋 Registre des Dangers</Text>
-              <Text style={styles.headerSub}>Par année — 5 dernières années de données</Text>
+              <Text style={styles.headerSub}>
+                {userEntite ? `${userEntite} · ` : ''}Par année — 5 dernières années de données
+              </Text>
             </View>
             {canEdit(userRole) && (
               <TouchableOpacity style={styles.addBtn} onPress={() => setShowAddAnnee(true)}>

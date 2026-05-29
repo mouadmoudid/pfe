@@ -14,6 +14,8 @@ public class RegistreDanger {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private String entite;        // entité organisationnelle (ex: CDT 102V)
+
     // Année du registre (ex: 2024 = données 2019-2023)
     @Column(nullable = false)
     private Integer anneeRegistre;

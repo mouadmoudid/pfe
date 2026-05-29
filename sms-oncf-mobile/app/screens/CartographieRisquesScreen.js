@@ -51,6 +51,7 @@ export default function CartographieRisquesScreen({ navigation }) {
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [userRole, setUserRole] = useState('');
+  const [userEntite, setUserEntite] = useState('');
   const [search, setSearch] = useState('');
   const [filterCriticite, setFilterCriticite] = useState('ALL');
   const [showModal, setShowModal] = useState(false);
@@ -67,7 +68,9 @@ export default function CartographieRisquesScreen({ navigation }) {
     setLoading(true);
     try {
       const userData = await AsyncStorage.getItem('user');
-      setUserRole(userData ? JSON.parse(userData).role : '');
+      const user = userData ? JSON.parse(userData) : {};
+      setUserRole(user.role || '');
+      setUserEntite(user.entite || '');
       const token = await getToken();
       const res = await axios.get(RISQUE_API, { headers: { Authorization: `Bearer ${token}` } });
       setRisques(res.data);
@@ -272,7 +275,9 @@ th { background:#0A1628;color:white;padding:6px;font-size:9px;text-align:left;bo
         <View style={styles.headerRow}>
           <View>
             <Text style={styles.headerTitle}>⚠️ Cartographie des Risques</Text>
-            <Text style={styles.headerSub}>{filtered.length} risque(s) · LGV ONCF</Text>
+            <Text style={styles.headerSub}>
+              {filtered.length} risque(s){userEntite ? ` · ${userEntite}` : ' · LGV ONCF'}
+            </Text>
           </View>
           <View style={{ flexDirection: 'row', gap: 8 }}>
             {canEditMedium(userRole) && (

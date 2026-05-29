@@ -14,6 +14,7 @@ public class RisqueEntry {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private String entite;        // entité organisationnelle (ex: CDT 102V)
     private String facteur;      // facteur humain, Env, Procédure, Installation
     private String lieu;         // LGV, etc.
     private String danger;
