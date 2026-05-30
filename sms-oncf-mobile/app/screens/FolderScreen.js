@@ -318,14 +318,7 @@ const FOLDERS = {
         title: 'PDVS Été / Ramadan N2',
         subtitle: 'Actions spécifiques · Périodes estivales et Ramadan',
         icon: '☀️',
-        screen: null, // à développer
-      },
-      {
-        id: 'LEGENDE_REFERENCES',
-        title: 'Légende & Références',
-        subtitle: 'Cotation SAMI · Fréquences KN2 · Critères fragilisés',
-        icon: '📖',
-        screen: null, // à développer
+        screen: 'PdvsEteRamadan', // à développer
       },
     ]
   },

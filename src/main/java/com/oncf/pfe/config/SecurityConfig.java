@@ -143,6 +143,9 @@ public class SecurityConfig {
 
                 .requestMatchers("/api/pdvs/registre-dangers-n2/**")
                     .hasAnyRole("ADMIN","CSPR","CET","CGPX")
+                
+                .requestMatchers("/api/pdvs/ete-ramadan/**")
+                  .hasAnyRole("ADMIN","CSPR","CET","CGPX")
 
                 
                 // Divers — tous authentifiés
