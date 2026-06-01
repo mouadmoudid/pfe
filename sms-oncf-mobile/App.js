@@ -41,6 +41,7 @@ import IfohSurveillanceScreen from './app/screens/IfohSurveillanceScreen';
 import RegistreDangersN2Screen from './app/screens/RegistreDangersN2Screen';
 import PasfN2Screen from './app/screens/PasfN2Screen';
 import PdvsEteRamadanScreen from './app/screens/PdvsEteRamadanScreen';
+import SyntheseKN2Screen from './app/screens/SyntheseKN2Screen';
 
 
 
@@ -90,6 +91,7 @@ export default function App() {
           <Stack.Screen name="RegistreDangersN2" component={RegistreDangersN2Screen} />
           <Stack.Screen name="PasfN2" component={PasfN2Screen} />
           <Stack.Screen name="PdvsEteRamadan" component={PdvsEteRamadanScreen} />
+          <Stack.Screen name="SyntheseKN2" component={SyntheseKN2Screen} />
 
         </Stack.Navigator>
       </NavigationContainer>

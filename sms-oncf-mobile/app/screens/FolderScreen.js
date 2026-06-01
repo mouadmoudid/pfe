@@ -281,7 +281,7 @@ const FOLDERS = {
         title: 'Synthèse KN2',
         subtitle: 'Rapport semestriel · Bilan quantitatif · Cotations SAMI',
         icon: '📊',
-        screen: null, // à développer
+        screen: 'SyntheseKN2', // à développer
       },
       {
         id: 'JOURNAL_CSSPR',
