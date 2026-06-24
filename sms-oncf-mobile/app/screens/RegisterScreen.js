@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
   StyleSheet, ActivityIndicator, ScrollView,
-  StatusBar
+  StatusBar, Platform
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import axios from 'axios';
@@ -103,10 +103,14 @@ export default function RegisterScreen({ navigation }) {
     );
   }
 
+  const Wrapper = Platform.OS === 'web' ? View : SafeAreaView;
+  const Scroller = Platform.OS === 'web' ? View : ScrollView;
+
   return (
-    <SafeAreaView style={styles.safe}>
+    <Wrapper style={Platform.OS === 'web' ? styles.webSafe : styles.safe}>
       <StatusBar barStyle="light-content" backgroundColor="#0A1628" />
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      <Scroller style={Platform.OS === 'web' ? styles.webScroller : styles.container}
+        {...(Platform.OS !== 'web' && { showsVerticalScrollIndicator: false, contentContainerStyle: styles.scrollContent })}>
 
         {/* Header */}
         <View style={styles.header}>
@@ -303,16 +307,18 @@ export default function RegisterScreen({ navigation }) {
             </Text>
           </TouchableOpacity>
 
-          <View style={{ height: 40 }} />
         </View>
-      </ScrollView>
-    </SafeAreaView>
+      </Scroller>
+    </Wrapper>
   );
 }
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#0A1628' },
-  container: { flex: 1, backgroundColor: '#0A1628' },
+  container: { flex: 1 },
+  scrollContent: { paddingBottom: 40 },
+  webSafe: { height: '100vh', backgroundColor: '#0A1628' },
+  webScroller: { flex: 1, overflow: 'scroll', paddingBottom: 40 },
 
   successContainer: {
     flex: 1, backgroundColor: '#0A1628',
