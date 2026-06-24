@@ -38,7 +38,7 @@ export default function LoginScreen({ navigation }) {
         </View>
         <Text style={styles.title}>ONCF</Text>
         <Text style={styles.subtitle}>Système de Management de la Sécurité</Text>
-        <Text style={styles.dric}>DRIC — Direction Régionale Infrastructure Centre</Text>
+        <Text style={styles.dric}>DRIC - Direction Régionale Infrastructure Centre</Text>
       </View>
 
       {/* Formulaire */}

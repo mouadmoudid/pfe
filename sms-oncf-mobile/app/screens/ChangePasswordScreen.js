@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
-  StyleSheet, ActivityIndicator, Alert
+  StyleSheet, ActivityIndicator, Alert, Platform
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import axios from 'axios';
@@ -37,19 +37,19 @@ export default function ChangePasswordScreen({ navigation }) {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      // Mettre à jour le user en local
-      const userData = await AsyncStorage.getItem('user');
-      if (userData) {
-        const user = JSON.parse(userData);
-        user.firstLogin = false;
-        await AsyncStorage.setItem('user', JSON.stringify(user));
-      }
+      await AsyncStorage.removeItem('token');
+      await AsyncStorage.removeItem('user');
 
-      Alert.alert(
-        'Succès',
-        'Mot de passe changé avec succès !',
-        [{ text: 'OK', onPress: () => navigation.replace('Dashboard') }]
-      );
+      if (Platform.OS === 'web') {
+        window.alert('Mot de passe changé avec succès ! Veuillez vous reconnecter.');
+        navigation.replace('Login');
+      } else {
+        Alert.alert(
+          'Succès',
+          'Mot de passe changé avec succès ! Veuillez vous reconnecter.',
+          [{ text: 'OK', onPress: () => navigation.replace('Login') }]
+        );
+      }
     } catch {
       Alert.alert('Erreur', 'Impossible de changer le mot de passe');
     } finally {
