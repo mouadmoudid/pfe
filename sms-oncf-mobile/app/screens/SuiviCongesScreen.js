@@ -340,10 +340,13 @@ table { width:100%;border-collapse:collapse;font-size:9px; }
     }
   };
 
+  const Wrapper = Platform.OS === 'web' ? View : SafeAreaView;
+  const Scroller = Platform.OS === 'web' ? View : ScrollView;
+
   // ===== ÉTAPE 0 — Liste années =====
   if (step === 0) {
     return (
-      <SafeAreaView style={styles.safe}>
+      <Wrapper style={Platform.OS === 'web' ? styles.webSafe : styles.safe}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <Text style={styles.backText}>← Retour</Text>
@@ -364,7 +367,7 @@ table { width:100%;border-collapse:collapse;font-size:9px; }
         {loading
           ? <ActivityIndicator color="#16A085" style={{ marginTop: 40 }} />
           : (
-            <ScrollView style={styles.list}>
+            <Scroller style={Platform.OS === 'web' ? styles.webScroller : styles.list} {...(Platform.OS !== 'web' && { showsVerticalScrollIndicator: false })}>
               {annees.length === 0 ? (
                 <View style={styles.emptyBox}>
                   <Text style={styles.emptyIcon}>📅</Text>
@@ -385,7 +388,7 @@ table { width:100%;border-collapse:collapse;font-size:9px; }
                 ))
               )}
               <View style={{ height: 40 }} />
-            </ScrollView>
+            </Scroller>
           )
         }
 
@@ -413,13 +416,13 @@ table { width:100%;border-collapse:collapse;font-size:9px; }
             </View>
           </View>
         </Modal>
-      </SafeAreaView>
+      </Wrapper>
     );
   }
 
   // ===== ÉTAPE 1 — Tableau =====
   return (
-    <SafeAreaView style={styles.safe}>
+    <Wrapper style={Platform.OS === 'web' ? styles.webSafe : styles.safe}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => { setStep(0); setTableau([]); }}>
           <Text style={styles.backText}>← Retour</Text>
@@ -467,7 +470,7 @@ table { width:100%;border-collapse:collapse;font-size:9px; }
       {loading
         ? <ActivityIndicator color="#16A085" style={{ marginTop: 40 }} />
         : (
-          <ScrollView style={{ flex: 1 }}>
+          <Scroller style={Platform.OS === 'web' ? styles.webScroller : { flex: 1 }} {...(Platform.OS !== 'web' && { showsVerticalScrollIndicator: false })}>
             <ScrollView horizontal showsHorizontalScrollIndicator={true} nestedScrollEnabled>
               <View>
                 {/* En-tête tableau */}
@@ -599,7 +602,7 @@ table { width:100%;border-collapse:collapse;font-size:9px; }
               </View>
             </ScrollView>
             <View style={{ height: 40 }} />
-          </ScrollView>
+          </Scroller>
         )
       }
 
@@ -706,12 +709,14 @@ table { width:100%;border-collapse:collapse;font-size:9px; }
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </Wrapper>
   );
 }
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#0A1628' },
+  webSafe: { height: '100vh', backgroundColor: '#0A1628' },
+  webScroller: { flex: 1, overflow: 'scroll', paddingBottom: 40 },
   header: {
     backgroundColor: '#0F2137', padding: 20,
     borderBottomLeftRadius: 20, borderBottomRightRadius: 20, marginBottom: 8,

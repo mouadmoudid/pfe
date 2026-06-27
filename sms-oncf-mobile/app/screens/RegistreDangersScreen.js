@@ -53,6 +53,9 @@ const EMPTY_FORM = (annee) => ({
 });
 
 export default function RegistreDangersScreen({ navigation }) {
+  const Wrapper = Platform.OS === 'web' ? View : SafeAreaView;
+  const Scroller = Platform.OS === 'web' ? View : ScrollView;
+
   const [step, setStep]           = useState(0); // 0=années, 1=tableau
   const [annees, setAnnees]       = useState([]);
   const [selectedAnnee, setSelectedAnnee] = useState(null);
@@ -284,7 +287,7 @@ ${rows||'<tr><td colspan="15" style="text-align:center;padding:20px;color:#999;"
   // ===== ÉTAPE 0 — ANNÉES =====
   if (step === 0) {
     return (
-      <SafeAreaView style={styles.safe}>
+      <Wrapper style={Platform.OS === 'web' ? styles.webSafe : styles.safe}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <Text style={styles.backText}>← Retour</Text>
@@ -305,7 +308,7 @@ ${rows||'<tr><td colspan="15" style="text-align:center;padding:20px;color:#999;"
         </View>
 
         {loading ? <ActivityIndicator color="#C9A84C" style={{ marginTop: 40 }} /> : (
-          <ScrollView style={styles.list}>
+          <Scroller style={Platform.OS === 'web' ? styles.webScroller : styles.list} {...(Platform.OS !== 'web' && { showsVerticalScrollIndicator: false })}>
             {annees.length === 0 ? (
               <View style={styles.emptyBox}>
                 <Text style={styles.emptyIcon}>📋</Text>
@@ -326,7 +329,7 @@ ${rows||'<tr><td colspan="15" style="text-align:center;padding:20px;color:#999;"
               </TouchableOpacity>
             ))}
             <View style={{ height: 40 }} />
-          </ScrollView>
+          </Scroller>
         )}
 
         {/* Modal nouvelle année */}
@@ -361,7 +364,7 @@ ${rows||'<tr><td colspan="15" style="text-align:center;padding:20px;color:#999;"
             </View>
           </View>
         </Modal>
-      </SafeAreaView>
+      </Wrapper>
     );
   }
 
@@ -369,7 +372,7 @@ ${rows||'<tr><td colspan="15" style="text-align:center;padding:20px;color:#999;"
   const anneeLabels = getAnneeLabels(selectedAnnee);
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <Wrapper style={Platform.OS === 'web' ? styles.webSafe : styles.safe}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => { setStep(0); setDangers([]); }}>
           <Text style={styles.backText}>← Retour</Text>
@@ -408,7 +411,7 @@ ${rows||'<tr><td colspan="15" style="text-align:center;padding:20px;color:#999;"
       </View>
 
       {loading ? <ActivityIndicator color="#C9A84C" style={{ marginTop: 40 }} /> : (
-        <ScrollView style={styles.list}>
+        <Scroller style={Platform.OS === 'web' ? styles.webScroller : styles.list} {...(Platform.OS !== 'web' && { showsVerticalScrollIndicator: false })}>
           {dangers.length === 0 ? (
             <View style={styles.emptyBox}>
               <Text style={styles.emptyIcon}>📋</Text>
@@ -502,7 +505,7 @@ ${rows||'<tr><td colspan="15" style="text-align:center;padding:20px;color:#999;"
             );
           })}
           <View style={{ height: 40 }} />
-        </ScrollView>
+        </Scroller>
       )}
 
       {/* ===== MODAL FORMULAIRE ===== */}
@@ -646,12 +649,14 @@ ${rows||'<tr><td colspan="15" style="text-align:center;padding:20px;color:#999;"
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </Wrapper>
   );
 }
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#0A1628' },
+  webSafe: { height: '100vh', backgroundColor: '#0A1628' },
+  webScroller: { flex: 1, overflow: 'scroll', paddingBottom: 40 },
   header: { backgroundColor: '#0F2137', padding: 20, borderBottomLeftRadius: 20, borderBottomRightRadius: 20, marginBottom: 10 },
   backText: { color: '#C9A84C', fontSize: 14, marginBottom: 8 },
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },

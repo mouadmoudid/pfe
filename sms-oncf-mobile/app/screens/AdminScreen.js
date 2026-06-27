@@ -101,6 +101,9 @@ export default function AdminScreen({ navigation }) {
     }
   };
 
+  const Wrapper = Platform.OS === 'web' ? View : SafeAreaView;
+  const Scroller = Platform.OS === 'web' ? View : ScrollView;
+
   const filteredUsers = users.filter(u => {
     if (filter === 'ALL') return true;
     return u.role === filter;
@@ -116,7 +119,7 @@ export default function AdminScreen({ navigation }) {
   };
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <Wrapper style={Platform.OS === 'web' ? styles.webSafe : styles.safe}>
 
       {/* Header */}
       <View style={styles.header}>
@@ -171,7 +174,7 @@ export default function AdminScreen({ navigation }) {
       {loading
         ? <ActivityIndicator color="#C9A84C" style={{ marginTop: 40 }} />
         : (
-          <ScrollView style={styles.list} showsVerticalScrollIndicator={false}>
+          <Scroller style={Platform.OS === 'web' ? styles.webScroller : styles.list} {...(Platform.OS !== 'web' && { showsVerticalScrollIndicator: false })}>
             {filteredUsers.length === 0 ? (
               <View style={styles.emptyBox}>
                 <Text style={styles.emptyIcon}>👥</Text>
@@ -241,7 +244,7 @@ export default function AdminScreen({ navigation }) {
               ))
             )}
             <View style={{ height: 40 }} />
-          </ScrollView>
+          </Scroller>
         )
       }
 
@@ -289,12 +292,14 @@ export default function AdminScreen({ navigation }) {
         </View>
       </Modal>
 
-    </SafeAreaView>
+    </Wrapper>
   );
 }
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#0A1628' },
+  webSafe: { height: '100vh', backgroundColor: '#0A1628' },
+  webScroller: { flex: 1, overflow: 'scroll', paddingBottom: 40 },
 
   header: {
     backgroundColor: '#0F2137',

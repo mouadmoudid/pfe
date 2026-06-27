@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet,
-  ScrollView, ActivityIndicator, Alert, TextInput
+  ScrollView, ActivityIndicator, Alert, TextInput, Platform
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import axios from 'axios';
@@ -12,6 +12,9 @@ import { API_URL } from '../services/authService';
 const CL_API = API_URL.replace('/auth', '/checklists');
 
 export default function CompteRenduScreen({ navigation }) {
+  const Wrapper = Platform.OS === 'web' ? View : SafeAreaView;
+  const Scroller = Platform.OS === 'web' ? View : ScrollView;
+
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [checklists, setChecklists] = useState([]);
@@ -770,7 +773,7 @@ export default function CompteRenduScreen({ navigation }) {
   // ===== ÉTAPE 0 — Liste des check lists =====
   if (step === 0) {
     return (
-      <SafeAreaView style={styles.safe}>
+      <Wrapper style={Platform.OS === 'web' ? styles.webSafe : styles.safe}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <Text style={styles.backText}>← Retour</Text>
@@ -784,7 +787,7 @@ export default function CompteRenduScreen({ navigation }) {
         {loading
           ? <ActivityIndicator color="#C9A84C" style={{ marginTop: 40 }} />
           : (
-            <ScrollView style={styles.list}>
+            <Scroller style={Platform.OS === 'web' ? styles.webScroller : styles.list} {...(Platform.OS !== 'web' && { showsVerticalScrollIndicator: false })}>
               {filteredCollab ? (
                 <TouchableOpacity 
                   style={styles.filterBackBtn} 
@@ -857,17 +860,17 @@ export default function CompteRenduScreen({ navigation }) {
                 })
               )}
               <View style={{ height: 40 }} />
-            </ScrollView>
+            </Scroller>
           )
         }
-      </SafeAreaView>
+      </Wrapper>
     );
   }
 
   // ===== ÉTAPE 1 — Formulaire =====
   if (step === 1) {
     return (
-      <SafeAreaView style={styles.safe}>
+      <Wrapper style={Platform.OS === 'web' ? styles.webSafe : styles.safe}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => setStep(0)}>
             <Text style={styles.backText}>← Retour</Text>
@@ -878,7 +881,7 @@ export default function CompteRenduScreen({ navigation }) {
           </Text>
         </View>
 
-        <ScrollView style={styles.formContainer}>
+        <Scroller style={Platform.OS === 'web' ? styles.webScroller : styles.formContainer} {...(Platform.OS !== 'web' && { showsVerticalScrollIndicator: false })}>
 
           <View style={styles.selectedCLBox}>
             <Text style={styles.selectedCLName}>
@@ -1025,8 +1028,8 @@ export default function CompteRenduScreen({ navigation }) {
           </TouchableOpacity>
 
           <View style={{ height: 40 }} />
-        </ScrollView>
-      </SafeAreaView>
+        </Scroller>
+      </Wrapper>
     );
   }
 

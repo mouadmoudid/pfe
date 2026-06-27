@@ -120,6 +120,9 @@ export default function RegistreDangersN2Screen({ navigation }) {
     }
   };
 
+  const Wrapper = Platform.OS === 'web' ? View : SafeAreaView;
+  const Scroller = Platform.OS === 'web' ? View : ScrollView;
+
   const counts = { C: 0, E: 0, M: 0, F: 0 };
   filtered.forEach(r => { if (counts[r.criticite] !== undefined) counts[r.criticite]++; });
 
@@ -225,7 +228,7 @@ th {
   };
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <Wrapper style={Platform.OS === 'web' ? styles.webSafe : styles.safe}>
 
       {/* HEADER */}
       <View style={styles.header}>
@@ -296,7 +299,7 @@ th {
       {loading
         ? <ActivityIndicator color="#9B59B6" style={{ marginTop: 40 }} />
         : (
-          <ScrollView style={styles.list}>
+          <Scroller style={Platform.OS === 'web' ? styles.webScroller : styles.list} {...(Platform.OS !== 'web' && { showsVerticalScrollIndicator: false })}>
             {filtered.length === 0 ? (
               <View style={styles.emptyBox}>
                 <Text style={styles.emptyIcon}>⚠️</Text>
@@ -393,7 +396,7 @@ th {
               })
             )}
             <View style={{ height: 40 }} />
-          </ScrollView>
+          </Scroller>
         )}
 
       {/* ===== MODAL ÉDITION CHAMPS N2 ===== */}
@@ -551,12 +554,14 @@ th {
         </View>
       </Modal>
 
-    </SafeAreaView>
+    </Wrapper>
   );
 }
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#0A1628' },
+  webSafe: { height: '100vh', backgroundColor: '#0A1628' },
+  webScroller: { flex: 1, overflow: 'scroll', paddingBottom: 40 },
 
   header: {
     backgroundColor: '#0F2137', padding: 20,

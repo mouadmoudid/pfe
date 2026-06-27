@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
   StyleSheet, ScrollView, ActivityIndicator,
-  Alert, SafeAreaView
+  Alert, SafeAreaView, Platform
 } from 'react-native';
 import { SafeAreaView as SafeAreaViewContext } from 'react-native-safe-area-context';
 import axios from 'axios';
@@ -25,6 +25,9 @@ const PROCESSUS_LIST = [
 ];
 
 export default function ManagerScreen({ navigation }) {
+  const Wrapper = Platform.OS === 'web' ? View : SafeAreaViewContext;
+  const Scroller = Platform.OS === 'web' ? View : ScrollView;
+
   const [agents, setAgents] = useState([]);
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -113,7 +116,7 @@ export default function ManagerScreen({ navigation }) {
   };
 
   return (
-    <SafeAreaViewContext style={styles.safe}>
+    <Wrapper style={Platform.OS === 'web' ? styles.webSafe : styles.safe}>
 
       {/* Header */}
       <View style={styles.header}>
@@ -146,7 +149,7 @@ export default function ManagerScreen({ navigation }) {
 
       {loading && <ActivityIndicator color="#C9A84C" style={{ marginTop: 20 }} />}
 
-      <ScrollView style={styles.content}    showsVerticalScrollIndicator={false}>
+      <Scroller style={Platform.OS === 'web' ? styles.webScroller : styles.content} {...(Platform.OS !== 'web' && { showsVerticalScrollIndicator: false })}>
 
         {/* Tab 1 : Assigner */}
         {activeTab === 'assign' && (
@@ -284,8 +287,8 @@ export default function ManagerScreen({ navigation }) {
         )}
 
         <View style={{ height: 40 }} />
-      </ScrollView>
-    </SafeAreaViewContext>
+      </Scroller>
+    </Wrapper>
   );
 }
 
@@ -379,4 +382,6 @@ const styles = StyleSheet.create({
   emptyBox: { alignItems: 'center', paddingVertical: 40 },
   emptyIcon: { fontSize: 40, marginBottom: 12 },
   emptyText: { color: '#607D8B', fontSize: 14, textAlign: 'center' },
+  webSafe: { height: '100vh', backgroundColor: '#0A1628' },
+  webScroller: { flex: 1, overflow: 'scroll', paddingBottom: 40 },
 });

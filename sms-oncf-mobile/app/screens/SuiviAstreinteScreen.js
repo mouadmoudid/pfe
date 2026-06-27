@@ -318,10 +318,13 @@ th { background:#16A085;color:white;padding:6px 8px;font-size:11px;text-align:le
     }
   };
 
+  const Wrapper = Platform.OS === 'web' ? View : SafeAreaView;
+  const Scroller = Platform.OS === 'web' ? View : ScrollView;
+
   // ===== ÉTAPE 0 — Années =====
   if (step === 0) {
     return (
-      <SafeAreaView style={styles.safe}>
+      <Wrapper style={Platform.OS === 'web' ? styles.webSafe : styles.safe}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <Text style={styles.backText}>← Retour</Text>
@@ -342,7 +345,7 @@ th { background:#16A085;color:white;padding:6px 8px;font-size:11px;text-align:le
         {loading
           ? <ActivityIndicator color="#E67E22" style={{ marginTop: 40 }} />
           : (
-            <ScrollView style={styles.list}>
+            <Scroller style={Platform.OS === 'web' ? styles.webScroller : styles.list} {...(Platform.OS !== 'web' && { showsVerticalScrollIndicator: false })}>
               {annees.length === 0 ? (
                 <View style={styles.emptyBox}>
                   <Text style={styles.emptyIcon}>📡</Text>
@@ -359,7 +362,7 @@ th { background:#16A085;color:white;padding:6px 8px;font-size:11px;text-align:le
                 ))
               )}
               <View style={{ height: 40 }} />
-            </ScrollView>
+            </Scroller>
           )
         }
 
@@ -380,14 +383,14 @@ th { background:#16A085;color:white;padding:6px 8px;font-size:11px;text-align:le
             </View>
           </View>
         </Modal>
-      </SafeAreaView>
+      </Wrapper>
     );
   }
 
   // ===== ÉTAPE 1 — Planning annuel =====
   if (step === 1) {
     return (
-      <SafeAreaView style={styles.safe}>
+      <Wrapper style={Platform.OS === 'web' ? styles.webSafe : styles.safe}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => { setStep(0); setPlanning([]); }}>
             <Text style={styles.backText}>← Retour</Text>
@@ -425,7 +428,7 @@ th { background:#16A085;color:white;padding:6px 8px;font-size:11px;text-align:le
         {loading
           ? <ActivityIndicator color="#E67E22" style={{ marginTop: 40 }} />
           : (
-            <ScrollView style={{ flex: 1 }}>
+            <Scroller style={Platform.OS === 'web' ? styles.webScroller : { flex: 1 }} {...(Platform.OS !== 'web' && { showsVerticalScrollIndicator: false })}>
               <ScrollView horizontal showsHorizontalScrollIndicator nestedScrollEnabled>
                 <View>
                   {/* En-tête : noms collaborateurs */}
@@ -475,7 +478,7 @@ th { background:#16A085;color:white;padding:6px 8px;font-size:11px;text-align:le
                 </View>
               </ScrollView>
               <View style={{ height: 40 }} />
-            </ScrollView>
+            </Scroller>
           )
         }
 
@@ -511,14 +514,14 @@ th { background:#16A085;color:white;padding:6px 8px;font-size:11px;text-align:le
             </View>
           </View>
         </Modal>
-      </SafeAreaView>
+      </Wrapper>
     );
   }
 
   // ===== ÉTAPE 2 — Vue par semaine =====
   if (step === 2) {
     return (
-      <SafeAreaView style={styles.safe}>
+      <Wrapper style={Platform.OS === 'web' ? styles.webSafe : styles.safe}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => setStep(1)}>
             <Text style={styles.backText}>← Retour</Text>
@@ -565,7 +568,7 @@ th { background:#16A085;color:white;padding:6px 8px;font-size:11px;text-align:le
         {loading
           ? <ActivityIndicator color="#E67E22" style={{ marginTop: 40 }} />
           : (
-            <ScrollView style={styles.list}>
+            <Scroller style={Platform.OS === 'web' ? styles.webScroller : styles.list} {...(Platform.OS !== 'web' && { showsVerticalScrollIndicator: false })}>
               {/* En-tête */}
               <View style={styles.equipeHeader}>
                 <Text style={[styles.equipeHeaderCell, { flex: 0.3 }]}>N°</Text>
@@ -601,10 +604,10 @@ th { background:#16A085;color:white;padding:6px 8px;font-size:11px;text-align:le
                 ))
               )}
               <View style={{ height: 40 }} />
-            </ScrollView>
+            </Scroller>
           )
         }
-      </SafeAreaView>
+      </Wrapper>
     );
   }
 
@@ -613,6 +616,8 @@ th { background:#16A085;color:white;padding:6px 8px;font-size:11px;text-align:le
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#0A1628' },
+  webSafe: { height: '100vh', backgroundColor: '#0A1628' },
+  webScroller: { flex: 1, overflow: 'scroll', paddingBottom: 40 },
   header: {
     backgroundColor: '#0F2137', padding: 20,
     borderBottomLeftRadius: 20, borderBottomRightRadius: 20, marginBottom: 8,

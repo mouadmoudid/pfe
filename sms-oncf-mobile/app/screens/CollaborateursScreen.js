@@ -57,6 +57,9 @@ export default function CollaborateursScreen({ navigation }) {
     }
   };
 
+  const Wrapper = Platform.OS === 'web' ? View : SafeAreaView;
+  const Scroller = Platform.OS === 'web' ? View : ScrollView;
+
   const collaborateurs = agents.filter(a => a.collaborateur);
   const nonCollaborateurs = agents.filter(a => !a.collaborateur);
 
@@ -66,7 +69,7 @@ export default function CollaborateursScreen({ navigation }) {
   );
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <Wrapper style={Platform.OS === 'web' ? styles.webSafe : styles.safe}>
 
       {/* Header */}
       <View style={styles.header}>
@@ -123,7 +126,7 @@ export default function CollaborateursScreen({ navigation }) {
       {loading
         ? <ActivityIndicator color="#C9A84C" style={{ marginTop: 40 }} />
         : (
-          <ScrollView style={styles.list}>
+          <Scroller style={Platform.OS === 'web' ? styles.webScroller : styles.list} {...(Platform.OS !== 'web' && { showsVerticalScrollIndicator: false })}>
             {filtered.length === 0 ? (
               <View style={styles.emptyBox}>
                 <Text style={styles.emptyIcon}>👷</Text>
@@ -189,15 +192,17 @@ export default function CollaborateursScreen({ navigation }) {
               ))
             )}
             <View style={{ height: 40 }} />
-          </ScrollView>
+          </Scroller>
         )
       }
-    </SafeAreaView>
+    </Wrapper>
   );
 }
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#0A1628' },
+  webSafe: { height: '100vh', backgroundColor: '#0A1628' },
+  webScroller: { flex: 1, overflow: 'scroll', paddingBottom: 40 },
 
   header: {
     backgroundColor: '#0F2137', padding: 20,

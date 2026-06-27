@@ -82,6 +82,9 @@ const EMPTY_FORM = {
 };
 
 export default function CulturePositiveScreen({ navigation }) {
+  const Wrapper = Platform.OS === 'web' ? View : SafeAreaView;
+  const Scroller = Platform.OS === 'web' ? View : ScrollView;
+
   const [step, setStep] = useState(0); // 0=menu, 1=questionnaire, 2=résultats
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -336,7 +339,7 @@ ${resultats.commentaires?.length > 0 ? `
   // ===== ÉTAPE 0 — Menu campagnes =====
   if (step === 0) {
     return (
-      <SafeAreaView style={styles.safe}>
+      <Wrapper style={Platform.OS === 'web' ? styles.webSafe : styles.safe}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <Text style={styles.backText}>← Retour</Text>
@@ -357,7 +360,7 @@ ${resultats.commentaires?.length > 0 ? `
         {loading
           ? <ActivityIndicator color="#27AE60" style={{ marginTop: 40 }} />
           : (
-            <ScrollView style={styles.list}>
+            <Scroller style={Platform.OS === 'web' ? styles.webScroller : styles.list} {...(Platform.OS !== 'web' && { showsVerticalScrollIndicator: false })}>
               {campagnes.length === 0 ? (
                 <View style={styles.emptyBox}>
                   <Text style={styles.emptyIcon}>📋</Text>
@@ -433,7 +436,7 @@ ${resultats.commentaires?.length > 0 ? `
                 ))
               )}
               <View style={{ height: 40 }} />
-            </ScrollView>
+            </Scroller>
           )
         }
 
@@ -463,7 +466,7 @@ ${resultats.commentaires?.length > 0 ? `
             </View>
           </View>
         </Modal>
-      </SafeAreaView>
+      </Wrapper>
     );
   }
 
@@ -490,7 +493,7 @@ ${resultats.commentaires?.length > 0 ? `
     );
 
     return (
-      <SafeAreaView style={styles.safe}>
+      <Wrapper style={Platform.OS === 'web' ? styles.webSafe : styles.safe}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => { setStep(0); setForm({...EMPTY_FORM}); }}>
             <Text style={styles.backText}>← Retour</Text>
@@ -498,7 +501,7 @@ ${resultats.commentaires?.length > 0 ? `
           <Text style={styles.headerTitle}>Questionnaire Culture Sécurité</Text>
           <Text style={styles.headerSub}>Exercice {selectedCampagne?.exercice} · Anonyme · 42 questions</Text>
         </View>
-        <ScrollView style={styles.formContainer}>
+        <Scroller style={Platform.OS === 'web' ? styles.webScroller : styles.formContainer} {...(Platform.OS !== 'web' && { showsVerticalScrollIndicator: false })}>
 
           <View style={styles.infoBox}>
             <Text style={styles.infoBoxText}>🔒 Ce questionnaire est 100% anonyme. Aucune information personnelle ne sera associée à vos réponses.</Text>
@@ -567,8 +570,8 @@ ${resultats.commentaires?.length > 0 ? `
             }
           </TouchableOpacity>
           <View style={{ height: 40 }} />
-        </ScrollView>
-      </SafeAreaView>
+        </Scroller>
+      </Wrapper>
     );
   }
 
@@ -601,7 +604,7 @@ ${resultats.commentaires?.length > 0 ? `
     };
 
     return (
-      <SafeAreaView style={styles.safe}>
+      <Wrapper style={Platform.OS === 'web' ? styles.webSafe : styles.safe}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => { setStep(0); setResultats(null); }}>
             <Text style={styles.backText}>← Retour</Text>
@@ -619,7 +622,7 @@ ${resultats.commentaires?.length > 0 ? `
         </View>
 
         {loading ? <ActivityIndicator color="#27AE60" style={{ marginTop: 40 }} /> : (
-          <ScrollView style={styles.list}>
+          <Scroller style={Platform.OS === 'web' ? styles.webScroller : styles.list} {...(Platform.OS !== 'web' && { showsVerticalScrollIndicator: false })}>
             {/* Scores par axe */}
             <View style={styles.scoresCard}>
               <Text style={styles.scoresTitle}>Scores par axe (1=Très positif · 4=Très négatif)</Text>
@@ -664,9 +667,9 @@ ${resultats.commentaires?.length > 0 ? `
               </View>
             )}
             <View style={{ height: 40 }} />
-          </ScrollView>
+          </Scroller>
         )}
-      </SafeAreaView>
+      </Wrapper>
     );
   }
 
@@ -675,6 +678,8 @@ ${resultats.commentaires?.length > 0 ? `
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#0A1628' },
+  webSafe: { height: '100vh', backgroundColor: '#0A1628' },
+  webScroller: { flex: 1, overflow: 'scroll', paddingBottom: 40 },
   header: { backgroundColor: '#0F2137', padding: 20, borderBottomLeftRadius: 20, borderBottomRightRadius: 20, marginBottom: 12 },
   backText: { color: '#C9A84C', fontSize: 14, marginBottom: 8 },
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },

@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet,
-  ScrollView, ActivityIndicator, Alert, TextInput, Modal
+  ScrollView, ActivityIndicator, Alert, TextInput, Modal, Platform
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import axios from 'axios';
@@ -26,6 +26,9 @@ export default function RACIScreen({ navigation }) {
   const [generating, setGenerating] = useState(false);
   const [step, setStep] = useState(0); // 0=période, 1=tableau
   const [userRole, setUserRole] = useState('');
+
+  const Wrapper = Platform.OS === 'web' ? View : SafeAreaView;
+  const Scroller = Platform.OS === 'web' ? View : ScrollView;
 
   const currentYear = new Date().getFullYear();
   const currentMonth = new Date().getMonth() + 1;
@@ -327,7 +330,7 @@ export default function RACIScreen({ navigation }) {
   // ===== ÉTAPE 0 — Sélection période =====
   if (step === 0) {
     return (
-      <SafeAreaView style={styles.safe}>
+      <Wrapper style={Platform.OS === 'web' ? styles.webSafe : styles.safe}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <Text style={styles.backText}>← Retour</Text>
@@ -336,7 +339,7 @@ export default function RACIScreen({ navigation }) {
           <Text style={styles.headerSub}>Registre des Actions de Contrôle et Inspection</Text>
         </View>
 
-        <ScrollView style={styles.formContainer}>
+        <Scroller style={Platform.OS === 'web' ? styles.webScroller : styles.formContainer} {...(Platform.OS !== 'web' && { showsVerticalScrollIndicator: false })}>
           <View style={styles.infoBox}>
             <Text style={styles.infoText}>
               Sélectionnez la période pour générer le RACI
@@ -391,15 +394,15 @@ export default function RACIScreen({ navigation }) {
             }
           </TouchableOpacity>
           <View style={{ height: 40 }} />
-        </ScrollView>
-      </SafeAreaView>
+        </Scroller>
+      </Wrapper>
     );
   }
 
   // ===== ÉTAPE 1 — Tableau RACI =====
   if (step === 1) {
     return (
-      <SafeAreaView style={styles.safe}>
+      <Wrapper style={Platform.OS === 'web' ? styles.webSafe : styles.safe}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => setStep(0)}>
             <Text style={styles.backText}>← Retour</Text>
@@ -424,7 +427,7 @@ export default function RACIScreen({ navigation }) {
           </View>
         </View>
 
-        <ScrollView style={styles.list}>
+        <Scroller style={Platform.OS === 'web' ? styles.webScroller : styles.list} {...(Platform.OS !== 'web' && { showsVerticalScrollIndicator: false })}>
           {checklists.length === 0 ? (
             <View style={styles.emptyBox}>
               <Text style={styles.emptyIcon}>📋</Text>
@@ -528,7 +531,7 @@ export default function RACIScreen({ navigation }) {
             })
           )}
           <View style={{ height: 40 }} />
-        </ScrollView>
+        </Scroller>
 
         {/* Modal QR Code */}
         <Modal
@@ -589,7 +592,7 @@ export default function RACIScreen({ navigation }) {
           </View>
         </Modal>
 
-      </SafeAreaView>
+      </Wrapper>
     );
   }
 
@@ -598,6 +601,8 @@ export default function RACIScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#0A1628' },
+  webSafe: { height: '100vh', backgroundColor: '#0A1628' },
+  webScroller: { flex: 1, overflow: 'scroll', paddingBottom: 40 },
   header: {
     backgroundColor: '#0F2137', padding: 20,
     borderBottomLeftRadius: 20, borderBottomRightRadius: 20, marginBottom: 12,

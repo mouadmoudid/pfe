@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet,
-  ScrollView, ActivityIndicator, Alert
+  ScrollView, ActivityIndicator, Alert, Platform
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import axios from 'axios';
@@ -11,6 +11,9 @@ import { API_URL } from '../services/authService';
 const TASK_API = API_URL.replace('/auth', '/tasks');
 
 export default function AgentScreen({ navigation }) {
+  const Wrapper = Platform.OS === 'web' ? View : SafeAreaView;
+  const Scroller = Platform.OS === 'web' ? View : ScrollView;
+
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState('ALL');
@@ -98,7 +101,7 @@ export default function AgentScreen({ navigation }) {
   ];
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <Wrapper style={Platform.OS === 'web' ? styles.webSafe : styles.safe}>
 
       {/* Header */}
       <View style={styles.header}>
@@ -146,7 +149,7 @@ export default function AgentScreen({ navigation }) {
 
       {loading && <ActivityIndicator color="#C9A84C" style={{ marginTop: 20 }} />}
 
-      <ScrollView style={styles.list}   showsVerticalScrollIndicator={false}>
+      <Scroller style={Platform.OS === 'web' ? styles.webScroller : styles.list} {...(Platform.OS !== 'web' && { showsVerticalScrollIndicator: false })}>
 
         {filteredTasks.length === 0 ? (
           <View style={styles.emptyBox}>
@@ -229,8 +232,8 @@ export default function AgentScreen({ navigation }) {
         )}
 
         <View style={{ height: 40 }} />
-      </ScrollView>
-    </SafeAreaView>
+      </Scroller>
+    </Wrapper>
   );
 }
 
@@ -344,4 +347,6 @@ const styles = StyleSheet.create({
     padding: 10, alignItems: 'center',
   },
   doneText: { color: '#27AE60', fontWeight: 'bold' },
+  webSafe: { height: '100vh', backgroundColor: '#0A1628' },
+  webScroller: { flex: 1, overflow: 'scroll', paddingBottom: 40 },
 });

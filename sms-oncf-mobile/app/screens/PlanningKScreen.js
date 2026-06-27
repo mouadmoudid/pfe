@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet,
   ScrollView, ActivityIndicator, Alert, Modal,
-  TextInput, Dimensions
+  TextInput, Dimensions, Platform
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import axios from 'axios';
@@ -183,8 +183,11 @@ export default function PlanningScreen({ navigation }) {
 
   const isCanCreate = user?.role === 'ADMIN' || user?.role === 'MANAGER';
 
+  const Wrapper = Platform.OS === 'web' ? View : SafeAreaView;
+  const Scroller = Platform.OS === 'web' ? View : ScrollView;
+
   return (
-    <SafeAreaView style={styles.safe}>
+    <Wrapper style={Platform.OS === 'web' ? styles.webSafe : styles.safe}>
 
       {/* Header */}
       <View style={styles.header}>
@@ -240,7 +243,7 @@ export default function PlanningScreen({ navigation }) {
         : activeTab === 'gantt'
           ? (
             /* ===== VUE GANTT ===== */
-            <ScrollView style={styles.ganttContainer}>
+            <Scroller style={Platform.OS === 'web' ? styles.webScroller : styles.ganttContainer} {...(Platform.OS !== 'web' && { showsVerticalScrollIndicator: false })}>
               {/* En-tête mois */}
               <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                 <View>
@@ -332,11 +335,12 @@ export default function PlanningScreen({ navigation }) {
                 ))}
               </View>
               <View style={{ height: 40 }} />
-            </ScrollView>
+            </Scroller>
           )
           : (
             /* ===== VUE LISTE ===== */
-            <ScrollView style={styles.listContainer}>
+            <Scroller style={Platform.OS === 'web' ? styles.webScroller : styles.listContainer} {...(Platform.OS !== 'web' && { showsVerticalScrollIndicator: false })}>
+
               {filteredTasks.length === 0 ? (
                 <View style={styles.emptyBox}>
                   <Text style={styles.emptyIcon}>📅</Text>
@@ -373,7 +377,7 @@ export default function PlanningScreen({ navigation }) {
                 ))
               )}
               <View style={{ height: 40 }} />
-            </ScrollView>
+            </Scroller>
           )
       }
 
@@ -590,12 +594,14 @@ export default function PlanningScreen({ navigation }) {
         </View>
       </Modal>
 
-    </SafeAreaView>
+    </Wrapper>
   );
 }
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#0A1628' },
+  webSafe: { height: '100vh', backgroundColor: '#0A1628' },
+  webScroller: { flex: 1, overflow: 'scroll', paddingBottom: 40 },
 
   header: {
     backgroundColor: '#0F2137',

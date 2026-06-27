@@ -265,8 +265,11 @@ th { background:#0A1628;color:white;padding:6px;font-size:9px;text-align:left;bo
 
   const previewCriticite = calcCriticite(form.frequence, form.gravite);
 
+  const Wrapper = Platform.OS === 'web' ? View : SafeAreaView;
+  const Scroller = Platform.OS === 'web' ? View : ScrollView;
+
   return (
-    <SafeAreaView style={styles.safe}>
+    <Wrapper style={Platform.OS === 'web' ? styles.webSafe : styles.safe}>
       {/* HEADER */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
@@ -338,7 +341,7 @@ th { background:#0A1628;color:white;padding:6px;font-size:9px;text-align:left;bo
       {loading
         ? <ActivityIndicator color="#E74C3C" style={{ marginTop: 40 }} />
         : (
-          <ScrollView style={styles.list}>
+          <Scroller style={Platform.OS === 'web' ? styles.webScroller : styles.list} {...(Platform.OS !== 'web' && { showsVerticalScrollIndicator: false })}>
             {filtered.length === 0 ? (
               <View style={styles.emptyBox}>
                 <Text style={styles.emptyIcon}>⚠️</Text>
@@ -406,7 +409,7 @@ th { background:#0A1628;color:white;padding:6px;font-size:9px;text-align:left;bo
               })
             )}
             <View style={{ height: 40 }} />
-          </ScrollView>
+          </Scroller>
         )}
 
       {/* MODAL AJOUT / MODIFICATION */}
@@ -546,12 +549,14 @@ th { background:#0A1628;color:white;padding:6px;font-size:9px;text-align:left;bo
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </Wrapper>
   );
 }
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#0A1628' },
+  webSafe: { height: '100vh', backgroundColor: '#0A1628' },
+  webScroller: { flex: 1, overflow: 'scroll', paddingBottom: 40 },
   header: {
     backgroundColor: '#0F2137', padding: 20,
     borderBottomLeftRadius: 20, borderBottomRightRadius: 20, marginBottom: 8,

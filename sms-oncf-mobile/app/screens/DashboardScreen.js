@@ -1,7 +1,7 @@
 import React from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet,
-  ScrollView, StatusBar
+  ScrollView, StatusBar, Platform
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
@@ -26,15 +26,17 @@ const getRoleColor = (role) => {
 };
 
 export default function DashboardScreen({ navigation }) {
+  const Wrapper = Platform.OS === 'web' ? View : SafeAreaView;
+  const Scroller = Platform.OS === 'web' ? View : ScrollView;
+
   const { user, logout } = useAuth();
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <Wrapper style={Platform.OS === 'web' ? styles.webSafe : styles.safe}>
       <StatusBar barStyle="light-content" backgroundColor="#0A1628" />
-      <ScrollView
-        style={styles.container}
-         
-        showsVerticalScrollIndicator={false}
+      <Scroller
+        style={Platform.OS === 'web' ? styles.webScroller : styles.container}
+        {...(Platform.OS !== 'web' && { showsVerticalScrollIndicator: false })}
       >
         {/* Header */}
         <View style={styles.header}>
@@ -105,8 +107,8 @@ export default function DashboardScreen({ navigation }) {
             ))}
           </View>
         <View style={styles.bottomPadding} />
-      </ScrollView>
-    </SafeAreaView>
+      </Scroller>
+    </Wrapper>
   );
 }
 
@@ -267,4 +269,6 @@ const styles = StyleSheet.create({
   alignItems: 'center',
   },
   planningBtnText: { color: '#27AE60', fontWeight: 'bold', fontSize: 14 },
+  webSafe: { height: '100vh', backgroundColor: '#0A1628' },
+  webScroller: { flex: 1, overflow: 'scroll', paddingBottom: 40 },
 });

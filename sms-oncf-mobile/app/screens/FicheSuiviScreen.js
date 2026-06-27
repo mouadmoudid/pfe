@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet,
-  ScrollView, ActivityIndicator, Alert, TextInput, Modal
+  ScrollView, ActivityIndicator, Alert, TextInput, Modal, Platform
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import axios from 'axios';
@@ -28,6 +28,9 @@ const RESULTAT_COLORS = {
 };
 
 export default function FicheSuiviScreen({ navigation }) {
+  const Wrapper = Platform.OS === 'web' ? View : SafeAreaView;
+  const Scroller = Platform.OS === 'web' ? View : ScrollView;
+
   const [step, setStep] = useState(0); // 0=liste collabs, 1=fiche
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -296,7 +299,7 @@ tr:nth-child(even) td { background: #f9f9f9; }
     };
 
     return (
-      <SafeAreaView style={styles.safe}>
+      <Wrapper style={Platform.OS === 'web' ? styles.webSafe : styles.safe}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <Text style={styles.backText}>← Retour</Text>
@@ -318,7 +321,7 @@ tr:nth-child(even) td { background: #f9f9f9; }
         {loading
           ? <ActivityIndicator color="#8E44AD" style={{ marginTop: 40 }} />
           : (
-            <ScrollView style={styles.list}>
+            <Scroller style={Platform.OS === 'web' ? styles.webScroller : styles.list} {...(Platform.OS !== 'web' && { showsVerticalScrollIndicator: false })}>
               {filtered.length === 0 ? (
                 <View style={styles.emptyBox}>
                   <Text style={styles.emptyIcon}>👤</Text>
@@ -345,10 +348,10 @@ tr:nth-child(even) td { background: #f9f9f9; }
                 ))
               )}
               <View style={{ height: 40 }} />
-            </ScrollView>
+            </Scroller>
           )
         }
-      </SafeAreaView>
+      </Wrapper>
     );
   }
 
@@ -363,7 +366,7 @@ tr:nth-child(even) td { background: #f9f9f9; }
     };
 
     return (
-      <SafeAreaView style={styles.safe}>
+      <Wrapper style={Platform.OS === 'web' ? styles.webSafe : styles.safe}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => { setStep(0); setSelectedCollab(null); setSaisies({}); }}>
             <Text style={styles.backText}>← Retour</Text>
@@ -389,7 +392,7 @@ tr:nth-child(even) td { background: #f9f9f9; }
         {loading
           ? <ActivityIndicator color="#8E44AD" style={{ marginTop: 40 }} />
           : (
-            <ScrollView style={styles.formContainer}>
+            <Scroller style={Platform.OS === 'web' ? styles.webScroller : styles.formContainer} {...(Platform.OS !== 'web' && { showsVerticalScrollIndicator: false })}>
 
               {/* ===== EXAMENS ===== */}
               <View style={styles.sectionBox}>
@@ -567,10 +570,10 @@ tr:nth-child(even) td { background: #f9f9f9; }
               </View>
 
               <View style={{ height: 40 }} />
-            </ScrollView>
+            </Scroller>
           )
         }
-      </SafeAreaView>
+      </Wrapper>
     );
   }
 
@@ -678,4 +681,6 @@ const styles = StyleSheet.create({
     padding: 10, alignItems: 'center', marginTop: 10,
   },
   saveBtnText: { color: '#FFFFFF', fontWeight: 'bold', fontSize: 13 },
+  webSafe: { height: '100vh', backgroundColor: '#0A1628' },
+  webScroller: { flex: 1, overflow: 'scroll', paddingBottom: 40 },
 });

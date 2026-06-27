@@ -32,6 +32,9 @@ const formatDate = (dateStr) => {
 const safeName = (nom) => (nom || 'referentiel').replace(/[^a-zA-Z0-9._-]/g, '_');
 
 export default function ReferentielsScreen({ navigation }) {
+  const Wrapper = Platform.OS === 'web' ? View : SafeAreaView;
+  const Scroller = Platform.OS === 'web' ? View : ScrollView;
+
   const [referentiels, setReferentiels] = useState([]);
   const [loading, setLoading] = useState(false);
   const [actionLoadingId, setActionLoadingId] = useState(null);
@@ -202,7 +205,7 @@ export default function ReferentielsScreen({ navigation }) {
   const isUploading = uploadProgress !== null;
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <Wrapper style={Platform.OS === 'web' ? styles.webSafe : styles.safe}>
       <StatusBar barStyle="light-content" backgroundColor="#0A1628" />
 
       {/* Header */}
@@ -233,7 +236,7 @@ export default function ReferentielsScreen({ navigation }) {
       {loading ? (
         <ActivityIndicator color="#C9A84C" style={{ marginTop: 40 }} />
       ) : (
-        <ScrollView style={styles.list} showsVerticalScrollIndicator={false}>
+        <Scroller style={Platform.OS === 'web' ? styles.webScroller : styles.list} {...(Platform.OS !== 'web' && { showsVerticalScrollIndicator: false })}>
           {referentiels.length === 0 ? (
             <View style={styles.emptyBox}>
               <Text style={styles.emptyIcon}>📄</Text>
@@ -293,7 +296,7 @@ export default function ReferentielsScreen({ navigation }) {
             ))
           )}
           <View style={{ height: 40 }} />
-        </ScrollView>
+        </Scroller>
       )}
 
       {/* Modal upload multi-fichiers */}
@@ -399,12 +402,14 @@ export default function ReferentielsScreen({ navigation }) {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </Wrapper>
   );
 }
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#0A1628' },
+  webSafe: { height: '100vh', backgroundColor: '#0A1628' },
+  webScroller: { flex: 1, overflow: 'scroll', paddingBottom: 40 },
 
   header: {
     backgroundColor: '#0F2137',

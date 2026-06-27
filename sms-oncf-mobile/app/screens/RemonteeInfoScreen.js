@@ -16,6 +16,9 @@ const canViewAll = (role) => role === 'ADMIN' || role === 'CGPX' || role === 'CS
 const canManage = canViewAll;
 
 export default function RemonteeInfoScreen({ navigation }) {
+  const Wrapper = Platform.OS === 'web' ? View : SafeAreaView;
+  const Scroller = Platform.OS === 'web' ? View : ScrollView;
+
   const [step, setStep] = useState(0); // 0=campagnes, 1=formulaire, 2=résultats
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -292,7 +295,7 @@ ${solutionsHtml || '<p style="color:#607D8B;font-size:10px;">Aucune réponse</p>
   // ===== ÉTAPE 0 — Campagnes =====
   if (step === 0) {
     return (
-      <SafeAreaView style={styles.safe}>
+      <Wrapper style={Platform.OS === 'web' ? styles.webSafe : styles.safe}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <Text style={styles.backText}>← Retour</Text>
@@ -311,7 +314,7 @@ ${solutionsHtml || '<p style="color:#607D8B;font-size:10px;">Aucune réponse</p>
         </View>
 
         {loading ? <ActivityIndicator color="#E67E22" style={{ marginTop: 40 }} /> : (
-          <ScrollView style={styles.list}>
+          <Scroller style={Platform.OS === 'web' ? styles.webScroller : styles.list} {...(Platform.OS !== 'web' && { showsVerticalScrollIndicator: false })}>
             {campagnes.length === 0 ? (
               <View style={styles.emptyBox}>
                 <Text style={styles.emptyIcon}>📋</Text>
@@ -376,7 +379,7 @@ ${solutionsHtml || '<p style="color:#607D8B;font-size:10px;">Aucune réponse</p>
               </View>
             ))}
             <View style={{ height: 40 }} />
-          </ScrollView>
+          </Scroller>
         )}
 
         <Modal visible={showAddCampagne} transparent animationType="fade">
@@ -401,7 +404,7 @@ ${solutionsHtml || '<p style="color:#607D8B;font-size:10px;">Aucune réponse</p>
             </View>
           </View>
         </Modal>
-      </SafeAreaView>
+      </Wrapper>
     );
   }
 
@@ -409,7 +412,7 @@ ${solutionsHtml || '<p style="color:#607D8B;font-size:10px;">Aucune réponse</p>
   if (step === 1) {
     const isReadOnly = selectedCampagne?.statut === 'FERME';
     return (
-      <SafeAreaView style={styles.safe}>
+      <Wrapper style={Platform.OS === 'web' ? styles.webSafe : styles.safe}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => { setStep(0); setMaReponse(null); }}>
             <Text style={styles.backText}>← Retour</Text>
@@ -422,7 +425,7 @@ ${solutionsHtml || '<p style="color:#607D8B;font-size:10px;">Aucune réponse</p>
             {isReadOnly ? ' · Fermé (lecture seule)' : maReponse ? ' · Modifier votre réponse' : ''}
           </Text>
         </View>
-        <ScrollView style={styles.formContainer}>
+        <Scroller style={Platform.OS === 'web' ? styles.webScroller : styles.formContainer} {...(Platform.OS !== 'web' && { showsVerticalScrollIndicator: false })}>
 
           <View style={styles.anonBox}>
             <Text style={styles.anonIcon}>🔒</Text>
@@ -474,8 +477,8 @@ ${solutionsHtml || '<p style="color:#607D8B;font-size:10px;">Aucune réponse</p>
             </TouchableOpacity>
           )}
           <View style={{ height: 40 }} />
-        </ScrollView>
-      </SafeAreaView>
+        </Scroller>
+      </Wrapper>
     );
   }
 
@@ -497,7 +500,7 @@ ${solutionsHtml || '<p style="color:#607D8B;font-size:10px;">Aucune réponse</p>
     );
 
     return (
-      <SafeAreaView style={styles.safe}>
+      <Wrapper style={Platform.OS === 'web' ? styles.webSafe : styles.safe}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => { setStep(0); setResultats([]); }}>
             <Text style={styles.backText}>← Retour</Text>
@@ -516,7 +519,7 @@ ${solutionsHtml || '<p style="color:#607D8B;font-size:10px;">Aucune réponse</p>
         </View>
 
         {loading ? <ActivityIndicator color="#E67E22" style={{ marginTop: 40 }} /> : (
-          <ScrollView style={styles.list}>
+          <Scroller style={Platform.OS === 'web' ? styles.webScroller : styles.list} {...(Platform.OS !== 'web' && { showsVerticalScrollIndicator: false })}>
             {total === 0 ? (
               <View style={styles.emptyBox}>
                 <Text style={styles.emptyIcon}>📊</Text>
@@ -587,9 +590,9 @@ ${solutionsHtml || '<p style="color:#607D8B;font-size:10px;">Aucune réponse</p>
               </>
             )}
             <View style={{ height: 40 }} />
-          </ScrollView>
+          </Scroller>
         )}
-      </SafeAreaView>
+      </Wrapper>
     );
   }
 
@@ -598,6 +601,8 @@ ${solutionsHtml || '<p style="color:#607D8B;font-size:10px;">Aucune réponse</p>
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#0A1628' },
+  webSafe: { height: '100vh', backgroundColor: '#0A1628' },
+  webScroller: { flex: 1, overflow: 'scroll', paddingBottom: 40 },
   header: { backgroundColor: '#0F2137', padding: 20, borderBottomLeftRadius: 20, borderBottomRightRadius: 20, marginBottom: 12 },
   backText: { color: '#C9A84C', fontSize: 14, marginBottom: 8 },
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },

@@ -9,10 +9,12 @@ import axios from 'axios';
 import { API_URL } from '../services/authService';
 import DatePickerInput from '../components/DatePickerInput';
 
-const ENTITES = [
-  'CAMI', 'CT Voie', 'CT CSS', 'CDT 101V',
-  'CDT 102V', 'CDT OA OH OT', 'CDT 101LC', 'CDT 101SST',
-];
+const ENTITES_PAR_ROLE = {
+  CET:   ['CAMI'],
+  CSPR:  ['CT Voie', 'CT CSS'],
+  CGPX:  ['CDT 101V', 'CDT 102V', 'CDT OA OH OT', 'CDT 101LC', 'CDT 101SST'],
+  AGENT: ['CDT 101V', 'CDT 102V', 'CDT OA OH OT', 'CDT 101LC', 'CDT 101SST'],
+};
 
 const ROLES = [
   { value: 'AGENT', label: 'Agent', icon: '👷', desc: 'Saisie terrain' },
@@ -110,7 +112,7 @@ export default function RegisterScreen({ navigation }) {
     <Wrapper style={Platform.OS === 'web' ? styles.webSafe : styles.safe}>
       <StatusBar barStyle="light-content" backgroundColor="#0A1628" />
       <Scroller style={Platform.OS === 'web' ? styles.webScroller : styles.container}
-        {...(Platform.OS !== 'web' && { showsVerticalScrollIndicator: false, contentContainerStyle: styles.scrollContent })}>
+        {...(Platform.OS !== 'web' && { showsVerticalScrollIndicator: false })}>
 
         {/* Header */}
         <View style={styles.header}>
@@ -188,9 +190,55 @@ export default function RegisterScreen({ navigation }) {
             />
           </View>
 
+          {/* ===== RÔLE ===== */}
+          <View style={styles.sectionBox}>
+            <Text style={styles.sectionTitle}>🔑 Rôle</Text>
+            <View style={styles.rolesContainer}>
+              {ROLES.map((role) => (
+                <TouchableOpacity
+                  key={role.value}
+                  style={[styles.roleCard, selectedRole === role.value && styles.roleCardSelected]}
+                  onPress={() => { setSelectedRole(role.value); setEntite(''); setShowEntiteDropdown(false); }}
+                >
+                  <Text style={styles.roleIcon}>{role.icon}</Text>
+                  <Text style={[styles.roleLabel, selectedRole === role.value && styles.roleLabelSelected]}>
+                    {role.label}
+                  </Text>
+                  <Text style={styles.roleDesc}>{role.desc}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
           {/* ===== POSTE ===== */}
           <View style={styles.sectionBox}>
             <Text style={styles.sectionTitle}>🏢 Poste & Fonction</Text>
+
+            <Text style={styles.label}>Entité *</Text>
+            <TouchableOpacity
+              style={styles.dropdownTrigger}
+              onPress={() => setShowEntiteDropdown(!showEntiteDropdown)}
+            >
+              <Text style={entite ? styles.dropdownValue : styles.dropdownPlaceholder}>
+                {entite || 'Sélectionner une entité'}
+              </Text>
+              <Text style={styles.dropdownArrow}>{showEntiteDropdown ? '▲' : '▼'}</Text>
+            </TouchableOpacity>
+            {showEntiteDropdown && (
+              <View style={styles.dropdownList}>
+                {(ENTITES_PAR_ROLE[selectedRole] || []).map((item) => (
+                  <TouchableOpacity
+                    key={item}
+                    style={[styles.dropdownItem, entite === item && styles.dropdownItemSelected]}
+                    onPress={() => { setEntite(item); setShowEntiteDropdown(false); }}
+                  >
+                    <Text style={[styles.dropdownItemText, entite === item && styles.dropdownItemTextSelected]}>
+                      {item}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
 
             <Text style={styles.label}>Poste occupé</Text>
             <TextInput style={styles.input}
@@ -212,57 +260,11 @@ export default function RegisterScreen({ navigation }) {
               placeholder="Sélectionner une date"
               inputStyle={styles.input} />
 
-            <Text style={styles.label}>Entité</Text>
-            <TouchableOpacity
-              style={styles.dropdownTrigger}
-              onPress={() => setShowEntiteDropdown(!showEntiteDropdown)}
-            >
-              <Text style={entite ? styles.dropdownValue : styles.dropdownPlaceholder}>
-                {entite || 'Sélectionner une entité'}
-              </Text>
-              <Text style={styles.dropdownArrow}>{showEntiteDropdown ? '▲' : '▼'}</Text>
-            </TouchableOpacity>
-            {showEntiteDropdown && (
-              <View style={styles.dropdownList}>
-                {ENTITES.map((item) => (
-                  <TouchableOpacity
-                    key={item}
-                    style={[styles.dropdownItem, entite === item && styles.dropdownItemSelected]}
-                    onPress={() => { setEntite(item); setShowEntiteDropdown(false); }}
-                  >
-                    <Text style={[styles.dropdownItemText, entite === item && styles.dropdownItemTextSelected]}>
-                      {item}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            )}
-
             <Text style={styles.label}>Site / UP</Text>
             <TextInput style={styles.input}
               placeholder="Ex: UP 1021V LGV" placeholderTextColor="#607D8B"
               value={siteUp} onChangeText={setSiteUp}
             />
-          </View>
-
-          {/* ===== RÔLE ===== */}
-          <View style={styles.sectionBox}>
-            <Text style={styles.sectionTitle}>🔑 Rôle</Text>
-            <View style={styles.rolesContainer}>
-              {ROLES.map((role) => (
-                <TouchableOpacity
-                  key={role.value}
-                  style={[styles.roleCard, selectedRole === role.value && styles.roleCardSelected]}
-                  onPress={() => setSelectedRole(role.value)}
-                >
-                  <Text style={styles.roleIcon}>{role.icon}</Text>
-                  <Text style={[styles.roleLabel, selectedRole === role.value && styles.roleLabelSelected]}>
-                    {role.label}
-                  </Text>
-                  <Text style={styles.roleDesc}>{role.desc}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
           </View>
 
           {/* ===== SÉCURITÉ ===== */}
@@ -315,8 +317,7 @@ export default function RegisterScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#0A1628' },
-  container: { flex: 1 },
-  scrollContent: { paddingBottom: 40 },
+  container: { flex: 1, backgroundColor: '#0A1628' },
   webSafe: { height: '100vh', backgroundColor: '#0A1628' },
   webScroller: { flex: 1, overflow: 'scroll', paddingBottom: 40 },
 

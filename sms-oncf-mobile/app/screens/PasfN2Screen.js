@@ -71,6 +71,9 @@ function AvancementBar({ pct }) {
 // ÉCRAN PRINCIPAL
 // ================================================================
 export default function PasfN2Screen({ navigation }) {
+  const Wrapper = Platform.OS === 'web' ? View : SafeAreaView;
+  const Scroller = Platform.OS === 'web' ? View : ScrollView;
+
   const { width } = useWindowDimensions();
   const WEB = Platform.OS === 'web' && width > 768;
 
@@ -332,7 +335,7 @@ td { font-size:7px;padding:3px;border:1px solid #ddd;vertical-align:top; }
   // ================================================================
   if (step === 0) {
     return (
-      <SafeAreaView style={s.safe}>
+      <Wrapper style={Platform.OS === 'web' ? s.webSafe : s.safe}>
         <View style={s.header}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <Text style={s.backText}>← Retour</Text>
@@ -342,7 +345,7 @@ td { font-size:7px;padding:3px;border:1px solid #ddd;vertical-align:top; }
         </View>
 
         {loading ? <ActivityIndicator color="#C9A84C" style={{ marginTop: 40 }} /> : (
-          <ScrollView style={[s.list, WEB && { maxWidth: 800, alignSelf: 'center', width: '100%' }]}>
+          <Scroller style={Platform.OS === 'web' ? s.webScroller : s.list} {...(Platform.OS !== 'web' && { showsVerticalScrollIndicator: false })}>
             <Text style={s.sectionLabel}>Année</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 20 }}>
               {annees.map(a => (
@@ -399,9 +402,9 @@ td { font-size:7px;padding:3px;border:1px solid #ddd;vertical-align:top; }
             <TouchableOpacity style={s.confirmBtn} onPress={loadData}>
               <Text style={s.confirmBtnText}>Consulter {selectedAnnee} →</Text>
             </TouchableOpacity>
-          </ScrollView>
+          </Scroller>
         )}
-      </SafeAreaView>
+      </Wrapper>
     );
   }
 
@@ -409,7 +412,7 @@ td { font-size:7px;padding:3px;border:1px solid #ddd;vertical-align:top; }
   // ÉTAPE 1 — Tableau PASF
   // ================================================================
   return (
-    <SafeAreaView style={s.safe}>
+    <Wrapper style={Platform.OS === 'web' ? s.webSafe : s.safe}>
 
       {/* HEADER */}
       <View style={s.header}>
@@ -485,7 +488,7 @@ td { font-size:7px;padding:3px;border:1px solid #ddd;vertical-align:top; }
       </ScrollView>
 
       {loading ? <ActivityIndicator color="#C9A84C" style={{ marginTop: 40 }} /> : (
-        <ScrollView style={[s.list, WEB && { paddingHorizontal: 24 }]}>
+        <Scroller style={Platform.OS === 'web' ? s.webScroller : s.list} {...(Platform.OS !== 'web' && { showsVerticalScrollIndicator: false })}>
 
           {dataFiltered.length === 0 ? (
             <View style={s.emptyBox}>
@@ -653,7 +656,7 @@ td { font-size:7px;padding:3px;border:1px solid #ddd;vertical-align:top; }
             })
           )}
           <View style={{ height: 40 }} />
-        </ScrollView>
+        </Scroller>
       )}
 
       {/* ════════════════════════════════════════════════
@@ -933,7 +936,7 @@ td { font-size:7px;padding:3px;border:1px solid #ddd;vertical-align:top; }
           </View>
         </KeyboardAvoidingView>
       </Modal>
-    </SafeAreaView>
+    </Wrapper>
   );
 }
 
@@ -942,6 +945,8 @@ td { font-size:7px;padding:3px;border:1px solid #ddd;vertical-align:top; }
 // ================================================================
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#0A1628' },
+  webSafe: { height: '100vh', backgroundColor: '#0A1628' },
+  webScroller: { flex: 1, overflow: 'scroll', paddingBottom: 40 },
   header: {
     backgroundColor: '#0F2137', padding: 20,
     borderBottomLeftRadius: 20, borderBottomRightRadius: 20, marginBottom: 12,

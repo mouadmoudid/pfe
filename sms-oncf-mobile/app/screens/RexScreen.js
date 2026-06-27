@@ -240,10 +240,13 @@ ${section('Conclusion', rex.conclusion, '#0A1628')}
     </View>
   );
 
+  const Wrapper = Platform.OS === 'web' ? View : SafeAreaView;
+  const Scroller = Platform.OS === 'web' ? View : ScrollView;
+
   // ===== LISTE =====
   if (step === 0) {
     return (
-      <SafeAreaView style={styles.safe}>
+      <Wrapper style={Platform.OS === 'web' ? styles.webSafe : styles.safe}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <Text style={styles.backText}>← Retour</Text>
@@ -262,7 +265,7 @@ ${section('Conclusion', rex.conclusion, '#0A1628')}
         {loading
           ? <ActivityIndicator color="#E67E22" style={{ marginTop: 40 }} />
           : (
-            <ScrollView style={styles.list}>
+            <Scroller style={Platform.OS === 'web' ? styles.webScroller : styles.list} {...(Platform.OS !== 'web' && { showsVerticalScrollIndicator: false })}>
               {rexList.length === 0 ? (
                 <View style={styles.emptyBox}>
                   <Text style={styles.emptyIcon}>📋</Text>
@@ -305,17 +308,17 @@ ${section('Conclusion', rex.conclusion, '#0A1628')}
                 ))
               )}
               <View style={{ height: 40 }} />
-            </ScrollView>
+            </Scroller>
           )
         }
-      </SafeAreaView>
+      </Wrapper>
     );
   }
 
   // ===== FORMULAIRE =====
   if (step === 1) {
     return (
-      <SafeAreaView style={styles.safe}>
+      <Wrapper style={Platform.OS === 'web' ? styles.webSafe : styles.safe}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => { setStep(0); setForm(EMPTY_REX); setEditingId(null); }}>
             <Text style={styles.backText}>← Retour</Text>
@@ -335,7 +338,7 @@ ${section('Conclusion', rex.conclusion, '#0A1628')}
           </View>
         </View>
 
-        <ScrollView style={styles.formContainer}>
+        <Scroller style={Platform.OS === 'web' ? styles.webScroller : styles.formContainer} {...(Platform.OS !== 'web' && { showsVerticalScrollIndicator: false })}>
 
           {/* Titre */}
           <View style={styles.sectionBox}>
@@ -398,8 +401,8 @@ ${section('Conclusion', rex.conclusion, '#0A1628')}
           </View>
 
           <View style={{ height: 40 }} />
-        </ScrollView>
-      </SafeAreaView>
+        </Scroller>
+      </Wrapper>
     );
   }
 
@@ -408,6 +411,8 @@ ${section('Conclusion', rex.conclusion, '#0A1628')}
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#0A1628' },
+  webSafe: { height: '100vh', backgroundColor: '#0A1628' },
+  webScroller: { flex: 1, overflow: 'scroll', paddingBottom: 40 },
   header: {
     backgroundColor: '#0F2137', padding: 20,
     borderBottomLeftRadius: 20, borderBottomRightRadius: 20, marginBottom: 12,

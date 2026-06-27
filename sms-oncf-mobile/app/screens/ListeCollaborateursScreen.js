@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet,
-  ScrollView, ActivityIndicator, Alert, TextInput
+  ScrollView, ActivityIndicator, Alert, TextInput, Platform
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import axios from 'axios';
@@ -13,6 +13,9 @@ const USERS_API = API_URL.replace('/auth', '/admin/users');
 const FICHE_API = API_URL.replace('/auth', '/fiche-suivi');
 
 export default function ListeCollaborateursScreen({ navigation }) {
+  const Wrapper = Platform.OS === 'web' ? View : SafeAreaView;
+  const Scroller = Platform.OS === 'web' ? View : ScrollView;
+
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [users, setUsers] = useState([]);
@@ -198,7 +201,7 @@ td { padding: 4px 6px; border: 1px solid #ddd; vertical-align: middle; }
   };
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <Wrapper style={Platform.OS === 'web' ? styles.webSafe : styles.safe}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Text style={styles.backText}>← Retour</Text>
@@ -243,7 +246,7 @@ td { padding: 4px 6px; border: 1px solid #ddd; vertical-align: middle; }
       {loading
         ? <ActivityIndicator color="#8E44AD" style={{ marginTop: 40 }} />
         : (
-          <ScrollView style={styles.list}>
+          <Scroller style={Platform.OS === 'web' ? styles.webScroller : styles.list} {...(Platform.OS !== 'web' && { showsVerticalScrollIndicator: false })}>
             {filtered.length === 0 ? (
               <View style={styles.emptyBox}>
                 <Text style={styles.emptyIcon}>👥</Text>
@@ -314,10 +317,10 @@ td { padding: 4px 6px; border: 1px solid #ddd; vertical-align: middle; }
               })
             )}
             <View style={{ height: 40 }} />
-          </ScrollView>
+          </Scroller>
         )
       }
-    </SafeAreaView>
+    </Wrapper>
   );
 }
 
@@ -390,4 +393,6 @@ const styles = StyleSheet.create({
   },
   obsLabel: { color: '#E74C3C', fontSize: 11, fontWeight: 'bold', marginBottom: 4 },
   obsText: { color: '#FFFFFF', fontSize: 12 },
+  webSafe: { height: '100vh', backgroundColor: '#0A1628' },
+  webScroller: { flex: 1, overflow: 'scroll', paddingBottom: 40 },
 });

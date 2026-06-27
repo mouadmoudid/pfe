@@ -84,6 +84,9 @@ export default function PdvsEteRamadanScreen({ navigation }) {
   // null | 'form' | 'respPicker' | 'cdtSelect'
   const [modalView, setModalView] = useState(null);
 
+  const Wrapper = Platform.OS === 'web' ? View : SafeAreaView;
+  const Scroller = Platform.OS === 'web' ? View : ScrollView;
+
   const getToken = async () => await AsyncStorage.getItem('token');
   const setF = (k, v) => setForm(p => ({ ...p, [k]: v }));
 
@@ -333,7 +336,7 @@ td { font-size:7px;padding:3px;border:1px solid #ddd;vertical-align:top; }
   // ================================================================
   if (step === 0) {
     return (
-      <SafeAreaView style={s.safe}>
+      <Wrapper style={Platform.OS === 'web' ? s.webSafe : s.safe}>
         <View style={s.header}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <Text style={s.backText}>← Retour</Text>
@@ -343,7 +346,7 @@ td { font-size:7px;padding:3px;border:1px solid #ddd;vertical-align:top; }
         </View>
 
         {loading ? <ActivityIndicator color="#C9A84C" style={{ marginTop: 40 }} /> : (
-          <ScrollView style={[s.list, WEB && { maxWidth: 700, alignSelf: 'center', width: '100%' }]}>
+          <Scroller style={Platform.OS === 'web' ? s.webScroller : s.list} {...(Platform.OS !== 'web' && { showsVerticalScrollIndicator: false })}>
 
             {/* Sélection Période */}
             <Text style={s.sectionLabel}>Période</Text>
@@ -424,9 +427,9 @@ td { font-size:7px;padding:3px;border:1px solid #ddd;vertical-align:top; }
                 {periodeInfo.icon} Consulter {periodeInfo.label} {selectedAnnee} →
               </Text>
             </TouchableOpacity>
-          </ScrollView>
+          </Scroller>
         )}
-      </SafeAreaView>
+      </Wrapper>
     );
   }
 
@@ -434,7 +437,7 @@ td { font-size:7px;padding:3px;border:1px solid #ddd;vertical-align:top; }
   // ÉTAPE 1 — Tableau actions
   // ================================================================
   return (
-    <SafeAreaView style={s.safe}>
+    <Wrapper style={Platform.OS === 'web' ? s.webSafe : s.safe}>
 
       {/* HEADER */}
       <View style={[s.header, { borderBottomColor: periodeInfo.color, borderBottomWidth: 3 }]}>
@@ -498,7 +501,7 @@ td { font-size:7px;padding:3px;border:1px solid #ddd;vertical-align:top; }
       </View>
 
       {loading ? <ActivityIndicator color="#C9A84C" style={{ marginTop: 40 }} /> : (
-        <ScrollView style={[s.list, WEB && { paddingHorizontal: 24 }]}>
+        <Scroller style={Platform.OS === 'web' ? s.webScroller : s.list} {...(Platform.OS !== 'web' && { showsVerticalScrollIndicator: false })}>
 
           {data.length === 0 ? (
             <View style={s.emptyBox}>
@@ -732,7 +735,7 @@ td { font-size:7px;padding:3px;border:1px solid #ddd;vertical-align:top; }
             })
           )}
           <View style={{ height: 40 }} />
-        </ScrollView>
+        </Scroller>
       )}
 
       {/* ════════════════════════════════════════════════
@@ -973,7 +976,7 @@ td { font-size:7px;padding:3px;border:1px solid #ddd;vertical-align:top; }
           </View>
         </KeyboardAvoidingView>
       </Modal>
-    </SafeAreaView>
+    </Wrapper>
   );
 }
 
@@ -982,6 +985,8 @@ td { font-size:7px;padding:3px;border:1px solid #ddd;vertical-align:top; }
 // ================================================================
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#0A1628' },
+  webSafe: { height: '100vh', backgroundColor: '#0A1628' },
+  webScroller: { flex: 1, overflow: 'scroll', paddingBottom: 40 },
   header: {
     backgroundColor: '#0F2137', padding: 20,
     borderBottomLeftRadius: 20, borderBottomRightRadius: 20, marginBottom: 12,

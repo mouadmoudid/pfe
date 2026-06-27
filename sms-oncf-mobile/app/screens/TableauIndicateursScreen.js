@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet,
-  ScrollView, ActivityIndicator, Alert, TextInput
+  ScrollView, ActivityIndicator, Alert, TextInput, Platform
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import axios from 'axios';
@@ -63,6 +63,9 @@ const INDICATEURS = [
 ];
 
 export default function TableauIndicateursScreen({ navigation }) {
+  const Wrapper = Platform.OS === 'web' ? View : SafeAreaView;
+  const Scroller = Platform.OS === 'web' ? View : ScrollView;
+
   const [step, setStep] = useState(0); // 0=collabs, 1=checklists, 2=tableau
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -292,7 +295,7 @@ table.indicateurs th:first-child { text-align: left; }
     );
 
     return (
-      <SafeAreaView style={styles.safe}>
+      <Wrapper style={Platform.OS === 'web' ? styles.webSafe : styles.safe}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <Text style={styles.backText}>← Retour</Text>
@@ -314,7 +317,7 @@ table.indicateurs th:first-child { text-align: left; }
         {loading
           ? <ActivityIndicator color="#8E44AD" style={{ marginTop: 40 }} />
           : (
-            <ScrollView style={styles.list}>
+            <Scroller style={Platform.OS === 'web' ? styles.webScroller : styles.list} {...(Platform.OS !== 'web' && { showsVerticalScrollIndicator: false })}>
               {filtered.map(c => (
                 <TouchableOpacity
                   key={c.id}
@@ -334,17 +337,17 @@ table.indicateurs th:first-child { text-align: left; }
                 </TouchableOpacity>
               ))}
               <View style={{ height: 40 }} />
-            </ScrollView>
+            </Scroller>
           )
         }
-      </SafeAreaView>
+      </Wrapper>
     );
   }
 
   // ===== ÉTAPE 1 — Liste check lists =====
   if (step === 1) {
     return (
-      <SafeAreaView style={styles.safe}>
+      <Wrapper style={Platform.OS === 'web' ? styles.webSafe : styles.safe}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => { setStep(0); setSelectedCollab(null); }}>
             <Text style={styles.backText}>← Retour</Text>
@@ -356,7 +359,7 @@ table.indicateurs th:first-child { text-align: left; }
         {loading
           ? <ActivityIndicator color="#8E44AD" style={{ marginTop: 40 }} />
           : (
-            <ScrollView style={styles.list}>
+            <Scroller style={Platform.OS === 'web' ? styles.webScroller : styles.list} {...(Platform.OS !== 'web' && { showsVerticalScrollIndicator: false })}>
               {checklists.length === 0 ? (
                 <View style={styles.emptyBox}>
                   <Text style={styles.emptyIcon}>📋</Text>
@@ -381,17 +384,17 @@ table.indicateurs th:first-child { text-align: left; }
                 ))
               )}
               <View style={{ height: 40 }} />
-            </ScrollView>
+            </Scroller>
           )
         }
-      </SafeAreaView>
+      </Wrapper>
     );
   }
 
   // ===== ÉTAPE 2 — Tableau des indicateurs =====
   if (step === 2) {
     return (
-      <SafeAreaView style={styles.safe}>
+      <Wrapper style={Platform.OS === 'web' ? styles.webSafe : styles.safe}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => { setStep(1); setSelectedCL(null); setIndicateursData({}); }}>
             <Text style={styles.backText}>← Retour</Text>
@@ -417,7 +420,7 @@ table.indicateurs th:first-child { text-align: left; }
         {loading
           ? <ActivityIndicator color="#8E44AD" style={{ marginTop: 40 }} />
           : (
-            <ScrollView style={styles.tableContainer}>
+            <Scroller style={Platform.OS === 'web' ? styles.webScroller : styles.tableContainer} {...(Platform.OS !== 'web' && { showsVerticalScrollIndicator: false })}>
 
               {/* Infos collaborateur */}
               <View style={styles.infoCard}>
@@ -496,10 +499,10 @@ table.indicateurs th:first-child { text-align: left; }
               ))}
 
               <View style={{ height: 40 }} />
-            </ScrollView>
+            </Scroller>
           )
         }
-      </SafeAreaView>
+      </Wrapper>
     );
   }
 
@@ -508,6 +511,8 @@ table.indicateurs th:first-child { text-align: left; }
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#0A1628' },
+  webSafe: { height: '100vh', backgroundColor: '#0A1628' },
+  webScroller: { flex: 1, overflow: 'scroll', paddingBottom: 40 },
   header: {
     backgroundColor: '#0F2137', padding: 20,
     borderBottomLeftRadius: 20, borderBottomRightRadius: 20, marginBottom: 12,

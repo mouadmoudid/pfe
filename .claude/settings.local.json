@@ -5,7 +5,9 @@
       "Bash(Select-Object Name, PSIsContainer)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8080/api/pdvs/registre-dangers-n2/annees -H \"Authorization: Bearer test\")",
       "Bash(npx expo *)",
-      "Bash(git -C \"c:/Users/HP/Downloads/pfe/pfe\" status --short)"
+      "Bash(git -C \"c:/Users/HP/Downloads/pfe/pfe\" status --short)",
+      "Bash(grep -v \":1$\")",
+      "Bash(grep -v \":0$\")"
     ]
   }
 }

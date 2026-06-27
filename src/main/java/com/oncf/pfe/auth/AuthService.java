@@ -48,8 +48,7 @@ public class AuthService {
             throw new RuntimeException("Email déjà utilisé");
         }
 
-        boolean isFirstLogin = request.getRole() == Role.AGENT
-                && request.getMatricule() != null;
+        boolean isFirstLogin = request.getRole() != Role.ADMIN;
 
         User user = User.builder()
                 .fullName(request.getFullName())

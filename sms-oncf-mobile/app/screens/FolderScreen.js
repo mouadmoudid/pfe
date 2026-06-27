@@ -1,7 +1,7 @@
 import React from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet,
-  ScrollView
+  ScrollView, Platform
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
@@ -267,7 +267,7 @@ const FOLDERS = {
         title: 'Rapport KN2',
         subtitle: 'Compte rendu KN2 · Évaluation FOH 4 dimensions',
         icon: '📝',
-        screen: null, // à développer
+        screen: 'RapportKN2', // à développer
       },
       {
         id: 'CONTROLE_MANAGEMENT',
@@ -341,6 +341,9 @@ const AGENT_HIDDEN = {
 // COMPOSANT PRINCIPAL
 // ================================================================
 export default function FolderScreen({ route, navigation }) {
+  const Wrapper = Platform.OS === 'web' ? View : SafeAreaView;
+  const Scroller = Platform.OS === 'web' ? View : ScrollView;
+
   const { folderId } = route.params;
   const folder = FOLDERS[folderId];
   const { user } = useAuth();
@@ -350,7 +353,7 @@ export default function FolderScreen({ route, navigation }) {
   // Vérifier accès au dossier complet
   if (folder.roles && !folder.roles.includes(role)) {
     return (
-      <SafeAreaView style={styles.safe}>
+      <Wrapper style={Platform.OS === 'web' ? styles.webSafe : styles.safe}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <Text style={styles.backText}>← Retour</Text>
@@ -363,7 +366,7 @@ export default function FolderScreen({ route, navigation }) {
             Ce dossier est réservé aux rôles CSPR, CET, ADMIN et CGPX
           </Text>
         </View>
-      </SafeAreaView>
+      </Wrapper>
     );
   }
 
@@ -373,7 +376,7 @@ export default function FolderScreen({ route, navigation }) {
     : folder.subFolders;
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <Wrapper style={Platform.OS === 'web' ? styles.webSafe : styles.safe}>
 
       {/* Header */}
       <View style={[styles.header, { borderBottomColor: folder.color }]}>
@@ -391,7 +394,7 @@ export default function FolderScreen({ route, navigation }) {
         </View>
       </View>
 
-      <ScrollView style={styles.content}>
+      <Scroller style={Platform.OS === 'web' ? styles.webScroller : styles.content} {...(Platform.OS !== 'web' && { showsVerticalScrollIndicator: false })}>
         {visibleSubFolders.length === 0 ? (
           <View style={styles.emptyBox}>
             <Text style={styles.emptyIcon}>🚧</Text>
@@ -437,8 +440,8 @@ export default function FolderScreen({ route, navigation }) {
           ))
         )}
         <View style={{ height: 40 }} />
-      </ScrollView>
-    </SafeAreaView>
+      </Scroller>
+    </Wrapper>
   );
 }
 
@@ -515,4 +518,6 @@ const styles = StyleSheet.create({
     marginLeft: 8, borderWidth: 1, borderColor: '#2A4060',
   },
   soonText: { color: '#607D8B', fontSize: 10 },
+  webSafe: { height: '100vh', backgroundColor: '#0A1628' },
+  webScroller: { flex: 1, overflow: 'scroll', paddingBottom: 40 },
 });

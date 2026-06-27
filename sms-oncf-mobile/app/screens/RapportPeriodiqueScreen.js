@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet,
-  ScrollView, ActivityIndicator, Alert, TextInput
+  ScrollView, ActivityIndicator, Alert, TextInput, Platform
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import axios from 'axios';
@@ -18,6 +18,9 @@ const MOIS_NOMS = [
 ];
 
 export default function RapportPeriodiqueScreen({ navigation }) {
+  const Wrapper = Platform.OS === 'web' ? View : SafeAreaView;
+  const Scroller = Platform.OS === 'web' ? View : ScrollView;
+
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [step, setStep] = useState(0); // 0=sélection période, 1=formulaire
@@ -306,7 +309,7 @@ export default function RapportPeriodiqueScreen({ navigation }) {
   // ===== ÉTAPE 0 — Sélection période =====
   if (step === 0) {
     return (
-      <SafeAreaView style={styles.safe}>
+      <Wrapper style={Platform.OS === 'web' ? styles.webSafe : styles.safe}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <Text style={styles.backText}>← Retour</Text>
@@ -315,7 +318,7 @@ export default function RapportPeriodiqueScreen({ navigation }) {
           <Text style={styles.headerSub}>Synthèse mensuelle — DRIC</Text>
         </View>
 
-        <ScrollView style={styles.formContainer}>
+        <Scroller style={Platform.OS === 'web' ? styles.webScroller : styles.formContainer} {...(Platform.OS !== 'web' && { showsVerticalScrollIndicator: false })}>
           <View style={styles.infoBox}>
             <Text style={styles.infoText}>
               Sélectionnez l'année et le mois pour générer le rapport périodique
@@ -377,8 +380,8 @@ export default function RapportPeriodiqueScreen({ navigation }) {
           </TouchableOpacity>
 
           <View style={{ height: 40 }} />
-        </ScrollView>
-      </SafeAreaView>
+        </Scroller>
+      </Wrapper>
     );
   }
 
@@ -388,7 +391,7 @@ export default function RapportPeriodiqueScreen({ navigation }) {
     const chantier = stats?.chantier || {};
 
     return (
-      <SafeAreaView style={styles.safe}>
+      <Wrapper style={Platform.OS === 'web' ? styles.webSafe : styles.safe}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => setStep(0)}>
             <Text style={styles.backText}>← Retour</Text>
@@ -397,7 +400,7 @@ export default function RapportPeriodiqueScreen({ navigation }) {
           <Text style={styles.headerSub}>Complétez les informations</Text>
         </View>
 
-        <ScrollView style={styles.formContainer}>
+        <Scroller style={Platform.OS === 'web' ? styles.webScroller : styles.formContainer} {...(Platform.OS !== 'web' && { showsVerticalScrollIndicator: false })}>
 
           {/* Infos responsable */}
           <View style={styles.sectionBox}>
@@ -550,8 +553,8 @@ export default function RapportPeriodiqueScreen({ navigation }) {
           </TouchableOpacity>
 
           <View style={{ height: 40 }} />
-        </ScrollView>
-      </SafeAreaView>
+        </Scroller>
+      </Wrapper>
     );
   }
 
@@ -666,4 +669,6 @@ const styles = StyleSheet.create({
     padding: 14, alignItems: 'center', marginTop: 8,
   },
   generateBtnText: { color: '#0A1628', fontWeight: 'bold', fontSize: 15 },
+  webSafe: { height: '100vh', backgroundColor: '#0A1628' },
+  webScroller: { flex: 1, overflow: 'scroll', paddingBottom: 40 },
 });

@@ -1,4 +1,5 @@
 import React from 'react';
+import { View, Platform } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { AuthProvider } from './app/context/AuthContext';
@@ -42,6 +43,7 @@ import RegistreDangersN2Screen from './app/screens/RegistreDangersN2Screen';
 import PasfN2Screen from './app/screens/PasfN2Screen';
 import PdvsEteRamadanScreen from './app/screens/PdvsEteRamadanScreen';
 import SyntheseKN2Screen from './app/screens/SyntheseKN2Screen';
+import RapportKN2Screen from './app/screens/RapportKN2Screen';
 
 
 
@@ -92,6 +94,7 @@ export default function App() {
           <Stack.Screen name="PasfN2" component={PasfN2Screen} />
           <Stack.Screen name="PdvsEteRamadan" component={PdvsEteRamadanScreen} />
           <Stack.Screen name="SyntheseKN2" component={SyntheseKN2Screen} />
+          <Stack.Screen name="RapportKN2" component={RapportKN2Screen} />
 
         </Stack.Navigator>
       </NavigationContainer>

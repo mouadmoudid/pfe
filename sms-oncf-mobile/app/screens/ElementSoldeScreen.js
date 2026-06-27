@@ -43,6 +43,9 @@ const EMPTY_FORM = {
 };
 
 export default function ElementSoldeScreen({ navigation }) {
+  const Wrapper = Platform.OS === 'web' ? View : SafeAreaView;
+  const Scroller = Platform.OS === 'web' ? View : ScrollView;
+
   const [step, setStep]           = useState(0);
   const [annees, setAnnees]       = useState([]);
   const [moisList, setMoisList]   = useState([]);
@@ -490,7 +493,7 @@ td { font-size:7px; padding:3px; border:1px solid #ddd; }
   // ================================================================
   if (step === 0) {
     return (
-      <SafeAreaView style={styles.safe}>
+      <Wrapper style={Platform.OS === 'web' ? styles.webSafe : styles.safe}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <Text style={styles.backText}>← Retour</Text>
@@ -502,7 +505,7 @@ td { font-size:7px; padding:3px; border:1px solid #ddd; }
         {loading
           ? <ActivityIndicator color="#C9A84C" style={{ marginTop: 40 }} />
           : (
-          <ScrollView style={styles.list}>
+          <Scroller style={Platform.OS === 'web' ? styles.webScroller : styles.list} {...(Platform.OS !== 'web' && { showsVerticalScrollIndicator: false })}>
             <Text style={styles.sectionLabel}>Année</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 16 }}>
               {annees.map(a => (
@@ -550,9 +553,9 @@ td { font-size:7px; padding:3px; border:1px solid #ddd; }
                 Consulter {MOIS_LABELS[selectedMois]} {selectedAnnee} →
               </Text>
             </TouchableOpacity>
-          </ScrollView>
+          </Scroller>
         )}
-      </SafeAreaView>
+      </Wrapper>
     );
   }
 
@@ -560,7 +563,7 @@ td { font-size:7px; padding:3px; border:1px solid #ddd; }
   // ÉTAPE 1 — Tableau
   // ================================================================
   return (
-    <SafeAreaView style={styles.safe}>
+    <Wrapper style={Platform.OS === 'web' ? styles.webSafe : styles.safe}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => { setStep(0); setData([]); }}>
           <Text style={styles.backText}>← Retour</Text>
@@ -592,7 +595,7 @@ td { font-size:7px; padding:3px; border:1px solid #ddd; }
       {loading
         ? <ActivityIndicator color="#C9A84C" style={{ marginTop: 40 }} />
         : (
-        <ScrollView style={styles.list}>
+        <Scroller style={Platform.OS === 'web' ? styles.webScroller : styles.list} {...(Platform.OS !== 'web' && { showsVerticalScrollIndicator: false })}>
           {visibleData.length === 0 ? (
             <View style={styles.emptyBox}>
               <Text style={styles.emptyIcon}>💰</Text>
@@ -671,7 +674,7 @@ td { font-size:7px; padding:3px; border:1px solid #ddd; }
             ))
           )}
           <View style={{ height: 40 }} />
-        </ScrollView>
+        </Scroller>
       )}
 
       {/* ================================================================
@@ -953,13 +956,15 @@ td { font-size:7px; padding:3px; border:1px solid #ddd; }
       </Modal>
 
       {renderDetailModal()}
-    </SafeAreaView>
+    </Wrapper>
   );
 }
 
 // ================================================================
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#0A1628' },
+  webSafe: { height: '100vh', backgroundColor: '#0A1628' },
+  webScroller: { flex: 1, overflow: 'scroll', paddingBottom: 40 },
   header: {
     backgroundColor: '#0F2137', padding: 20,
     borderBottomLeftRadius: 20, borderBottomRightRadius: 20, marginBottom: 12,
