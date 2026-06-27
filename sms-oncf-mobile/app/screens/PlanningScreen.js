@@ -107,6 +107,7 @@ export default function PlanningScreen({ navigation }) {
     assignedToId: '',
     cotation: '',
   });
+  const [editPct, setEditPct] = useState('');
 
   useEffect(() => {
     const initialize = async () => {
@@ -190,6 +191,22 @@ export default function PlanningScreen({ navigation }) {
       );
       loadData();
       setDetailModal(false);
+    } catch {
+      Alert.alert('Erreur', 'Impossible de mettre à jour');
+    }
+  };
+
+  const updatePourcentage = async (taskId, pct) => {
+    const val = Math.min(100, Math.max(0, parseInt(pct) || 0));
+    try {
+      const token = await getToken();
+      const payload = { pourcentageAcheve: val };
+      if (val >= 100) payload.status = 'REALISE';
+      await axios.patch(`${PLANNING_API}/${taskId}`, payload,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      loadData();
+      if (val >= 100) setDetailModal(false);
     } catch {
       Alert.alert('Erreur', 'Impossible de mettre à jour');
     }
@@ -311,7 +328,7 @@ export default function PlanningScreen({ navigation }) {
                         <TouchableOpacity
                           key={task.id}
                           style={styles.ganttRow}
-                          onPress={() => { setSelectedTask(task); setDetailModal(true); }}
+                          onPress={() => { setSelectedTask(task); setEditPct(String(task.pourcentageAcheve ?? 0)); setDetailModal(true); }}
                         >
                           {/* Label */}
                           <View style={[styles.ganttLabel, { width: LABEL_WIDTH }]}>
@@ -381,7 +398,7 @@ export default function PlanningScreen({ navigation }) {
                   <TouchableOpacity
                     key={task.id}
                     style={[styles.taskCard, { borderLeftColor: CATEGORY_COLORS[task.category] || '#C9A84C' }]}
-                    onPress={() => { setSelectedTask(task); setDetailModal(true); }}
+                    onPress={() => { setSelectedTask(task); setEditPct(String(task.pourcentageAcheve ?? 0)); setDetailModal(true); }}
                   >
                     <View style={styles.taskTop}>
                       <Text style={[styles.taskCategory, { color: CATEGORY_COLORS[task.category] }]}>
@@ -446,8 +463,26 @@ export default function PlanningScreen({ navigation }) {
                   </View>
                   <View style={styles.detailRow}>
                     <Text style={styles.detailLabel}>% Achevé</Text>
-                    <Text style={styles.detailValue}>{selectedTask.pourcentageAcheve}%</Text>
+                    <Text style={styles.detailValue}>{selectedTask.pourcentageAcheve ?? 0}%</Text>
                   </View>
+                  {isCanCreate && selectedTask.status === 'EN_COURS' && (
+                    <View style={styles.pctEditRow}>
+                      <TextInput
+                        style={[styles.input, { flex: 1, marginRight: 8 }]}
+                        placeholder="0-100"
+                        placeholderTextColor="#607D8B"
+                        keyboardType="numeric"
+                        value={editPct}
+                        onChangeText={setEditPct}
+                      />
+                      <TouchableOpacity
+                        style={styles.pctSaveBtn}
+                        onPress={() => updatePourcentage(selectedTask.id, editPct)}
+                      >
+                        <Text style={styles.pctSaveBtnText}>Valider</Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
                   {selectedTask.matricule && (
                     <View style={styles.detailRow}>
                       <Text style={styles.detailLabel}>Matricule</Text>
@@ -519,8 +554,41 @@ export default function PlanningScreen({ navigation }) {
         <View style={styles.modalOverlay}>
           <View style={styles.modalBox}>
             <Text style={styles.modalTitle}>Nouvelle tâche planning</Text>
-            <ScrollView>
+            <ScrollView showsVerticalScrollIndicator={false}>
 
+              {/* 1. Catégorie */}
+              <Text style={styles.inputLabel}>Catégorie *</Text>
+              <View style={styles.modalCatGrid}>
+                {Object.keys(CATEGORY_COLORS).map(cat => (
+                  <TouchableOpacity
+                    key={cat}
+                    style={[styles.modalCatBtn, form.category === cat && { backgroundColor: CATEGORY_COLORS[cat], borderColor: CATEGORY_COLORS[cat] }]}
+                    onPress={() => setForm({ ...form, category: cat, parentTitle: '', title: '' })}
+                  >
+                    <Text style={[styles.modalCatBtnText, form.category === cat && { color: '#fff' }]}>
+                      {CATEGORIES.find(c => c.key === cat)?.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              {/* 2. Sous-tâche */}
+              <Text style={styles.inputLabel}>Sous-tâche *</Text>
+              <View style={{ gap: 6, marginBottom: 8 }}>
+                {(SOUS_TACHES[form.category] || []).map(st => (
+                  <TouchableOpacity
+                    key={st}
+                    style={[styles.modalSubTaskBtn, form.parentTitle === st && styles.modalSubTaskBtnActive]}
+                    onPress={() => setForm({ ...form, parentTitle: st, title: st })}
+                  >
+                    <Text style={[styles.modalSubTaskText, form.parentTitle === st && styles.modalSubTaskTextActive]}>
+                      {st}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              {/* 3. Titre (pré-rempli ou personnalisé) */}
               <Text style={styles.inputLabel}>Titre *</Text>
               <TextInput
                 style={styles.input}
@@ -530,36 +598,36 @@ export default function PlanningScreen({ navigation }) {
                 onChangeText={v => setForm({ ...form, title: v })}
               />
 
-              <Text style={styles.inputLabel}>Catégorie *</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 8 }}>
-                {Object.keys(CATEGORY_COLORS).map(cat => (
-                  <TouchableOpacity
-                    key={cat}
-                    style={[styles.catChip, form.category === cat && styles.catChipActive, { marginBottom: 0 }]}
-                    onPress={() => setForm({ ...form, category: cat })}
-                  >
-                    <Text style={[styles.catText, form.category === cat && styles.catTextActive]}>
-                      {CATEGORIES.find(c => c.key === cat)?.label}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
+              {/* 4. Assigner à un agent */}
+              <Text style={styles.inputLabel}>Assigner à un agent</Text>
+              {agents.length > 0 ? (
+                <View style={{ gap: 6, marginBottom: 8 }}>
+                  {agents.map(agent => (
+                    <TouchableOpacity
+                      key={agent.id}
+                      style={[styles.modalAgentBtn, form.assignedToId === String(agent.id) && styles.modalAgentBtnActive]}
+                      onPress={() => setForm({ ...form, assignedToId: String(agent.id), matricule: agent.matricule || '' })}
+                    >
+                      <View style={styles.modalAgentAvatar}>
+                        <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 12 }}>
+                          {agent.fullName?.charAt(0).toUpperCase()}
+                        </Text>
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={[styles.modalAgentName, form.assignedToId === String(agent.id) && { color: '#C9A84C' }]}>
+                          {agent.fullName}
+                        </Text>
+                        {agent.matricule && <Text style={styles.modalAgentMatricule}>{agent.matricule}</Text>}
+                      </View>
+                      {form.assignedToId === String(agent.id) && <Text style={{ color: '#C9A84C', fontSize: 16 }}>✓</Text>}
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              ) : (
+                <Text style={{ color: '#607D8B', fontSize: 12, marginBottom: 8 }}>Aucun agent disponible</Text>
+              )}
 
-              <Text style={styles.inputLabel}>Sous-tâche</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 8 }}>
-                {(SOUS_TACHES[form.category] || []).map(st => (
-                  <TouchableOpacity
-                    key={st}
-                    style={[styles.catChip, form.parentTitle === st && styles.catChipActive, { marginBottom: 0 }]}
-                    onPress={() => setForm({ ...form, parentTitle: st, title: st })}
-                  >
-                    <Text style={[styles.catText, form.parentTitle === st && styles.catTextActive]} numberOfLines={1}>
-                      {st.substring(0, 25)}...
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-
+              {/* 5. Semaine + Durée */}
               <View style={styles.rowInputs}>
                 <View style={{ flex: 1, marginRight: 8 }}>
                   <Text style={styles.inputLabel}>Semaine * (1-53)</Text>
@@ -585,48 +653,15 @@ export default function PlanningScreen({ navigation }) {
                 </View>
               </View>
 
-              <View style={styles.rowInputs}>
-                <View style={{ flex: 1, marginRight: 8 }}>
-                  <Text style={styles.inputLabel}>Matricule</Text>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Ex: 12345"
-                    placeholderTextColor="#607D8B"
-                    value={form.matricule}
-                    onChangeText={v => setForm({ ...form, matricule: v })}
-                  />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.inputLabel}>Cotation</Text>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Ex: A"
-                    placeholderTextColor="#607D8B"
-                    value={form.cotation}
-                    onChangeText={v => setForm({ ...form, cotation: v })}
-                  />
-                </View>
-              </View>
-
-              <Text style={styles.inputLabel}>Assigner à un agent</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 8 }}>
-                {agents.map(agent => (
-                  <TouchableOpacity
-                    key={agent.id}
-                    style={[styles.catChip,
-                      form.assignedToId === String(agent.id) && styles.catChipActive,
-                      { marginBottom: 0 }
-                    ]}
-                    onPress={() => setForm({ ...form, assignedToId: String(agent.id) })}
-                  >
-                    <Text style={[styles.catText,
-                      form.assignedToId === String(agent.id) && styles.catTextActive
-                    ]}>
-                      {agent.fullName}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
+              {/* 6. Cotation + Détails */}
+              <Text style={styles.inputLabel}>Cotation</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Ex: A"
+                placeholderTextColor="#607D8B"
+                value={form.cotation}
+                onChangeText={v => setForm({ ...form, cotation: v })}
+              />
 
               <Text style={styles.inputLabel}>Détails</Text>
               <TextInput
@@ -659,6 +694,8 @@ export default function PlanningScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#0A1628' },
+  webSafe: { height: '100vh', backgroundColor: '#0A1628' },
+  webScroller: { flex: 1, overflow: 'scroll', paddingBottom: 40 },
 
   header: {
     backgroundColor: '#0F2137',
@@ -813,4 +850,36 @@ const styles = StyleSheet.create({
     padding: 12, alignItems: 'center', marginTop: 8,
   },
   modalCancelText: { color: '#607D8B', fontSize: 14 },
+
+  modalCatGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 8 },
+  modalCatBtn: {
+    paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8,
+    backgroundColor: '#1A2F4A', borderWidth: 1, borderColor: '#2A4060',
+  },
+  modalCatBtnText: { color: '#607D8B', fontSize: 11, fontWeight: 'bold' },
+
+  modalSubTaskBtn: {
+    backgroundColor: '#1A2F4A', borderWidth: 1, borderColor: '#2A4060',
+    borderRadius: 8, padding: 10,
+  },
+  modalSubTaskBtnActive: { backgroundColor: '#C9A84C20', borderColor: '#C9A84C' },
+  modalSubTaskText: { color: '#B0BEC5', fontSize: 12 },
+  modalSubTaskTextActive: { color: '#C9A84C', fontWeight: 'bold' },
+
+  modalAgentBtn: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: '#1A2F4A', borderWidth: 1, borderColor: '#2A4060',
+    borderRadius: 8, padding: 10, gap: 10,
+  },
+  modalAgentBtnActive: { borderColor: '#C9A84C', backgroundColor: '#C9A84C10' },
+  modalAgentAvatar: {
+    width: 32, height: 32, borderRadius: 16, backgroundColor: '#4A90D9',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  modalAgentName: { color: '#FFFFFF', fontSize: 13, fontWeight: 'bold' },
+  modalAgentMatricule: { color: '#607D8B', fontSize: 11 },
+
+  pctEditRow: { flexDirection: 'row', alignItems: 'center', marginTop: 8, marginBottom: 8 },
+  pctSaveBtn: { backgroundColor: '#C9A84C', borderRadius: 8, paddingHorizontal: 14, paddingVertical: 10 },
+  pctSaveBtnText: { color: '#0A1628', fontWeight: 'bold', fontSize: 12 },
 });

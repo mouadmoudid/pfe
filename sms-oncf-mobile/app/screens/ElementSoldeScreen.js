@@ -507,17 +507,17 @@ td { font-size:7px; padding:3px; border:1px solid #ddd; }
           : (
           <Scroller style={Platform.OS === 'web' ? styles.webScroller : styles.list} {...(Platform.OS !== 'web' && { showsVerticalScrollIndicator: false })}>
             <Text style={styles.sectionLabel}>Année</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 16 }}>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
               {annees.map(a => (
                 <TouchableOpacity key={a}
-                  style={[styles.chipBtn, selectedAnnee === a && styles.chipBtnActive]}
+                  style={[styles.chipBtn, { marginRight: 0 }, selectedAnnee === a && styles.chipBtnActive]}
                   onPress={() => { setSelectedAnnee(a); loadMois(a); }}>
                   <Text style={[styles.chipText, selectedAnnee === a && styles.chipTextActive]}>{a}</Text>
                 </TouchableOpacity>
               ))}
               {canEdit(userRole) && (
                 <TouchableOpacity
-                  style={[styles.chipBtn, { borderColor: '#C9A84C' }]}
+                  style={[styles.chipBtn, { marginRight: 0, borderColor: '#C9A84C' }]}
                   onPress={() => {
                     const newY = Math.max(...annees) + 1;
                     setAnnees(prev => [newY, ...prev]);
@@ -526,7 +526,7 @@ td { font-size:7px; padding:3px; border:1px solid #ddd; }
                   <Text style={[styles.chipText, { color: '#C9A84C' }]}>+ {Math.max(...annees) + 1}</Text>
                 </TouchableOpacity>
               )}
-            </ScrollView>
+            </View>
 
             <Text style={styles.sectionLabel}>Mois</Text>
             <View style={styles.moisGrid}>

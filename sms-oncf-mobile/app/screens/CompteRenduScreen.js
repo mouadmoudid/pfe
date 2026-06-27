@@ -1038,6 +1038,8 @@ export default function CompteRenduScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#0A1628' },
+  webSafe: { height: '100vh', backgroundColor: '#0A1628' },
+  webScroller: { flex: 1, overflow: 'scroll', paddingBottom: 40 },
   header: {
     backgroundColor: '#0F2137', padding: 20,
     borderBottomLeftRadius: 20, borderBottomRightRadius: 20, marginBottom: 12,

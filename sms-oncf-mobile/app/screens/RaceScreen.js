@@ -8,6 +8,7 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { generateAndSharePDF } from '../utils/pdfUtils';
 import { API_URL } from '../services/authService';
+import DatePickerInput from '../components/DatePickerInput';
 
 const RACE_API = API_URL.replace('/auth', '/rex/race');
 
@@ -367,7 +368,15 @@ ${section('Recommandations', race.recommandations)}
               </View>
             </View>
             <Field label="1. Entité *" field="entite" placeholder="Ex: DT 102V LGV" />
-            <Field label="2. Date de l'événement *" field="dateEvenement" placeholder="JJ/MM/AAAA" />
+            <View style={{ marginBottom: 12 }}>
+              <Text style={styles.fieldLabel}>2. Date de l'événement *</Text>
+              <DatePickerInput
+                value={form.dateEvenement}
+                onChange={v => updateForm('dateEvenement', v)}
+                placeholder="Sélectionner une date"
+                inputStyle={styles.input}
+              />
+            </View>
             <Field label="Lieu de l'événement" field="lieuEvenement" placeholder="Ex: LGV2, km 128..." />
           </View>
 
