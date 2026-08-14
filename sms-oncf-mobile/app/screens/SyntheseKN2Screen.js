@@ -492,7 +492,7 @@ td { font-size:7px;padding:3px;border:1px solid #ddd;vertical-align:top; }
             </View>
 
             <Text style={s.sectionLabel}>Année</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 20 }}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0, marginBottom: 20 }}>
               {annees.map(a => (
                 <TouchableOpacity key={a}
                   style={[s.chipBtn, selectedAnnee === a && s.chipBtnActive]}
@@ -500,12 +500,12 @@ td { font-size:7px;padding:3px;border:1px solid #ddd;vertical-align:top; }
                   <Text style={[s.chipText, selectedAnnee === a && s.chipTextActive]}>{a}</Text>
                 </TouchableOpacity>
               ))}
-              <TouchableOpacity style={[s.chipBtn, { borderColor: '#C9A84C' }]}
+              <TouchableOpacity style={[s.chipBtn, { borderColor: '#C9A84C', borderStyle: 'dashed' }]}
                 onPress={() => {
                   const ny = Math.max(...annees) + 1;
                   setAnnees(p => [ny, ...p]); setSelectedAnnee(ny);
                 }}>
-                <Text style={[s.chipText, { color: '#C9A84C' }]}>+ {Math.max(...annees) + 1}</Text>
+                <Text style={[s.chipText, { color: '#C9A84C' }]} numberOfLines={1}>+ {Math.max(...annees) + 1}</Text>
               </TouchableOpacity>
             </ScrollView>
 
@@ -1174,9 +1174,9 @@ const s = StyleSheet.create({
   headerSub: { color: '#607D8B', fontSize: 11, marginTop: 2 },
   list: { paddingHorizontal: 14 },
   sectionLabel: { color: '#C9A84C', fontWeight: 'bold', fontSize: 13, marginBottom: 8 },
-  chipBtn: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, backgroundColor: '#0F2137', borderWidth: 1, borderColor: '#2A4060', marginRight: 8 },
+  chipBtn: { minWidth: 64, height: 40, paddingHorizontal: 14, borderRadius: 20, backgroundColor: '#0F2137', borderWidth: 1, borderColor: '#2A4060', marginRight: 8, alignItems: 'center', justifyContent: 'center' },
   chipBtnActive: { backgroundColor: '#C9A84C', borderColor: '#C9A84C' },
-  chipText: { color: '#607D8B', fontWeight: 'bold' },
+  chipText: { color: '#607D8B', fontWeight: 'bold', fontSize: 13 },
   chipTextActive: { color: '#0A1628' },
   confirmBtn: { backgroundColor: '#C9A84C', borderRadius: 12, padding: 16, alignItems: 'center', marginBottom: 20 },
   confirmBtnText: { color: '#0A1628', fontWeight: 'bold', fontSize: 15 },

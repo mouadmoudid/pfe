@@ -116,9 +116,10 @@ public class CheckListService {
         CheckList cl = checkListRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Check list non trouvée"));
 
-        if (cl.getCreatedBy() != null
-                && !cl.getCreatedBy().getId().equals(user.getId())
-                && user.getRole() != Role.ADMIN) {
+        boolean isOwner = cl.getCreatedBy() == null || cl.getCreatedBy().getId().equals(user.getId());
+        boolean isAdmin = user.getRole() == Role.ADMIN;
+        boolean isCgpx = user.getRole() == Role.CGPX;
+        if (!isOwner && !isAdmin && !isCgpx) {
             throw new RuntimeException("Vous n'avez pas le droit de supprimer cette check list");
         }
 

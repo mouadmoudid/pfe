@@ -362,7 +362,7 @@ td { font-size:7px;padding:2px;border:1px solid #ddd;vertical-align:top; }
 
             <Text style={s.sectionLabel}>Année</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false}
-              style={{ marginBottom: 20 }}>
+              style={{ flexGrow: 0, marginBottom: 20 }}>
               {annees.map(a => (
                 <TouchableOpacity key={a}
                   style={[s.chipBtn, selectedAnnee === a && s.chipBtnActive]}
@@ -373,13 +373,13 @@ td { font-size:7px;padding:2px;border:1px solid #ddd;vertical-align:top; }
               ))}
               {canEdit(userRole) && (
                 <TouchableOpacity
-                  style={[s.chipBtn, { borderColor: '#C9A84C' }]}
+                  style={[s.chipBtn, { borderColor: '#C9A84C', borderStyle: 'dashed' }]}
                   onPress={() => {
                     const newY = Math.max(...annees) + 1;
                     setAnnees(p => [newY, ...p]);
                     setSelectedAnnee(newY);
                   }}>
-                  <Text style={[s.chipText, { color: '#C9A84C' }]}>
+                  <Text style={[s.chipText, { color: '#C9A84C' }]} numberOfLines={1}>
                     + {Math.max(...annees) + 1}
                   </Text>
                 </TouchableOpacity>
@@ -700,11 +700,12 @@ const s = StyleSheet.create({
   bigChipText: { color: '#607D8B', fontWeight: 'bold', fontSize: 16 },
   bigChipTextActive: { color: '#C9A84C', fontSize: 18 },
   chipBtn: {
-    paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20,
+    minWidth: 64, height: 40, paddingHorizontal: 14, borderRadius: 20,
     backgroundColor: '#0F2137', borderWidth: 1, borderColor: '#2A4060', marginRight: 8,
+    alignItems: 'center', justifyContent: 'center',
   },
   chipBtnActive: { backgroundColor: '#C9A84C', borderColor: '#C9A84C' },
-  chipText: { color: '#607D8B', fontWeight: 'bold' },
+  chipText: { color: '#607D8B', fontWeight: 'bold', fontSize: 13 },
   chipTextActive: { color: '#0A1628' },
   entiteBox: {
     backgroundColor: '#0F2137', borderRadius: 10, padding: 14,

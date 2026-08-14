@@ -50,7 +50,8 @@ public class PlanningService {
         List<String> visible = entiteVisibilityHelper.getVisibleEntites(currentUser);
         return planningTaskRepository.findByAnnee(annee).stream()
                 .filter(t -> visible == null ||
-                        (t.getCreatedBy() != null && visible.contains(t.getCreatedBy().getEntite())))
+                        (t.getCreatedBy() != null && t.getCreatedBy().getEntite() != null
+                                && visible.contains(t.getCreatedBy().getEntite())))
                 .map(this::toResponse).toList();
     }
 
@@ -72,8 +73,12 @@ public class PlanningService {
             task.setPourcentageAcheve(request.getPourcentageAcheve());
         if (request.getDateRealisation() != null)
             task.setDateRealisation(request.getDateRealisation());
-        if (request.getStatus() != null)
+        if (request.getStatus() != null) {
             task.setStatus(request.getStatus());
+            if (request.getStatus() == PlanningStatus.REALISE) {
+                task.setPourcentageAcheve(100);
+            }
+        }
         if (request.getCotation() != null)
             task.setCotation(request.getCotation());
         if (request.getDetails() != null)
@@ -113,7 +118,8 @@ public class PlanningService {
         List<String> visible = entiteVisibilityHelper.getVisibleEntites(currentUser);
         List<PlanningTask> tasks = planningTaskRepository.findByAnnee(annee).stream()
                 .filter(t -> visible == null ||
-                        (t.getCreatedBy() != null && visible.contains(t.getCreatedBy().getEntite())))
+                        (t.getCreatedBy() != null && t.getCreatedBy().getEntite() != null
+                                && visible.contains(t.getCreatedBy().getEntite())))
                 .toList();
 
         int[] semainesMois = getSemainsDuMois(annee, mois);

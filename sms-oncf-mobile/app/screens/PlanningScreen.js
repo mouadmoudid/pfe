@@ -139,8 +139,10 @@ export default function PlanningScreen({ navigation }) {
       let planRes;
       if (currentUser && (currentUser.role === 'ADMIN' || currentUser.role === 'MANAGER' || isChef(currentUser.role))) {
         planRes = await axios.get(`${PLANNING_API}?annee=${annee}`, { headers });
-        const agentRes = await axios.get(`${API_URL.replace('/auth', '/admin/collaborateurs')}`, { headers });
-        setAgents(agentRes.data);
+        try {
+          const agentRes = await axios.get(`${API_URL.replace('/auth', '/admin/collaborateurs')}`, { headers });
+          setAgents(agentRes.data);
+        } catch { setAgents([]); }
       } else {
         planRes = await axios.get(`${PLANNING_API}/my`, { headers });
         setAgents([]); // non autorisé / pas nécessaire pour agent

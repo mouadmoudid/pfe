@@ -320,7 +320,7 @@ td{font-size:7px;padding:2px;border:1px solid #ddd;vertical-align:top}</style></
         {loading ? <ActivityIndicator color="#C9A84C" style={{marginTop:40}}/> : (
           <Scroller style={Platform.OS === 'web' ? s.webScroller : s.list} {...(Platform.OS !== 'web' && { showsVerticalScrollIndicator: false })}>
             <Text style={s.sectionLabel}>Année</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{marginBottom:20}}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{flexGrow:0, marginBottom:20}}>
               {annees.map(a => (
                 <TouchableOpacity key={a} style={[s.chipBtn, selectedAnnee===a && s.chipBtnActive]}
                   onPress={() => setSelectedAnnee(a)}>
@@ -328,9 +328,9 @@ td{font-size:7px;padding:2px;border:1px solid #ddd;vertical-align:top}</style></
                 </TouchableOpacity>
               ))}
               {canEdit(userRole) && (
-                <TouchableOpacity style={[s.chipBtn,{borderColor:'#C9A84C'}]}
+                <TouchableOpacity style={[s.chipBtn,{borderColor:'#C9A84C', borderStyle:'dashed'}]}
                   onPress={() => { const ny=Math.max(...annees)+1; setAnnees(p=>[ny,...p]); setSelectedAnnee(ny); }}>
-                  <Text style={[s.chipText,{color:'#C9A84C'}]}>+ {Math.max(...annees)+1}</Text>
+                  <Text style={[s.chipText,{color:'#C9A84C'}]} numberOfLines={1}>+ {Math.max(...annees)+1}</Text>
                 </TouchableOpacity>
               )}
             </ScrollView>
@@ -767,9 +767,9 @@ const s = StyleSheet.create({
   headerSub:{color:'#607D8B',fontSize:11,marginTop:2},
   list:{paddingHorizontal:14},
   sectionLabel:{color:'#C9A84C',fontWeight:'bold',fontSize:13,marginBottom:8},
-  chipBtn:{paddingHorizontal:16,paddingVertical:8,borderRadius:20,backgroundColor:'#0F2137',borderWidth:1,borderColor:'#2A4060',marginRight:8},
+  chipBtn:{minWidth:64,height:40,paddingHorizontal:14,borderRadius:20,backgroundColor:'#0F2137',borderWidth:1,borderColor:'#2A4060',marginRight:8,alignItems:'center',justifyContent:'center'},
   chipBtnActive:{backgroundColor:'#C9A84C',borderColor:'#C9A84C'},
-  chipText:{color:'#607D8B',fontWeight:'bold'},
+  chipText:{color:'#607D8B',fontWeight:'bold',fontSize:13},
   chipTextActive:{color:'#0A1628'},
   entiteBox:{backgroundColor:'#0F2137',borderRadius:10,padding:14,marginBottom:16,borderLeftWidth:4,borderLeftColor:'#C9A84C'},
   entiteLabel:{color:'#607D8B',fontSize:11},
